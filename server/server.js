@@ -8,6 +8,8 @@ var players = [];
 
 app.use(express.static(__dirname + '/../client'));
 
+var ARENA_RADIUS = 1500;
+
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
@@ -65,6 +67,11 @@ function movePlayer(player){
   }
   player.x +=changeX;
   player.y +=changeY;
+  var distFromCenter = Math.sqrt(player.x*player.x + player.y*player.y);
+  if (distFromCenter > ARENA_RADIUS) {
+    player.x *= (ARENA_RADIUS/distFromCenter);
+    player.y *= (ARENA_RADIUS/distFromCenter);
+  }
 }
 
 var serverPort = process.env.PORT || config.port;
