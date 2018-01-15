@@ -6,11 +6,20 @@ var util    = require('./lib/util');
 
 var config  = require('./config.json');
 var players = [];
+
 var powerups = [];
+
+var bullets = [];
+
 
 app.use(express.static(__dirname + '/../client'));
 
 var ARENA_RADIUS = 1500;
+var BULLET_AGE = 60;
+var BULLET_SPEED = 10;
+var PLAYER_SPEED_LIMIT = 8;
+var FRICTION = 0.1;
+var playerRadius = 30;
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -25,6 +34,7 @@ io.on('connection', function (socket) {
     windowWidth  : config.defaultWindowWidth,
     id : nextId,
     target  : {x:0,y:0},
+    velocity: {x:0,y:0},
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -42,21 +52,57 @@ io.on('connection', function (socket) {
     socket.emit('bearing', bearing);
     });
   socket.on('move', function(message){
-    currentPlayer.target.x += message.x;
-    currentPlayer.target.y += message.y;
+    currentPlayer.velocity.x += message.x;
+    currentPlayer.velocity.y += message.y;
   });
 
 
 
-  
+
 
   socket.on('window_resized', function(dimensions){
     currentPlayer.windowWidth = dimensions.windowWidth;
     currentPlayer.windowHeight = dimensions.windowHeight;
   })
 
+  socket.on('fire', function(vector){
+    var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+    var normalizedVector = {x: vector.x/length, y: vector.y/length};
+    newBullet = {
+      x: currentPlayer.x + normalizedVector.x*40,
+      y: currentPlayer.y + normalizedVector.y*40,
+      xHeading: normalizedVector.x,
+      yHeading: normalizedVector.y,
+      timeLeft: BULLET_AGE,
+    }
+    bullets.push(newBullet);
+  })
 
 });
+
+
+function sign(x){
+  if(x >=0)
+    return 1;
+  else
+    return -1;
+}
+
+//reflect vector x1,y1 about vector x2,y2
+function reflect(x1,y1,x2,y2)
+{
+  var a1 = Math.atan2(y1,x1);
+
+  var a2 = Math.atan2(y2,x2);
+  var answer = 2*a2-a1;
+  var r = Math.sqrt(x1*x1+y1*y1);
+  console.log(x1+" "+y1);
+  console.log(a1);
+  console.log(a2);
+  console.log(answer);
+  return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
+}
+
 function spawnPlayer(player){
   var numPlayers = players.length;
   var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
@@ -79,10 +125,28 @@ function spawnPowerup(){
   console.log("Powerup spawned " + JSON.stringify(nextPowerup));
   powerups.push(nextPowerup);
 }
+
 function movePlayer(player){
-  player.x = player.target.x;
-  player.y = player.target.y;
-  
+  var vx = player.velocity.x;
+  var vy = player.velocity.y;
+
+  var speedBeforeFricton = Math.sqrt(vx*vx+vy*vy);
+  if(speedBeforeFricton>0){
+    vx -= (vx/speedBeforeFricton)*FRICTION;
+    vy -= (vy/speedBeforeFricton)*FRICTION;
+  }
+  var speed = Math.sqrt(vx*vx+vy*vy);
+  if (speed > PLAYER_SPEED_LIMIT) {
+    vx *= PLAYER_SPEED_LIMIT/speed;
+    vy *= PLAYER_SPEED_LIMIT/speed;
+  }
+
+  player.velocity.x = vx;
+  player.velocity.y = vy;
+
+  player.x += player.velocity.x;
+  player.y += player.velocity.y;
+
   /*
   var x = player.target.x;
   var y = player.target.y;
@@ -106,20 +170,49 @@ function movePlayer(player){
   }
   player.x +=changeX;
   player.y +=changeY;
-<<<<<<< HEAD
-  
-*/
+  */
 
-//Move to boundary if outside
-  var distFromCenter = Math.sqrt(player.x*player.x + player.y*player.y);
-  if (distFromCenter > ARENA_RADIUS) {
-    player.x *= (.99 * ARENA_RADIUS/distFromCenter);
-    player.y *= (.99* ARENA_RADIUS/distFromCenter);
+  //Move to boundary if outside
+  var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
+  if (distFromCenter > ARENA_RADIUS-playerRadius) {
+    player.x *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
+    player.y *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
+    newVelocity = reflect(player.velocity.x,player.velocity.y, -player.y, player.x);
+    player.velocity.x = newVelocity.x;
+    player.velocity.y = newVelocity.y;
+    player.x+=player.velocity.x;
+    player.y+=player.velocity.y;
   }
 
-  player.target.x = player.x;
-  player.target.y = player.y;
 
+  //player.target.x = player.x;
+  //player.target.y = player.y;
+
+}
+
+function moveBullet(bullet){
+  // moves a bullet, and returns whether the bullet is still alive
+  // (i.e. has not run out of time or escaped the arena)
+  var changeX = bullet.xHeading * BULLET_SPEED;
+  var changeY = bullet.yHeading * BULLET_SPEED;
+  bullet.x += changeX;
+  bullet.y += changeY;
+  bullet.timeLeft -= 1;
+  var isAlive = (bullet.timeLeft > 0 && util.distance(bullet, {x:0, y:0}) <= ARENA_RADIUS)
+  return isAlive;
+}
+function moveAllBullets() {
+  var indicesOfDeadBullets = [];
+  for (var i=0; i<bullets.length; i++) {
+    bullet = bullets[i];
+    if (!moveBullet(bullet)) {
+      indicesOfDeadBullets.push(i);
+    }
+  }
+  // remove dead bullets
+  for (var j=indicesOfDeadBullets.length-1; j>=0; j--) {
+    bullets.splice(indicesOfDeadBullets[j], 1);
+  }
 }
 
 var serverPort = process.env.PORT || config.port;
@@ -139,7 +232,7 @@ player.windowHeight (height of player's client window)
 */
 
 function sendView(player) {
-  var allObjects = [];
+  var allPlayers = [];
   for(var i=0; i<players.length; i++)
   {
     var relX = players[i].x - player.x;
@@ -147,23 +240,36 @@ function sendView(player) {
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
       var current = {name:players[i].name, x:relX, y: relY};
-      allObjects.push(current);
+      allPlayers.push(current);
     }
   }
+  var allPowerups = [];
   for(var i = 0;i<powerups.length;i++){
     var relX = powerups[i].x - player.x;
     var relY = powerups[i].y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
       var current = {name:powerups[i].type, x:relX, y: relY};
-      allObjects.push(current);
+      allPowerups.push(current);
     }
   }
+  var nearbyBullets = [];
+  for (var i=0; i<bullets.length; i++) {
+    var relX = bullets[i].x - player.x;
+    var relY = bullets[i].y - player.y;
+    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
+      var current = {x:relX, y: relY};
+      nearbyBullets.push(current);
+    }
+  }
+
   player.socket.emit(
     'game_state',
     {
       my_absolute_coord: {x: player.x, y:player.y},
-      nearby_objects: allObjects,
+      nearby_powerups: allPowerups,
+      nearby_players: allPlayers,
+      nearby_bullets: nearbyBullets,
     }
   );
 }
@@ -172,6 +278,7 @@ function moveLoops(){
     movePlayer(players[i]);
     sendView(players[i]);
   }
+  moveAllBullets();
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
