@@ -51,7 +51,7 @@ exports.distance = function(firstPoint, secondPoint){
 };
 exports.collided = function(firstObject, secondObject,epsilon){
 	var dist = exports.distance(firstObject,secondObject);
-	if(distance<=(1+epsilon)*(firstObject.radius+secondObject.radius)){
+	if(dist<=(1+epsilon)*(firstObject.radius+secondObject.radius)){
 		return true;
 	}
 	return false;

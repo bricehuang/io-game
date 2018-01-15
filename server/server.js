@@ -14,28 +14,23 @@ var bullets = [];
 
 app.use(express.static(__dirname + '/../client'));
 
-var ARENA_RADIUS = 1500;
-var BULLET_AGE = 60;
-var BULLET_SPEED = 10;
-var PLAYER_SPEED_LIMIT = 8;
-var FRICTION = 0.1;
-var playerRadius = 30;
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
   nextId = players.length;
   currentPlayer = {
-    name:config.defaultName,
+    name:config.DEFAULT_NAME,
     x:0,
     y:0,
     socket:socket,
-    windowHeight : config.defaultWindowHeight,
-    windowWidth  : config.defaultWindowWidth,
+    windowHeight : config.DEFAULT_WINDOW_HEIGHT,
+    windowWidth  : config.DEFAULT_WINDOW_WIDTH,
     id : nextId,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
-    radius: playerRadius,
+    radius: config.PLAYER_RADIUS,
+    health: config.PLAYER_MAX_HEALTH,
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -74,8 +69,8 @@ io.on('connection', function (socket) {
       y: currentPlayer.y + normalizedVector.y*40,
       xHeading: normalizedVector.x,
       yHeading: normalizedVector.y,
-      timeLeft: BULLET_AGE,
-      radius:bulletRadius
+      timeLeft: config.BULLET_AGE,
+      radius: config.BULLET_RADIUS
     }
     bullets.push(newBullet);
   })
@@ -91,7 +86,7 @@ function collisionDetect(){
       var dx = players[i].x - players[j].x;
       var dy = players[i].y - players[j].y;
       var dist = Math.sqrt(dx*dx+dy*dy);
-      if(dist< 2*playerRadius)
+      if(dist< 2*config.PLAYER_RADIUS)
       {
         var v1_x = players[i].velocity.x;
         var v1_y = players[i].velocity.y;
@@ -102,7 +97,8 @@ function collisionDetect(){
         players[i].velocity.y = v1_y + impulse * dy;
         players[j].velocity.x = v2_x - impulse * dx;
         players[j].velocity.y = v2_y - impulse * dy;
-
+        players[i].health -= config.BODY_COLLISION_DAMAGE;
+        players[j].health -= config.BODY_COLLISION_DAMAGE;
 
       }
     }
@@ -111,25 +107,27 @@ function collisionDetect(){
     for(var j = 0;j<bullets.length;j++){
       var player = players[i];
       var bullet = bullets[j];
-      if(util.collided(player,bullet,config.eps)){
-        registerPlayerBulletHit(player,bullet,);
+      if(util.collided(player,bullet,config.EPS)){
+        registerPlayerBulletHit(player,bullet);
       }
     }
   }
   for(var i = 0;i<players.length;i++){
     for(var j = 0;j<powerups.length;j++){
       var player = players[i];
-      var powerup = powerup[j];
-      if(util.collided(player,powerup,config.eps)){
+      var powerup = powerups[j];
+      if(util.collided(player,powerup,config.EPS)){
         registerPlayerPowerupHit(player,powerup);
       }
     }
   }
 }
 function registerPlayerBulletHit(player, bullet){
+  console.log("Player Bullet Collision!");
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
+  console.log("Player Powerup Collision!");
   return;
 }
 
@@ -158,22 +156,22 @@ function reflect(x1,y1,x2,y2)
 
 function spawnPlayer(player){
   var numPlayers = players.length;
-  var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
+  var nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
   player.x = nextCoords.x;
   player.y = nextCoords.y;
   player.target = nextCoords;
   console.log("Player spawned at " + JSON.stringify(nextCoords));
 }
 function spawnPowerup(){
-  var r = config.mapRadius;
+  var r = config.MAP_RADIUS;
   var pos = util.gaussianCircleGenerate(r,0.01,0.00001);
-  var type = config.weaponTypes[Math.floor(Math.random()*config.weaponTypes.length)];
-  
+  var type = config.WEAPON_TYPES[Math.floor(Math.random()*config.WEAPON_TYPES.length)];
+
   var nextPowerup = {
     type:type,
     x:pos.x,
     y:pos.y,
-    radius:powerupRadius,
+    radius:config.POWERUP_RADIUS,
   }
 
   console.log("Powerup spawned " + JSON.stringify(nextPowerup));
@@ -186,13 +184,13 @@ function movePlayer(player){
 
   var speedBeforeFricton = Math.sqrt(vx*vx+vy*vy);
   if(speedBeforeFricton>0){
-    vx -= (vx/speedBeforeFricton)*FRICTION;
-    vy -= (vy/speedBeforeFricton)*FRICTION;
+    vx -= (vx/speedBeforeFricton)*config.FRICTION;
+    vy -= (vy/speedBeforeFricton)*config.FRICTION;
   }
   var speed = Math.sqrt(vx*vx+vy*vy);
-  if (speed > PLAYER_SPEED_LIMIT) {
-    vx *= PLAYER_SPEED_LIMIT/speed;
-    vy *= PLAYER_SPEED_LIMIT/speed;
+  if (speed > config.PLAYER_SPEED_LIMIT) {
+    vx *= config.PLAYER_SPEED_LIMIT/speed;
+    vy *= config.PLAYER_SPEED_LIMIT/speed;
   }
 
   player.velocity.x = vx;
@@ -228,9 +226,9 @@ function movePlayer(player){
 
   //Move to boundary if outside
   var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
-  if (distFromCenter > ARENA_RADIUS-playerRadius) {
-    player.x *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
-    player.y *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
+  if (distFromCenter > config.ARENA_RADIUS-config.PLAYER_RADIUS) {
+    player.x *= ( (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter);
+    player.y *= ( (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter);
     newVelocity = reflect(player.velocity.x,player.velocity.y, -player.y, player.x);
     player.velocity.x = newVelocity.x;
     player.velocity.y = newVelocity.y;
@@ -247,12 +245,12 @@ function movePlayer(player){
 function moveBullet(bullet){
   // moves a bullet, and returns whether the bullet is still alive
   // (i.e. has not run out of time or escaped the arena)
-  var changeX = bullet.xHeading * BULLET_SPEED;
-  var changeY = bullet.yHeading * BULLET_SPEED;
+  var changeX = bullet.xHeading * config.BULLET_SPEED;
+  var changeY = bullet.yHeading * config.BULLET_SPEED;
   bullet.x += changeX;
   bullet.y += changeY;
   bullet.timeLeft -= 1;
-  var isAlive = (bullet.timeLeft > 0 && util.distance(bullet, {x:0, y:0}) <= ARENA_RADIUS)
+  var isAlive = (bullet.timeLeft > 0 && util.distance(bullet, {x:0, y:0}) <= config.ARENA_RADIUS)
   return isAlive;
 }
 function moveAllBullets() {
@@ -293,7 +291,7 @@ function sendView(player) {
     var relY = players[i].y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
-      var current = {name:players[i].name, x:relX, y: relY};
+      var current = {name:players[i].name, x:relX, y: relY, health: players[i].health};
       allPlayers.push(current);
     }
   }

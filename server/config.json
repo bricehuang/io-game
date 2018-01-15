@@ -1,12 +1,19 @@
 {
   "port": 3000,
-  "defaultName": "Allen Liu",
-  "defaultWindowWidth": 500,
-  "defaultWindowHeight": 500,
-  "mapRadius" : 1500,
-  "weaponTypes": ["gun", "bomb"],
-  "eps": 0.0001,
-  "playerRadius": 30,
-  "powerupRadius": 10,
-  "bulletRadius":  5
+  "DEFAULT_NAME": "Allen Liu",
+  "DEFAULT_WINDOW_WIDTH": 500,
+  "DEFAULT_WINDOW_HEIGHT": 500,
+  "MAP_RADIUS" : 1500,
+  "WEAPON_TYPES": ["gun", "bomb"],
+  "EPS": 0.0001,
+  "PLAYER_RADIUS": 30,
+  "POWERUP_RADIUS": 10,
+  "BULLET_RADIUS":  5,
+  "ARENA_RADIUS" :1500,
+  "BULLET_AGE": 60,
+  "BULLET_SPEED" : 10,
+  "PLAYER_SPEED_LIMIT" : 8,
+  "FRICTION" : 0.1,
+  "PLAYER_MAX_HEALTH" : 100,
+  "BODY_COLLISION_DAMAGE" : 49
 }
