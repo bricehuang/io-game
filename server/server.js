@@ -39,30 +39,40 @@ io.on('connection', function (socket) {
   players.set(socket.id,currentPlayer);
 
   socket.on('player_information', function(data){
-    currentPlayer.name         = data.name;
-    currentPlayer.windowWidth  = data.windowWidth;
-    currentPlayer.windowHeight = data.windowHeight;
+    player = players.get(socket.id);
+    if (!player) return;
+    player.name         = data.name;
+    player.windowWidth  = data.windowWidth;
+    player.windowHeight = data.windowHeight;
   });
 
   socket.on('mouse_location', function(message){
-    currentPlayer.target = {x:message.x,y:message.y};
+    player = players.get(socket.id);
+    if (!player) return;
+    player.target = {x:message.x,y:message.y};
     // var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
     // socket.emit('bearing', bearing);
   });
   socket.on('move', function(message){
-    currentPlayer.velocity.x += message.x;
-    currentPlayer.velocity.y += message.y;
+    player = players.get(socket.id);
+    if (!player) return;
+    player.velocity.x += message.x;
+    player.velocity.y += message.y;
   });
   socket.on('window_resized', function(dimensions){
-    currentPlayer.windowWidth = dimensions.windowWidth;
-    currentPlayer.windowHeight = dimensions.windowHeight;
+    player = players.get(socket.id);
+    if (!player) return;
+    player.windowWidth = dimensions.windowWidth;
+    player.windowHeight = dimensions.windowHeight;
   })
   socket.on('fire', function(vector){
+    player = players.get(socket.id);
+    if (!player) return;
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
     newBullet = {
-      x: currentPlayer.x + normalizedVector.x*40,
-      y: currentPlayer.y + normalizedVector.y*40,
+      x: player.x + normalizedVector.x*40,
+      y: player.y + normalizedVector.y*40,
       xHeading: normalizedVector.x,
       yHeading: normalizedVector.y,
       timeLeft: config.BULLET_AGE,
@@ -74,8 +84,8 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function(){
     console.log('user disconnected');
-    if (currentPlayer.socket.id in players){
-      players.delete(currentPlayer.socket.id);
+    if (socket.id in players){
+      players.delete(socket.id);
     }
   })
 
