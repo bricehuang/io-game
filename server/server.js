@@ -8,6 +8,8 @@ var players = [];
 
 app.use(express.static(__dirname + '/../client'));
 
+var ARENA_RADIUS = 1500;
+
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
@@ -41,14 +43,20 @@ io.on('connection', function (socket) {
   });
 
 
+
   
+
+  socket.on('window_resized', function(dimensions){
+    currentPlayer.windowWidth = dimensions.windowWidth;
+    currentPlayer.windowHeight = dimensions.windowHeight;
+  })
+
 
 });
 function movePlayer(player){
   player.x = player.target.x;
   player.y = player.target.y;
-  player.target.x = player.x;
-  player.target.y = player.y;
+  
   /*
   var x = player.target.x;
   var y = player.target.y;
@@ -72,20 +80,26 @@ function movePlayer(player){
   }
   player.x +=changeX;
   player.y +=changeY;
+<<<<<<< HEAD
   
 */
 
+//Move to boundary if outside
+  var distFromCenter = Math.sqrt(player.x*player.x + player.y*player.y);
+  if (distFromCenter > ARENA_RADIUS) {
+    player.x *= (.99 * ARENA_RADIUS/distFromCenter);
+    player.y *= (.99* ARENA_RADIUS/distFromCenter);
+  }
+
+  player.target.x = player.x;
+  player.target.y = player.y;
+
 }
+
 var serverPort = process.env.PORT || config.port;
 http.listen(serverPort, function() {
   console.log("Server is listening on port " + serverPort);
 });
-
-
-
-
-
-
 
 
 /*
@@ -98,27 +112,6 @@ player.windowWidth (width of player's client window)
 player.windowHeight (height of player's client window)
 */
 
-/*
-Return an array
-  [
-    {
-      name: __
-      x: __
-      y: __
-    },
-    {
-      name: __
-      x: __
-      y: __
-    },
-    ...
-  ]
-where each element in this array is a player within
-x-distance player.windowWidth/2 and y-distance
-player.windowHeight/2 from this player.  For each object,
-the x,y values returned represent the location of the
-player relative to this player.
-*/
 function sendView(player) {
   var allPlayers = [];
   for(var i=0; i<players.length; i++)

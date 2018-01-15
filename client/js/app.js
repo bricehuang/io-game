@@ -94,9 +94,11 @@ window.addEventListener('resize', function() {
 }, true);
 
 function sendNewMouseLocation(mouse){
+    if (!socket) return;
     var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
     socket.emit('mouse_location', mouseCoords);
 }
+
 //c.addEventListener('mousemove', sendNewMouseLocation, false);
 
 
@@ -111,7 +113,7 @@ onkeydown = onkeyup = function(e){
         map[e.keyCode] = false;
 
 }
-var movespeed = 2;
+var movespeed = 8;
 function move(){
 var vector = {x:0, y:0};
 /*
@@ -139,6 +141,7 @@ var vector = {x:0, y:0};
     if(map[40]==true){
         vector.y+=movespeed;
     }
+    console.log(vector);
     socket.emit('move',vector);
     
 
@@ -146,4 +149,16 @@ var vector = {x:0, y:0};
 updateRate=100;
 setInterval(move, 1000 / updateRate);
 
+
+
+
+function resize() {
+    if (!socket) return;
+    screenWidth = window.innerWidth;
+    screenHeight = window.innerHeight;
+
+    var newDimensions = { windowWidth: screenWidth, windowHeight: screenHeight };
+    socket.emit('window_resized', newDimensions);
+}
+window.addEventListener('resize', resize);
 

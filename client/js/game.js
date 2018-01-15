@@ -4,6 +4,8 @@ var nearby_objects = [];
 var my_absolute_coord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 
+var ARENA_RADIUS = 1500;
+
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
@@ -22,11 +24,7 @@ Game.prototype.handleLogic = function() {
   // This is where you update your game logic
 }
 
-Game.prototype.handleGraphics = function(gfx) {
-  // This is where you draw everything
-  gfx.fillStyle = '#fbfcfc';
-  gfx.fillRect(0, 0, screenWidth, screenHeight);
-
+function drawBackgroundGrid(gfx) {
   var smallest_x_line = (screenWidth/2 - my_absolute_coord.x) % GRID_OFFSET;
   if (smallest_x_line < 0){
     smallest_x_line += GRID_OFFSET;
@@ -44,7 +42,9 @@ Game.prototype.handleGraphics = function(gfx) {
     gfx.lineTo(screenWidth, y);
   }
   gfx.stroke();
+}
 
+function drawObjects(gfx) {
   gfx.fillStyle = '#2ecc71';
   gfx.strokeStyle = '#003300';
   gfx.font = '12px Verdana';
@@ -58,6 +58,37 @@ Game.prototype.handleGraphics = function(gfx) {
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
+    gfx.closePath();
   }
-  // gfx.strokeText('Now playing...', screenWidth / 2, screenHeight / 2);
+}
+
+function drawBoundary(gfx) {
+  var x = Math.abs(my_absolute_coord.x)+screenWidth/2; // max absolute x on screen
+  var y = Math.abs(my_absolute_coord.y)+screenHeight/2; // max absolute y on screen
+  if (Math.sqrt(x*x+y*y) < ARENA_RADIUS) {
+    // all four corners of screen are in the arena
+    return;
+  } else {
+    // TODO: draw only the relevant part?
+    gfx.beginPath();
+    gfx.arc(
+      -my_absolute_coord.x+screenWidth/2,
+      -my_absolute_coord.y+screenHeight/2,
+      ARENA_RADIUS, 0,
+      2*Math.PI,
+      false
+    );
+    gfx.stroke();
+    gfx.closePath();
+  }
+}
+
+Game.prototype.handleGraphics = function(gfx) {
+  // This is where you draw everything
+  gfx.fillStyle = '#fbfcfc';
+  gfx.fillRect(0, 0, screenWidth, screenHeight);
+
+  drawBackgroundGrid(gfx);
+  drawObjects(gfx);
+  drawBoundary(gfx);
 }
