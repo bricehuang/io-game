@@ -77,9 +77,9 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function(){
     console.log('user disconnected');
-    // remove currentPlayer from players registry
-    // TODO replace this when players gets set-ified
-    players.delete(currentPlayer.socket.id);
+    if (currentPlayer.socket.id in players){
+      players.delete(currentPlayer.socket.id);
+    }
   })
 
 });
@@ -248,11 +248,9 @@ function moveAllBullets() {
 }
 
 function expelDeadPlayer(player) {
-  // remove currentPlayer from players registry
-  // TODO replace this when players gets set-ified
-  player.socket.emit('death');
-  player.socket.disconnect();
   players.delete(player.socket.id);
+  player.socket.emit('death');
+  // player.socket.disconnect();
 }
 
 function sendView(player) {
@@ -304,15 +302,20 @@ function moveLoops(){
     sendView(players.get(key));
   }
   collisionDetect();
-  var idsOfPlayersToExpel = [];
+  var keysOfPlayersToExpel = [];
   for (var key of players.keys()) {
     var player = players.get(key);
     if (player.health < 0) {
-      idsOfPlayersToExpel.push(player.socket.id);
+      keysOfPlayersToExpel.push(key);
     }
   }
-  for (var i=0; i<idsOfPlayersToExpel.length; i++) {
-    expelDeadPlayer(players.get(idsOfPlayersToExpel[i]));
+  // console.log(players);
+  if (keysOfPlayersToExpel.length > 0){
+    console.log("expelling dead players: " + keysOfPlayersToExpel);
+  }
+  for (var i=0; i<keysOfPlayersToExpel.length; i++) {
+    var player = players.get(keysOfPlayersToExpel[i]);
+    expelDeadPlayer(player);
   }
 }
 
