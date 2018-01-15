@@ -36,6 +36,11 @@ io.on('connection', function (socket) {
     socket.emit('bearing', bearing);
   });
 
+  socket.on('window_resized', function(dimensions){
+    currentPlayer.windowWidth = dimensions.windowWidth;
+    currentPlayer.windowHeight = dimensions.windowHeight;
+  })
+
 });
 function movePlayer(player){
   var x = player.target.x;
@@ -61,16 +66,11 @@ function movePlayer(player){
   player.x +=changeX;
   player.y +=changeY;
 }
+
 var serverPort = process.env.PORT || config.port;
 http.listen(serverPort, function() {
   console.log("Server is listening on port " + serverPort);
 });
-
-
-
-
-
-
 
 
 /*
@@ -83,27 +83,6 @@ player.windowWidth (width of player's client window)
 player.windowHeight (height of player's client window)
 */
 
-/*
-Return an array
-  [
-    {
-      name: __
-      x: __
-      y: __
-    },
-    {
-      name: __
-      x: __
-      y: __
-    },
-    ...
-  ]
-where each element in this array is a player within
-x-distance player.windowWidth/2 and y-distance
-player.windowHeight/2 from this player.  For each object,
-the x,y values returned represent the location of the
-player relative to this player.
-*/
 function sendView(player) {
   var allPlayers = [];
   for(var i=0; i<players.length; i++)

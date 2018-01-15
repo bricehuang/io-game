@@ -94,7 +94,18 @@ window.addEventListener('resize', function() {
 }, true);
 
 function sendNewMouseLocation(mouse){
+    if (!socket) return;
     var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
     socket.emit('mouse_location', mouseCoords);
 }
 c.addEventListener('mousemove', sendNewMouseLocation, false);
+
+function resize() {
+    if (!socket) return;
+    screenWidth = window.innerWidth;
+    screenHeight = window.innerHeight;
+
+    var newDimensions = { windowWidth: screenWidth, windowHeight: screenHeight };
+    socket.emit('window_resized', newDimensions);
+}
+window.addEventListener('resize', resize);
