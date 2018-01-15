@@ -21,6 +21,13 @@ http.listen(serverPort, function() {
   console.log("Server is listening on port " + serverPort);
 });
 
+
+
+
+
+
+
+
 /*
 Players should have fields:
 player.name (string, name)
@@ -53,8 +60,23 @@ the x,y values returned represent the location of the
 player relative to this player.
 */
 function sendView(player) {
-  // TODO replace "" with something
-  player.socket.emit('game_state', "")
+  var allPlayers = [];
+  for(var i=0; i<players.length; i++)
+  {
+    var relX = players[i].x - player.x;
+    var relY = players[i].y - player.y;
+    if( abs(relX) <= player.windowWidth/2 && abs(relY) <= player.windowHeight/2)
+    {
+      var current = {name:players[i].name, x:relX, y: relY};
+      allPlayers.push(current);
+
+    }
+
+  }
+  player.socket.emit('game_state', allPlayers);
 }
+
+var updateRate = 10;
+setInterval(sendView, 1000 / updateRate);
 
 
