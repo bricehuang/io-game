@@ -104,6 +104,10 @@ function sendNewMouseLocation(mouse){
 
 
 
+//w=87
+//a=65
+//s = 83
+//d = 68
 
 var map = {}; // You could also use an array
 onkeydown = onkeyup = function(e){
@@ -130,16 +134,16 @@ var vector = {x:0, y:0};
     map[40] = 0;
     */
 
-    if(map[37]==true){
+    if(map[65]==true){
         vector.x -=movespeed;
     }
-    if(map[38]==true){
+    if(map[87]==true){
         vector.y-=movespeed;
     }
-    if (map[39]==true){
+    if (map[68]==true){
         vector.x+=movespeed;
     }
-    if(map[40]==true){
+    if(map[83]==true){
         vector.y+=movespeed;
     }
     console.log(vector);
