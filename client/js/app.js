@@ -114,7 +114,7 @@ onkeydown = onkeyup = function(e){
         map[e.keyCode] = false;
 
 }
-var movespeed = 0.2;
+var movespeed = 0.1;
 function move(){
 var vector = {x:0, y:0};
 /*

@@ -17,6 +17,9 @@ app.use(express.static(__dirname + '/../client'));
 var ARENA_RADIUS = 1500;
 var BULLET_AGE = 60;
 var BULLET_SPEED = 10;
+var PLAYER_SPEED_LIMIT = 8;
+var FRICTION = 0.1;
+var playerRadius = 30;
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -100,9 +103,6 @@ function reflect(x1,y1,x2,y2)
   return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
 }
 
-var friction = 0.2;
-var playerRadius = 30;
-
 function spawnPlayer(player){
   var numPlayers = players.length;
   var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
@@ -123,14 +123,22 @@ function spawnPowerup(){
 }
 
 function movePlayer(player){
-  var vx = 100*player.velocity.x;
-  var vy = 100*player.velocity.y;
+  var vx = player.velocity.x;
+  var vy = player.velocity.y;
 
-  var speed = Math.sqrt(vx*vx+vy*vy);
-  if(speed>0){
-  player.velocity.x = player.velocity.x - (vx/speed)*friction;
-  player.velocity.y = player.velocity.y - (vy/speed)*friction;
+  var speedBeforeFricton = Math.sqrt(vx*vx+vy*vy);
+  if(speedBeforeFricton>0){
+    vx -= (vx/speedBeforeFricton)*FRICTION;
+    vy -= (vy/speedBeforeFricton)*FRICTION;
   }
+  var speed = Math.sqrt(vx*vx+vy*vy);
+  if (speed > PLAYER_SPEED_LIMIT) {
+    vx *= PLAYER_SPEED_LIMIT/speed;
+    vy *= PLAYER_SPEED_LIMIT/speed;
+  }
+
+  player.velocity.x = vx;
+  player.velocity.y = vy;
 
   player.x += player.velocity.x;
   player.y += player.velocity.y;
@@ -161,7 +169,7 @@ function movePlayer(player){
   */
 
   //Move to boundary if outside
-  var distFromCenter = Math.sqrt(player.x*player.x + player.y*player.y);
+  var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
   if (distFromCenter > ARENA_RADIUS-playerRadius) {
     player.x *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
     player.y *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
@@ -186,7 +194,7 @@ function moveBullet(bullet){
   bullet.x += changeX;
   bullet.y += changeY;
   bullet.timeLeft -= 1;
-  var isAlive = (bullet.timeLeft > 0 && Math.sqrt(bullet.x*bullet.x+bullet.y*bullet.y) <= ARENA_RADIUS)
+  var isAlive = (bullet.timeLeft > 0 && util.distance(bullet, {x:0, y:0}) <= ARENA_RADIUS)
   return isAlive;
 }
 function moveAllBullets() {
