@@ -34,10 +34,22 @@ io.on('connection', function (socket) {
     currentPlayer.target = {x:message.x,y:message.y};
     var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
     socket.emit('bearing', bearing);
+    });
+  socket.on('move', function(message){
+    currentPlayer.target.x += message.x;
+    currentPlayer.target.y += message.y;
   });
+
+
+  
 
 });
 function movePlayer(player){
+  player.x = player.target.x;
+  player.y = player.target.y;
+  player.target.x = player.x;
+  player.target.y = player.y;
+  /*
   var x = player.target.x;
   var y = player.target.y;
   var maxSpeed = 6;
@@ -60,6 +72,9 @@ function movePlayer(player){
   }
   player.x +=changeX;
   player.y +=changeY;
+  
+*/
+
 }
 var serverPort = process.env.PORT || config.port;
 http.listen(serverPort, function() {

@@ -97,4 +97,53 @@ function sendNewMouseLocation(mouse){
     var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
     socket.emit('mouse_location', mouseCoords);
 }
-c.addEventListener('mousemove', sendNewMouseLocation, false);
+//c.addEventListener('mousemove', sendNewMouseLocation, false);
+
+
+
+
+var map = {}; // You could also use an array
+onkeydown = onkeyup = function(e){
+    e = e || event; // to deal with IE
+    if(e.type == 'keydown')
+        map[e.keyCode] = true;
+    if(e.type=='keyup')
+        map[e.keyCode] = false;
+
+}
+var movespeed = 2;
+function move(){
+var vector = {x:0, y:0};
+/*
+    console.log(vector);
+    vector.x -= movespeed*map[37];
+    vector.y -= movespeed*map[38];
+    vector.x += movespeed*map[39];
+    vector.y += movespeed*map[40];
+    console.log(vector);
+    map[37] = 0;
+    map[38] = 0;
+    map[39] = 0;
+    map[40] = 0;
+    */
+    
+    if(map[37]==true){
+        vector.x -=movespeed;
+    }
+    if(map[38]==true){
+        vector.y-=movespeed;
+    }
+    if (map[39]==true){
+        vector.x+=movespeed;
+    }
+    if(map[40]==true){
+        vector.y+=movespeed;
+    }
+    socket.emit('move',vector);
+    
+
+}
+updateRate=100;
+setInterval(move, 1000 / updateRate);
+
+

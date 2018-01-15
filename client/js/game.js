@@ -11,8 +11,8 @@ Game.prototype.handleNetwork = function(socket) {
   socket.on('game_state', function(message){
     nearby_objects = message.nearby_objects;
     my_absolute_coord = message.my_absolute_coord;
-    console.log(message.my_absolute_coord);
-    console.log(message.nearby_objects);
+    //console.log(message.my_absolute_coord);
+    //console.log(message.nearby_objects);
   })
   // This is where you receive all socket messages
 }
