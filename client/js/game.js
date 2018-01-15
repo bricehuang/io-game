@@ -17,6 +17,8 @@ Game.prototype.handleNetwork = function(socket) {
     nearby_bullets = message.nearby_bullets;
     nearby_powerups = message.nearby_powerups;
     my_absolute_coord = message.my_absolute_coord;
+    my_health = message.my_health;
+
     // console.log(message.my_absolute_coord);
     // console.log(message.nearby_players);
     // console.log(message.nearby_bullets);
@@ -61,11 +63,13 @@ function drawObjects(gfx) {
     var centerY = screenHeight/2 + player.y;
     var radius = 30;
     gfx.fillText(player.name, centerX, centerY+4);
+    gfx.fillText(player.health, centerX, centerY-36);
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
     gfx.closePath();
   }
+
   // bullets
   for (var i=0; i<nearby_bullets.length; i++) {
     var bullet = nearby_bullets[i];
