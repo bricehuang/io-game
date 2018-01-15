@@ -6,11 +6,17 @@ var util    = require('./lib/util');
 
 var config  = require('./config.json');
 var players = [];
+
 var powerups = [];
+
+var bullets = [];
+
 
 app.use(express.static(__dirname + '/../client'));
 
 var ARENA_RADIUS = 1500;
+var BULLET_AGE = 60;
+var BULLET_SPEED = 10;
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -49,13 +55,25 @@ io.on('connection', function (socket) {
 
 
 
-  
+
 
   socket.on('window_resized', function(dimensions){
     currentPlayer.windowWidth = dimensions.windowWidth;
     currentPlayer.windowHeight = dimensions.windowHeight;
   })
 
+  socket.on('fire', function(vector){
+    var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+    var normalizedVector = {x: vector.x/length, y: vector.y/length};
+    newBullet = {
+      x: currentPlayer.x + normalizedVector.x*40,
+      y: currentPlayer.y + normalizedVector.y*40,
+      xHeading: normalizedVector.x,
+      yHeading: normalizedVector.y,
+      timeLeft: BULLET_AGE,
+    }
+    bullets.push(newBullet);
+  })
 
 });
 
@@ -107,16 +125,16 @@ function spawnPowerup(){
 function movePlayer(player){
   var vx = 100*player.velocity.x;
   var vy = 100*player.velocity.y;
-  
+
   var speed = Math.sqrt(vx*vx+vy*vy);
   if(speed>0){
-  player.velocity.x = player.velocity.x - (vx/speed)*friction; 
+  player.velocity.x = player.velocity.x - (vx/speed)*friction;
   player.velocity.y = player.velocity.y - (vy/speed)*friction;
   }
-  
+
   player.x += player.velocity.x;
   player.y += player.velocity.y;
-  
+
   /*
   var x = player.target.x;
   var y = player.target.y;
@@ -140,11 +158,9 @@ function movePlayer(player){
   }
   player.x +=changeX;
   player.y +=changeY;
-<<<<<<< HEAD
-  
-*/
+  */
 
-//Move to boundary if outside
+  //Move to boundary if outside
   var distFromCenter = Math.sqrt(player.x*player.x + player.y*player.y);
   if (distFromCenter > ARENA_RADIUS-playerRadius) {
     player.x *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
@@ -154,15 +170,37 @@ function movePlayer(player){
     player.velocity.y = newVelocity.y;
     player.x+=player.velocity.x;
     player.y+=player.velocity.y;
-
-
-
   }
 
 
   //player.target.x = player.x;
   //player.target.y = player.y;
 
+}
+
+function moveBullet(bullet){
+  // moves a bullet, and returns whether the bullet is still alive
+  // (i.e. has not run out of time or escaped the arena)
+  var changeX = bullet.xHeading * BULLET_SPEED;
+  var changeY = bullet.yHeading * BULLET_SPEED;
+  bullet.x += changeX;
+  bullet.y += changeY;
+  bullet.timeLeft -= 1;
+  var isAlive = (bullet.timeLeft > 0 && Math.sqrt(bullet.x*bullet.x+bullet.y*bullet.y) <= ARENA_RADIUS)
+  return isAlive;
+}
+function moveAllBullets() {
+  var indicesOfDeadBullets = [];
+  for (var i=0; i<bullets.length; i++) {
+    bullet = bullets[i];
+    if (!moveBullet(bullet)) {
+      indicesOfDeadBullets.push(i);
+    }
+  }
+  // remove dead bullets
+  for (var j=indicesOfDeadBullets.length-1; j>=0; j--) {
+    bullets.splice(indicesOfDeadBullets[j], 1);
+  }
 }
 
 var serverPort = process.env.PORT || config.port;
@@ -193,11 +231,22 @@ function sendView(player) {
       allPlayers.push(current);
     }
   }
+  var nearbyBullets = [];
+  for (var i=0; i<bullets.length; i++) {
+    var relX = bullets[i].x - player.x;
+    var relY = bullets[i].y - player.y;
+    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
+      var current = {x:relX, y: relY};
+      nearbyBullets.push(current);
+    }
+  }
+
   player.socket.emit(
     'game_state',
     {
       my_absolute_coord: {x: player.x, y:player.y},
-      nearby_objects: allPlayers
+      nearby_players: allPlayers,
+      nearby_bullets: nearbyBullets,
     }
   );
 }
@@ -206,6 +255,7 @@ function moveLoops(){
     movePlayer(players[i]);
     sendView(players[i]);
   }
+  moveAllBullets();
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);

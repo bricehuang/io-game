@@ -129,7 +129,7 @@ var vector = {x:0, y:0};
     map[39] = 0;
     map[40] = 0;
     */
-    
+
     if(map[37]==true){
         vector.x -=movespeed;
     }
@@ -144,13 +144,11 @@ var vector = {x:0, y:0};
     }
     console.log(vector);
     socket.emit('move',vector);
-    
+
 
 }
 updateRate=100;
 setInterval(move, 1000 / updateRate);
-
-
 
 
 function resize() {
@@ -163,3 +161,9 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
+function sendClick(mouse) {
+    if (!socket) return;
+    var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
+    socket.emit('fire', mouseCoords);
+}
+c.addEventListener('click', sendClick, false);
