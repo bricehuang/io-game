@@ -20,7 +20,7 @@ app.use(express.static(__dirname + '/../client'));
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
-  nextId = players.size;
+  // nextId = players.size;
   currentPlayer = {
     name:config.DEFAULT_NAME,
     x:0,
@@ -28,7 +28,7 @@ io.on('connection', function (socket) {
     socket:socket,
     windowHeight : config.DEFAULT_WINDOW_HEIGHT,
     windowWidth  : config.DEFAULT_WINDOW_WIDTH,
-    id : nextId,
+    // id : nextId,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
     radius: config.PLAYER_RADIUS,
@@ -39,36 +39,40 @@ io.on('connection', function (socket) {
   players.set(socket.id,currentPlayer);
 
   socket.on('player_information', function(data){
-    currentPlayer.name         = data.name;
-    currentPlayer.windowWidth  = data.windowWidth;
-    currentPlayer.windowHeight = data.windowHeight;
+    player = players.get(socket.id);
+    if (!player) return;
+    player.name         = data.name;
+    player.windowWidth  = data.windowWidth;
+    player.windowHeight = data.windowHeight;
   });
 
   socket.on('mouse_location', function(message){
-    currentPlayer.target = {x:message.x,y:message.y};
-    var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
-    socket.emit('bearing', bearing);
-    });
-  socket.on('move', function(message){
-    currentPlayer.velocity.x += message.x;
-    currentPlayer.velocity.y += message.y;
+    player = players.get(socket.id);
+    if (!player) return;
+    player.target = {x:message.x,y:message.y};
+    // var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
+    // socket.emit('bearing', bearing);
   });
-
-
-
-
-
+  socket.on('move', function(message){
+    player = players.get(socket.id);
+    if (!player) return;
+    player.velocity.x += message.x;
+    player.velocity.y += message.y;
+  });
   socket.on('window_resized', function(dimensions){
-    currentPlayer.windowWidth = dimensions.windowWidth;
-    currentPlayer.windowHeight = dimensions.windowHeight;
+    player = players.get(socket.id);
+    if (!player) return;
+    player.windowWidth = dimensions.windowWidth;
+    player.windowHeight = dimensions.windowHeight;
   })
-
   socket.on('fire', function(vector){
+    player = players.get(socket.id);
+    if (!player) return;
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
     newBullet = {
-      x: currentPlayer.x + normalizedVector.x*40,
-      y: currentPlayer.y + normalizedVector.y*40,
+      x: player.x + normalizedVector.x*40,
+      y: player.y + normalizedVector.y*40,
       xHeading: normalizedVector.x,
       yHeading: normalizedVector.y,
       timeLeft: config.BULLET_AGE,
@@ -80,8 +84,8 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function(){
     console.log('user disconnected');
-    if (currentPlayer.socket.id in players){
-      players.delete(currentPlayer.socket.id);
+    if (socket.id in players){
+      players.delete(socket.id);
     }
   })
 
@@ -309,7 +313,7 @@ function moveLoops(){
   var keysOfPlayersToExpel = [];
   for (var key of players.keys()) {
     var player = players.get(key);
-    if (player.health < 0) {
+    if (player.health <= 0) {
       keysOfPlayersToExpel.push(key);
     }
   }
@@ -330,5 +334,5 @@ http.listen(serverPort, function() {
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
 var spawnRate = 0.5;
-setInterval(spawnPowerup, 1000);
+setInterval(spawnPowerup, 1000 / spawnRate);
 

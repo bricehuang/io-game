@@ -122,6 +122,7 @@ onkeydown = onkeyup = function(e){
 var movespeed = 0.1;
 function move(){
 var vector = {x:0, y:0};
+    if (!socket) return;
 /*
     console.log(vector);
     vector.x -= movespeed*map[37];
@@ -147,7 +148,7 @@ var vector = {x:0, y:0};
     if(map[83]==true){
         vector.y+=movespeed;
     }
-    console.log(vector);
+    console.log("moving: " + JSON.stringify(vector));
     socket.emit('move',vector);
 
 
