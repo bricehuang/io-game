@@ -53,8 +53,8 @@ function movePlayer(player){
     speed = (dist-20)* (maxSpeed)/30;
   }
   var deg = Math.atan2(x,y);
-  var changeX = speed*cos(deg);
-  var changeY = speed*sin(deg);
+  var changeX = speed*Math.cos(deg);
+  var changeY = speed*Math.sin(deg);
   player.x +=changeX;
   player.y +=changeY;
 }
