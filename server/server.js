@@ -209,31 +209,6 @@ function movePlayer(player){
   player.x += player.velocity.x;
   player.y += player.velocity.y;
 
-  /*
-  var x = player.target.x;
-  var y = player.target.y;
-  var maxSpeed = 6;
-  var speed;
-  var dist = Math.sqrt(x*x+y*y);
-  if(dist>50){
-    speed = maxSpeed;
-  }
-  else if(dist<20){
-    speed = 0;
-  }
-  else{
-    speed = (dist-20)* (maxSpeed)/30;
-  }
-  var changeX = 0;
-  var changeY = 0;
-  if(dist !=0){
-    var changeX = speed*x/dist;
-    var changeY = speed*y/dist;
-  }
-  player.x +=changeX;
-  player.y +=changeY;
-  */
-
   //Move to boundary if outside
   var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
   if (distFromCenter > config.ARENA_RADIUS-config.PLAYER_RADIUS) {
@@ -245,11 +220,6 @@ function movePlayer(player){
     player.x+=player.velocity.x;
     player.y+=player.velocity.y;
   }
-
-
-  //player.target.x = player.x;
-  //player.target.y = player.y;
-
 }
 
 function moveBullet(bullet){
@@ -277,21 +247,13 @@ function moveAllBullets() {
   }
 }
 
-var serverPort = process.env.PORT || config.port;
-http.listen(serverPort, function() {
-  console.log("Server is listening on port " + serverPort);
-});
-
-
-/*
-Players should have fields:
-player.name (string, name)
-player.y (float, absolute x-coordinate in game grid)
-player.y (float, absolute y-coordinate in game grid)
-player.socket (player's socket)
-player.windowWidth (width of player's client window)
-player.windowHeight (height of player's client window)
-*/
+function expelDeadPlayer(player) {
+  // remove currentPlayer from players registry
+  // TODO replace this when players gets set-ified
+  player.socket.emit('death');
+  player.socket.disconnect();
+  players.delete(player.socket.id);
+}
 
 function sendView(player) {
   var allPlayers = [];
@@ -324,9 +286,6 @@ function sendView(player) {
       nearbyBullets.push(current);
     }
   }
-  
-
-
 
   player.socket.emit(
     'game_state',
@@ -339,14 +298,29 @@ function sendView(player) {
   );
 }
 function moveLoops(){
-
+  moveAllBullets();
   for(var key of players.keys()){
     movePlayer(players.get(key));
     sendView(players.get(key));
   }
-  moveAllBullets();
+  collisionDetect();
+  var idsOfPlayersToExpel = [];
+  for (var key of players.keys()) {
+    var player = players.get(key);
+    if (player.health < 0) {
+      idsOfPlayersToExpel.push(player.socket.id);
+    }
+  }
+  for (var i=0; i<idsOfPlayersToExpel.length; i++) {
+    expelDeadPlayer(players.get(idsOfPlayersToExpel[i]));
+  }
 }
+
+var serverPort = process.env.PORT || config.port;
+http.listen(serverPort, function() {
+  console.log("Server is listening on port " + serverPort);
+});
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
-setInterval(collisionDetect, 1000 / updateRate);
-setInterval(spawnPowerup,1000/5);
+setInterval(spawnPowerup, 1000/5);
+

@@ -17,9 +17,10 @@ Game.prototype.handleNetwork = function(socket) {
     nearby_bullets = message.nearby_bullets;
     nearby_powerups = message.nearby_powerups;
     my_absolute_coord = message.my_absolute_coord;
-    // console.log(message.my_absolute_coord);
-    // console.log(message.nearby_players);
-    // console.log(message.nearby_bullets);
+  })
+  socket.on('death', function(message){
+    document.getElementById('gameAreaWrapper').style.display = 'none';
+    document.getElementById('startMenuWrapper').style.display = 'block';
   })
   // This is where you receive all socket messages
 }
