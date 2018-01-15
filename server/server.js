@@ -7,9 +7,11 @@ var util    = require('./lib/util');
 var config  = require('./config.json');
 var players = new Map();
 
-var powerups = [];
+var powerups = new Map();
 
-var bullets = [];
+var bullets = new Map();
+var nextBulletID = 0;
+var nextPowerupID = 0;
 
 
 app.use(express.static(__dirname + '/../client'));
@@ -70,9 +72,10 @@ io.on('connection', function (socket) {
       xHeading: normalizedVector.x,
       yHeading: normalizedVector.y,
       timeLeft: config.BULLET_AGE,
-      radius: config.BULLET_RADIUS
+      radius: config.BULLET_RADIUS,
+      id: nextBulletID++,
     }
-    bullets.push(newBullet);
+    bullets.set(newBullet.id,newBullet);
   })
 
   socket.on('disconnect', function(){
@@ -115,19 +118,19 @@ function collisionDetect(){
       }
     }
   }
-  for(var i = 0;i<players.length;i++){
-    for(var j = 0;j<bullets.length;j++){
-      var player = players[i];
-      var bullet = bullets[j];
+  for(var key1 of players.keys()){
+    for(var key2 of bullets.keys()){
+      var player = players.get(key1);
+      var bullet = bullets.get(key2);
       if(util.collided(player,bullet,config.EPS)){
         registerPlayerBulletHit(player,bullet);
       }
     }
   }
-  for(var i = 0;i<players.length;i++){
-    for(var j = 0;j<powerups.length;j++){
-      var player = players[i];
-      var powerup = powerups[j];
+  for(var key1 of players.keys()){
+    for(var key2 of powerups.keys()){
+      var player = players.get(key1);
+      var powerup = powerups.get(key2);
       if(util.collided(player,powerup,config.EPS)){
         registerPlayerPowerupHit(player,powerup);
       }
@@ -136,10 +139,13 @@ function collisionDetect(){
 }
 function registerPlayerBulletHit(player, bullet){
   console.log("Player Bullet Collision!");
+  player.health-=config.BULLET_COLLISION_DAMAGE;
+  bullets.delete(bullet.id);
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
   console.log("Player Powerup Collision!");
+  powerups.delete(powerup.id);
   return;
 }
 
@@ -182,10 +188,11 @@ function spawnPowerup(){
     x:pos.x,
     y:pos.y,
     radius:config.POWERUP_RADIUS,
+    id:nextPowerupID++,
   }
 
   //console.log("Powerup spawned " + JSON.stringify(nextPowerup));
-  powerups.push(nextPowerup);
+  powerups.set(nextPowerup.id,nextPowerup);
 }
 
 function movePlayer(player){
@@ -264,16 +271,11 @@ function moveBullet(bullet){
   return isAlive;
 }
 function moveAllBullets() {
-  var indicesOfDeadBullets = [];
-  for (var i=0; i<bullets.length; i++) {
-    bullet = bullets[i];
-    if (!moveBullet(bullet)) {
-      indicesOfDeadBullets.push(i);
+  for(var key of bullets.keys()){
+    bullet = bullets.get(key);
+    if(!moveBullet(bullet)){
+      bullets.delete(key);
     }
-  }
-  // remove dead bullets
-  for (var j=indicesOfDeadBullets.length-1; j>=0; j--) {
-    bullets.splice(indicesOfDeadBullets[j], 1);
   }
 }
 
@@ -306,25 +308,24 @@ function sendView(player) {
     }
   }
   var allPowerups = [];
-  for(var i = 0;i<powerups.length;i++){
-    var relX = powerups[i].x - player.x;
-    var relY = powerups[i].y - player.y;
+  for(var key of powerups.keys()){
+    var relX = powerups.get(key).x - player.x;
+    var relY = powerups.get(key).y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
-      var current = {name:powerups[i].type, x:relX, y: relY};
+      var current = {name:powerups.get(key).type, x:relX, y: relY};
       allPowerups.push(current);
     }
   }
   var nearbyBullets = [];
-  for (var i=0; i<bullets.length; i++) {
-    var relX = bullets[i].x - player.x;
-    var relY = bullets[i].y - player.y;
+  for (var key of bullets.keys()) {
+    var relX = bullets.get(key).x - player.x;
+    var relY = bullets.get(key).y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {x:relX, y: relY};
       nearbyBullets.push(current);
     }
   }
-  
 
 
 
