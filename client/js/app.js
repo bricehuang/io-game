@@ -96,12 +96,10 @@ window.addEventListener('resize', function() {
     c.height = screenHeight;
 }, true);
 
-function sendNewMouseLocation(mouse){
+function setMouseCoords(mouse){
     mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
 }
-
-c.addEventListener('mousemove', sendNewMouseLocation, false);
-
+c.addEventListener('mousemove', setMouseCoords, false);
 
 
 

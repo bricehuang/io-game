@@ -6,6 +6,7 @@ var nearby_powerups = [];
 var my_absolute_coord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
+var startPingTime;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -22,7 +23,15 @@ Game.prototype.handleNetwork = function(socket) {
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('startMenuWrapper').style.display = 'block';
   })
+  socket.on('pong', function(){
+    timeNow = Date.now();
+    console.log("Latency: " + (timeNow - startPingTime) + " ms.");
+  })
   // This is where you receive all socket messages
+}
+function checkLatency() {
+    startPingTime = Date.now();
+    this.socket.emit('ping');
 }
 
 Game.prototype.handleLogic = function() {
