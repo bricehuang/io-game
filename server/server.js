@@ -62,6 +62,8 @@ function spawnPlayer(player){
   var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
   player.x = nextCoords.x;
   player.y = nextCoords.y;
+  player.target = nextCoords;
+  console.log("Player spawned at " + JSON.stringify(nextCoords));
 }
 function spawnPowerup(){
   var r = config.mapRadius;
@@ -70,12 +72,8 @@ function spawnPowerup(){
     x:pos.x,
     y:pos.y,
   }
-  console.log("succeeded powerup " + JSON.stringify(nextPowerup));
+  console.log("Powerup spawned " + JSON.stringify(nextPowerup));
   powerups.push(nextPowerup);
-}
-function fak(){
-
-  return {x:35,y:45,};
 }
 function movePlayer(player){
   player.x = player.target.x;
@@ -164,4 +162,4 @@ function moveLoops(){
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
-setInterval(spawnPowerup,1000);
+setInterval(spawnPowerup,5000);

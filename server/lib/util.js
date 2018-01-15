@@ -5,13 +5,12 @@ exports.gaussianCircleGenerate = function(radius, flattenFactor, epsilon){
 	var count = 0;
 	while(count<50){
 	    count++;
-	    console.log("trying");
 	    var x = Math.random()*2-1;
 	    var y = Math.random()*2-1;
 	    var s = x*x+y*y;
 	    if(s>=1) continue;
 	    if(s<epsilon) continue;
-	    console.log("mag " + (-2*Math.log(s)));
+	    //console.log("mag " + (-2*Math.log(s)));
 	    if(-2*flattenFactor*Math.log(s)>=1) continue;
 	    var f = Math.sqrt(-2*Math.log(s)/s);
 	    genX = x*f;
