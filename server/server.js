@@ -81,6 +81,35 @@ io.on('connection', function (socket) {
 });
 
 
+function collisionDetect(){
+  for(var i = 0; i<players.length; i++)
+  {
+    for(var j=i+1; j<players.length; j++)
+    {
+      var dx = players[i].x - players[j].x;
+      var dy = players[i].y - players[j].y;
+      var dist = Math.sqrt(dx*dx+dy*dy);
+      if(dist< 2*playerRadius)
+      {
+        var v1_x = players[i].velocity.x;
+        var v1_y = players[i].velocity.y;
+        var v2_x = players[j].velocity.x;
+        var v2_y = players[j].velocity.y;
+        var impulse = (dx*dx+dy*dy)/(dx*(v2_x-v1_x)+dy*(v2_y-v1_y)+.000001);
+        players[i].velocity.x = v1_x + impulse * dx;
+        players[i].velocity.y = v1_y + impulse * dy;
+        players[j].velocity.x = v2_x - impulse * dx;
+        players[j].velocity.y = v2_y - impulse * dy;
+
+
+      }
+    }
+  }
+
+}
+
+
+
 function sign(x){
   if(x >=0)
     return 1;
@@ -282,4 +311,5 @@ function moveLoops(){
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
+setInterval(collisionDetect, 1000 / updateRate);
 setInterval(spawnPowerup,1000/5);
