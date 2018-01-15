@@ -20,6 +20,9 @@ var BULLET_SPEED = 10;
 var PLAYER_SPEED_LIMIT = 8;
 var FRICTION = 0.1;
 var playerRadius = 30;
+var PLAYER_MAX_HEALTH = 100;
+
+var BODY_COLLISION_DAMAGE = 49;
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -35,10 +38,11 @@ io.on('connection', function (socket) {
     id : nextId,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
+    health: PLAYER_MAX_HEALTH,
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
-  players.set(nextId,currentPlayer);
+  players.set(socket.id,currentPlayer);
 
   socket.on('player_information', function(data){
     currentPlayer.name         = data.name;
@@ -78,6 +82,13 @@ io.on('connection', function (socket) {
     bullets.push(newBullet);
   })
 
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+    // remove currentPlayer from players registry
+    // TODO replace this when players gets set-ified
+    players.delete(currentPlayer.socket.id);
+  })
+
 });
 
 
@@ -96,10 +107,13 @@ function collisionDetect(){
         var v2_x = players.get(key2).velocity.x;
         var v2_y = players.get(key2).velocity.y;
         var impulse = (dx*dx+dy*dy)/(dx*(v2_x-v1_x)+dy*(v2_y-v1_y)+.000001);
+
         players.get(key1).velocity.x = v1_x + impulse * dx;
         players.get(key1).velocity.y = v1_y + impulse * dy;
         players.get(key2).velocity.x = v2_x - impulse * dx;
         players.get(key2).velocity.y = v2_y - impulse * dy;
+        players.get(key1).health -= BODY_COLLISION_DAMAGE;
+        players.get(key2).health -= BODY_COLLISION_DAMAGE;
 
 
       }
@@ -140,7 +154,7 @@ function spawnPowerup(){
   var r = config.mapRadius;
   var pos = util.gaussianCircleGenerate(r,0.01,0.00001);
   var type = config.weaponTypes[Math.floor(Math.random()*config.weaponTypes.length)];
-  
+
   var nextPowerup = {
     type:type,
     x:pos.x,
@@ -264,7 +278,7 @@ function sendView(player) {
     var relY = players.get(key).y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
-      var current = {name:players.get(key).name, x:relX, y: relY};
+      var current = {name:players.get(key).name, x:relX, y: relY, health: players[i].health};
       allPlayers.push(current);
     }
   }
