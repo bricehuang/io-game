@@ -11,10 +11,10 @@ exports.gaussianCircleGenerate = function(radius, flattenFactor, epsilon){
 	    if(s>=1) continue;
 	    if(s<epsilon) continue;
 	    //console.log("mag " + (-2*Math.log(s)));
-	    if(-2*flattenFactor*Math.log(s)>=1) continue;
+	    if(-2*flattenFactor*flattenFactor*Math.log(s)>=1) continue;
 	    var f = Math.sqrt(-2*Math.log(s)/s);
-	    genX = x*f;
-	    genY = y*f;
+	    genX = flattenFactor*x*f;
+	    genY = flattenFactor*y*f;
 	    break;
 	}
 	return {x:radius*genX,y:radius*genY};
@@ -48,7 +48,4 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
 };
 exports.distance = function(firstPoint, secondPoint){
 	return Math.sqrt((firstPoint.x-secondPoint.x)*(firstPoint.x-secondPoint.x)+(firstPoint.y-secondPoint.y)*(firstPoint.y-secondPoint.y));
-};
-exports.fake = function(){
-	return {x:35,y:45,};
 };

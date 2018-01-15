@@ -67,11 +67,15 @@ function spawnPlayer(player){
 }
 function spawnPowerup(){
   var r = config.mapRadius;
-  var pos = util.gaussianCircleGenerate(r,1.0,0.00001);
+  var pos = util.gaussianCircleGenerate(r,0.01,0.00001);
+  var type = config.weaponTypes[Math.floor(Math.random()*config.weaponTypes.length)];
+  
   var nextPowerup = {
+    type:type,
     x:pos.x,
     y:pos.y,
   }
+
   console.log("Powerup spawned " + JSON.stringify(nextPowerup));
   powerups.push(nextPowerup);
 }
@@ -135,7 +139,7 @@ player.windowHeight (height of player's client window)
 */
 
 function sendView(player) {
-  var allPlayers = [];
+  var allObjects = [];
   for(var i=0; i<players.length; i++)
   {
     var relX = players[i].x - player.x;
@@ -143,14 +147,23 @@ function sendView(player) {
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
       var current = {name:players[i].name, x:relX, y: relY};
-      allPlayers.push(current);
+      allObjects.push(current);
+    }
+  }
+  for(var i = 0;i<powerups.length;i++){
+    var relX = powerups[i].x - player.x;
+    var relY = powerups[i].y - player.y;
+    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
+    {
+      var current = {name:powerups[i].type, x:relX, y: relY};
+      allObjects.push(current);
     }
   }
   player.socket.emit(
     'game_state',
     {
       my_absolute_coord: {x: player.x, y:player.y},
-      nearby_objects: allPlayers
+      nearby_objects: allObjects,
     }
   );
 }
@@ -162,4 +175,4 @@ function moveLoops(){
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
-setInterval(spawnPowerup,5000);
+setInterval(spawnPowerup,1000/5);
