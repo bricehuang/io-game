@@ -20,7 +20,7 @@ app.use(express.static(__dirname + '/../client'));
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
-  nextId = players.size;
+  // nextId = players.size;
   currentPlayer = {
     name:config.DEFAULT_NAME,
     x:0,
@@ -28,7 +28,7 @@ io.on('connection', function (socket) {
     socket:socket,
     windowHeight : config.DEFAULT_WINDOW_HEIGHT,
     windowWidth  : config.DEFAULT_WINDOW_WIDTH,
-    id : nextId,
+    // id : nextId,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
     radius: config.PLAYER_RADIUS,
@@ -46,23 +46,17 @@ io.on('connection', function (socket) {
 
   socket.on('mouse_location', function(message){
     currentPlayer.target = {x:message.x,y:message.y};
-    var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
-    socket.emit('bearing', bearing);
-    });
+    // var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
+    // socket.emit('bearing', bearing);
+  });
   socket.on('move', function(message){
     currentPlayer.velocity.x += message.x;
     currentPlayer.velocity.y += message.y;
   });
-
-
-
-
-
   socket.on('window_resized', function(dimensions){
     currentPlayer.windowWidth = dimensions.windowWidth;
     currentPlayer.windowHeight = dimensions.windowHeight;
   })
-
   socket.on('fire', function(vector){
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
@@ -330,5 +324,5 @@ http.listen(serverPort, function() {
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
 var spawnRate = 0.5;
-setInterval(spawnPowerup, 1000);
+setInterval(spawnPowerup, 1000 / spawnRate);
 
