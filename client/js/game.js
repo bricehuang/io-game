@@ -5,7 +5,6 @@ var nearby_bullets = [];
 var nearby_powerups = [];
 var my_absolute_coord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
-
 var ARENA_RADIUS = 1500;
 
 Game.prototype.handleNetwork = function(socket) {
@@ -56,19 +55,34 @@ function drawObjects(gfx) {
   gfx.strokeStyle = '#003300';
   gfx.font = '12px Verdana';
   gfx.textAlign = 'center';
+
   // players
+  gfx.lineWidth=5;
   for (var i=0; i<nearby_players.length; i++) {
     var player = nearby_players[i];
     var centerX = screenWidth/2 + player.x;
     var centerY = screenHeight/2 + player.y;
     var radius = 30;
-    gfx.fillText(player.name, centerX, centerY+4);
+    gfx.fillText(player.name, centerX, centerY-43);
     gfx.fillText(player.health,centerX, centerY-36);
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
     gfx.closePath();
+
+
+    //rotate gun
+    var mag = Math.sqrt(mouseCoords.x * mouseCoords.x+ mouseCoords.y * mouseCoords.y);
+    var dir = {x: mouseCoords.x/mag, y: mouseCoords.y/mag};
+    gfx.beginPath();
+    gfx.moveTo(centerX+10*dir.x, centerY+10*dir.y);
+    gfx.lineTo(centerX-10*dir.x, centerY-10*dir.y);
+    gfx.stroke();
+    gfx.closePath();
+    
+    
   }
+  gfx.lineWidth = 1;
   // bullets
   for (var i=0; i<nearby_bullets.length; i++) {
     var bullet = nearby_bullets[i];
@@ -89,6 +103,9 @@ function drawObjects(gfx) {
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
+    var img = new Image;
+    img.src = "http://basspro.scene7.com/is/image/BassPro/2039364_1307240621304_is?$Prod_PLPThumb$";
+    gfx.drawImage(img, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
   }
 
@@ -115,7 +132,7 @@ function drawBoundary(gfx) {
   }
 }
 
-Game.prototype.handleGraphics = function(gfx) {
+Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
   gfx.fillStyle = '#fbfcfc';
   gfx.fillRect(0, 0, screenWidth, screenHeight);

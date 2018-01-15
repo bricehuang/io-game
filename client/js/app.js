@@ -1,3 +1,6 @@
+
+var mouseCoords={x:0,y:0};
+
 var playerName;
 var playerNameInput = document.getElementById('playerNameInput');
 var socket;
@@ -94,12 +97,10 @@ window.addEventListener('resize', function() {
 }, true);
 
 function sendNewMouseLocation(mouse){
-    if (!socket) return;
-    var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
-    socket.emit('mouse_location', mouseCoords);
+    mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
 }
 
-//c.addEventListener('mousemove', sendNewMouseLocation, false);
+c.addEventListener('mousemove', sendNewMouseLocation, false);
 
 
 
