@@ -75,6 +75,14 @@ io.on('connection', function (socket) {
     bullets.push(newBullet);
   })
 
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+    // remove currentPlayer from players registry
+    // TODO replace this when players gets set-ified
+    var index = players.indexOf(currentPlayer);
+    players.splice(index, 1);
+  })
+
 });
 
 
