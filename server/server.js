@@ -101,7 +101,9 @@ function collisionDetect(){
         var v1_y = players.get(key1).velocity.y;
         var v2_x = players.get(key2).velocity.x;
         var v2_y = players.get(key2).velocity.y;
-        var impulse = (dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
+        var impulse = ( dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
+        if(Math.abs(impulse)<.05)
+          impulse = .05;
 
         players.get(key1).velocity.x = v1_x + impulse * dx;
         players.get(key1).velocity.y = v1_y + impulse * dy;
