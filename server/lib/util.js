@@ -34,16 +34,17 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
 		}
 		genX = curX;
 		genY = curY;
-		if(otherPoints.length==0) break;
+		if(otherPoints.size==0) break;
 		var minDistance = Infinity;
-		for (var pnt of otherPoints){
-			minDistance = Math.min(minDistance,exports.distance({x:curX,y:curY,},pnt));
+		for (var key of otherPoints.keys()){
+			minDistance = Math.min(minDistance,exports.distance({x:curX,y:curY,},otherPoints.get(key)));
 		}
 		if(minDistance>bestDistance){
 			genX = curX;
 			genY = curY;
 		}
 	}
+
 	return {x:genX*radius,y:genY*radius};
 };
 exports.distance = function(firstPoint, secondPoint){

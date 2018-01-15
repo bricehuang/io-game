@@ -5,7 +5,7 @@ var io      = require('socket.io')(http);
 var util    = require('./lib/util');
 
 var config  = require('./config.json');
-var players = [];
+var players = new Map();
 
 var powerups = [];
 
@@ -24,7 +24,7 @@ var playerRadius = 30;
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
-  nextId = players.length;
+  nextId = players.size;
   currentPlayer = {
     name:config.defaultName,
     x:0,
@@ -38,7 +38,7 @@ io.on('connection', function (socket) {
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
-  players.push(currentPlayer);
+  players.set(nextId,currentPlayer);
 
   socket.on('player_information', function(data){
     currentPlayer.name         = data.name;
@@ -82,24 +82,24 @@ io.on('connection', function (socket) {
 
 
 function collisionDetect(){
-  for(var i = 0; i<players.length; i++)
+  for(var key1 of players.keys())
   {
-    for(var j=i+1; j<players.length; j++)
+    for(var key2 of players.keys())
     {
-      var dx = players[i].x - players[j].x;
-      var dy = players[i].y - players[j].y;
+      var dx = players.get(key1).x - players.get(key2).x;
+      var dy = players.get(key1).y - players.get(key2).y;
       var dist = Math.sqrt(dx*dx+dy*dy);
-      if(dist< 2*playerRadius)
+      if(dist< 2*playerRadius && key1<key2)
       {
-        var v1_x = players[i].velocity.x;
-        var v1_y = players[i].velocity.y;
-        var v2_x = players[j].velocity.x;
-        var v2_y = players[j].velocity.y;
+        var v1_x = players.get(key1).velocity.x;
+        var v1_y = players.get(key1).velocity.y;
+        var v2_x = players.get(key2).velocity.x;
+        var v2_y = players.get(key2).velocity.y;
         var impulse = (dx*dx+dy*dy)/(dx*(v2_x-v1_x)+dy*(v2_y-v1_y)+.000001);
-        players[i].velocity.x = v1_x + impulse * dx;
-        players[i].velocity.y = v1_y + impulse * dy;
-        players[j].velocity.x = v2_x - impulse * dx;
-        players[j].velocity.y = v2_y - impulse * dy;
+        players.get(key1).velocity.x = v1_x + impulse * dx;
+        players.get(key1).velocity.y = v1_y + impulse * dy;
+        players.get(key2).velocity.x = v2_x - impulse * dx;
+        players.get(key2).velocity.y = v2_y - impulse * dy;
 
 
       }
@@ -125,15 +125,11 @@ function reflect(x1,y1,x2,y2)
   var a2 = Math.atan2(y2,x2);
   var answer = 2*a2-a1;
   var r = Math.sqrt(x1*x1+y1*y1);
-  console.log(x1+" "+y1);
-  console.log(a1);
-  console.log(a2);
-  console.log(answer);
   return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
 }
 
 function spawnPlayer(player){
-  var numPlayers = players.length;
+  var numPlayers = players.size;
   var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
   player.x = nextCoords.x;
   player.y = nextCoords.y;
@@ -151,7 +147,7 @@ function spawnPowerup(){
     y:pos.y,
   }
 
-  console.log("Powerup spawned " + JSON.stringify(nextPowerup));
+  //console.log("Powerup spawned " + JSON.stringify(nextPowerup));
   powerups.push(nextPowerup);
 }
 
@@ -262,13 +258,13 @@ player.windowHeight (height of player's client window)
 
 function sendView(player) {
   var allPlayers = [];
-  for(var i=0; i<players.length; i++)
+  for(var key of players.keys())
   {
-    var relX = players[i].x - player.x;
-    var relY = players[i].y - player.y;
+    var relX = players.get(key).x - player.x;
+    var relY = players.get(key).y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
-      var current = {name:players[i].name, x:relX, y: relY};
+      var current = {name:players.get(key).name, x:relX, y: relY};
       allPlayers.push(current);
     }
   }
@@ -291,6 +287,9 @@ function sendView(player) {
       nearbyBullets.push(current);
     }
   }
+  
+
+
 
   player.socket.emit(
     'game_state',
@@ -303,9 +302,10 @@ function sendView(player) {
   );
 }
 function moveLoops(){
-  for(var i = 0;i<players.length;i++){
-    movePlayer(players[i]);
-    sendView(players[i]);
+
+  for(var key of players.keys()){
+    movePlayer(players.get(key));
+    sendView(players.get(key));
   }
   moveAllBullets();
 }
