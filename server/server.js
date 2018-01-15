@@ -329,5 +329,6 @@ http.listen(serverPort, function() {
 });
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
-setInterval(spawnPowerup, 1000/5);
+var spawnRate = 0.5;
+setInterval(spawnPowerup, 1000);
 
