@@ -18,9 +18,9 @@ io.on('connection', function (socket) {
     y:0,
     socket:socket,
     windowHeight : config.defaultWindowHeight,
-    windowWidth  : config.defaultWindowWidth;
-    id : nextId;
-    target  : {x:0,y:0}
+    windowWidth  : config.defaultWindowWidth,
+    id : nextId,
+    target  : {x:0,y:0},
   }
   players.push(currentPlayer);
 
@@ -52,9 +52,12 @@ function movePlayer(player){
   else{
     speed = (dist-20)* (maxSpeed)/30;
   }
-  var deg = Math.atan2(x,y);
-  var changeX = speed*Math.cos(deg);
-  var changeY = speed*Math.sin(deg);
+  var changeX = 0;
+  var changeY = 0;
+  if(dist !=0){
+    var changeX = speed*x/dist;
+    var changeY = speed*y/dist;
+  }
   player.x +=changeX;
   player.y +=changeY;
 }
@@ -107,7 +110,7 @@ function sendView(player) {
   {
     var relX = players[i].x - player.x;
     var relY = players[i].y - player.y;
-    if( abs(relX) <= player.windowWidth/2 && abs(relY) <= player.windowHeight/2)
+    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
     {
       var current = {name:players[i].name, x:relX, y: relY};
       allPlayers.push(current);
@@ -117,8 +120,15 @@ function sendView(player) {
   }
   player.socket.emit('game_state', allPlayers);
 }
-
-var updateRate = 10;
-setInterval(sendView, 1000 / updateRate);
+function moveLoops(){
+  for(var i = 0;i<players.length;i++){
+    movePlayer(players[i]);
+    sendView(players[i]);
+    console.log("Player " + i+ " is at " + players[i].x + " " + players[i].y);
+    console.log("Mouse wants to move in the direction of " + players[i].target.x + " " + players[i].target.y);
+  }
+}
+var updateRate = 1;
+setInterval(moveLoops, 1000 / updateRate);
 
 
