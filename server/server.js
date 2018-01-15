@@ -35,6 +35,7 @@ io.on('connection', function (socket) {
     id : nextId,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
+    radius: playerRadius,
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -74,6 +75,7 @@ io.on('connection', function (socket) {
       xHeading: normalizedVector.x,
       yHeading: normalizedVector.y,
       timeLeft: BULLET_AGE,
+      radius:bulletRadius
     }
     bullets.push(newBullet);
   })
@@ -105,9 +107,31 @@ function collisionDetect(){
       }
     }
   }
-
+  for(var i = 0;i<players.length;i++){
+    for(var j = 0;j<bullets.length;j++){
+      var player = players[i];
+      var bullet = bullets[j];
+      if(util.collided(player,bullet,config.eps)){
+        registerPlayerBulletHit(player,bullet,);
+      }
+    }
+  }
+  for(var i = 0;i<players.length;i++){
+    for(var j = 0;j<powerups.length;j++){
+      var player = players[i];
+      var powerup = powerup[j];
+      if(util.collided(player,powerup,config.eps)){
+        registerPlayerPowerupHit(player,powerup);
+      }
+    }
+  }
 }
-
+function registerPlayerBulletHit(player, bullet){
+  return;
+}
+function registerPlayerPowerupHit(player, powerup){
+  return;
+}
 
 
 function sign(x){
@@ -149,6 +173,7 @@ function spawnPowerup(){
     type:type,
     x:pos.x,
     y:pos.y,
+    radius:powerupRadius,
   }
 
   console.log("Powerup spawned " + JSON.stringify(nextPowerup));

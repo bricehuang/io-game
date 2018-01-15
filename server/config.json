@@ -4,5 +4,9 @@
   "defaultWindowWidth": 500,
   "defaultWindowHeight": 500,
   "mapRadius" : 1500,
-  "weaponTypes": ["gun", "bomb"]
+  "weaponTypes": ["gun", "bomb"],
+  "eps": 0.0001,
+  "playerRadius": 30,
+  "powerupRadius": 10,
+  "bulletRadius":  5
 }

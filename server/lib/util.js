@@ -49,3 +49,10 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
 exports.distance = function(firstPoint, secondPoint){
 	return Math.sqrt((firstPoint.x-secondPoint.x)*(firstPoint.x-secondPoint.x)+(firstPoint.y-secondPoint.y)*(firstPoint.y-secondPoint.y));
 };
+exports.collided = function(firstObject, secondObject,epsilon){
+	var dist = exports.distance(firstObject,secondObject);
+	if(distance<=(1+epsilon)*(firstObject.radius+secondObject.radius)){
+		return true;
+	}
+	return false;
+}
