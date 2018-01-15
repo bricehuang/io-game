@@ -96,6 +96,5 @@ window.addEventListener('resize', function() {
 function sendNewMouseLocation(mouse){
     var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
     socket.emit('mouse_location', mouseCoords);
-    console.log("mouse at coordinates: " + JSON.stringify(mouseCoords));
 }
 c.addEventListener('mousemove', sendNewMouseLocation, false);

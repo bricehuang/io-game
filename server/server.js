@@ -25,9 +25,9 @@ io.on('connection', function (socket) {
   players.push(currentPlayer);
 
   socket.on('player_information', function(data){
-    currentPlayer.name         = data.playerName;
-    currentPlayer.windowWidth  = data.playerWidth;
-    currentPlayer.windowHeight = data.playerHeight;
+    currentPlayer.name         = data.name;
+    currentPlayer.windowWidth  = data.windowWidth;
+    currentPlayer.windowHeight = data.windowHeight;
   });
 
   socket.on('mouse_location', function(message){
@@ -114,21 +114,21 @@ function sendView(player) {
     {
       var current = {name:players[i].name, x:relX, y: relY};
       allPlayers.push(current);
-
     }
-
   }
-  player.socket.emit('game_state', allPlayers);
+  player.socket.emit(
+    'game_state',
+    {
+      my_absolute_coord: {x: player.x, y:player.y},
+      nearby_objects: allPlayers
+    }
+  );
 }
 function moveLoops(){
   for(var i = 0;i<players.length;i++){
     movePlayer(players[i]);
     sendView(players[i]);
-    console.log("Player " + i+ " is at " + players[i].x + " " + players[i].y);
-    console.log("Mouse wants to move in the direction of " + players[i].target.x + " " + players[i].target.y);
   }
 }
-var updateRate = 1;
+var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
-
-
