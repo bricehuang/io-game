@@ -2,5 +2,6 @@
   "port": 3000,
   "defaultName": "Allen Liu",
   "defaultWindowWidth": 500,
-  "defaultWindowHeight": 500
+  "defaultWindowHeight": 500,
+  "mapRadius" : 1500
 }

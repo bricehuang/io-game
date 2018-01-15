@@ -2,9 +2,11 @@ var express = require('express');
 var app     = express();
 var http    = require('http').Server(app);
 var io      = require('socket.io')(http);
+var util    = require('./lib/util');
 
 var config  = require('./config.json');
 var players = [];
+var powerups = [];
 
 app.use(express.static(__dirname + '/../client'));
 
@@ -25,6 +27,8 @@ io.on('connection', function (socket) {
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
   }
+  spawnPlayer(currentPlayer);
+  spawnPowerup();
   players.push(currentPlayer);
 
   socket.on('player_information', function(data){
@@ -55,6 +59,7 @@ io.on('connection', function (socket) {
 
 });
 
+
 function sign(x){
   if(x >=0)
     return 1;
@@ -79,6 +84,26 @@ function reflect(x1,y1,x2,y2)
 
 var friction = 0.2;
 var playerRadius = 30;
+
+function spawnPlayer(player){
+  var numPlayers = players.length;
+  var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
+  player.x = nextCoords.x;
+  player.y = nextCoords.y;
+  player.target = nextCoords;
+  console.log("Player spawned at " + JSON.stringify(nextCoords));
+}
+function spawnPowerup(){
+  var r = config.mapRadius;
+  var pos = util.gaussianCircleGenerate(r,1.0,0.00001);
+  var nextPowerup = {
+    x:pos.x,
+    y:pos.y,
+  }
+  console.log("Powerup spawned " + JSON.stringify(nextPowerup));
+  powerups.push(nextPowerup);
+}
+
 function movePlayer(player){
   var vx = 100*player.velocity.x;
   var vy = 100*player.velocity.y;
@@ -184,3 +209,4 @@ function moveLoops(){
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
+setInterval(spawnPowerup,5000);
