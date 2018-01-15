@@ -2,9 +2,11 @@ var express = require('express');
 var app     = express();
 var http    = require('http').Server(app);
 var io      = require('socket.io')(http);
+var util    = require('./lib/util');
 
 var config  = require('./config.json');
 var players = [];
+var powerups = [];
 
 app.use(express.static(__dirname + '/../client'));
 
@@ -22,6 +24,8 @@ io.on('connection', function (socket) {
     id : nextId,
     target  : {x:0,y:0},
   }
+  spawnPlayer(currentPlayer);
+  spawnPowerup();
   players.push(currentPlayer);
 
   socket.on('player_information', function(data){
@@ -37,6 +41,26 @@ io.on('connection', function (socket) {
   });
 
 });
+function spawnPlayer(player){
+  var numPlayers = players.length;
+  var nextCoords = util.uniformCircleGenerate(config.mapRadius,players);
+  player.x = nextCoords.x;
+  player.y = nextCoords.y;
+}
+function spawnPowerup(){
+  var r = config.mapRadius;
+  var pos = util.gaussianCircleGenerate(r,1.0,0.00001);
+  var nextPowerup = {
+    x:pos.x,
+    y:pos.y,
+  }
+  console.log("succeeded powerup " + JSON.stringify(nextPowerup));
+  powerups.push(nextPowerup);
+}
+function fak(){
+
+  return {x:35,y:45,};
+}
 function movePlayer(player){
   var x = player.target.x;
   var y = player.target.y;
@@ -132,3 +156,4 @@ function moveLoops(){
 }
 var updateRate = 60;
 setInterval(moveLoops, 1000 / updateRate);
+setInterval(spawnPowerup,1000);
