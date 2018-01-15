@@ -23,6 +23,7 @@ io.on('connection', function (socket) {
     windowWidth  : config.defaultWindowWidth,
     id : nextId,
     target  : {x:0,y:0},
+    velocity: {x:0,y:0},
   }
   players.push(currentPlayer);
 
@@ -38,8 +39,8 @@ io.on('connection', function (socket) {
     socket.emit('bearing', bearing);
     });
   socket.on('move', function(message){
-    currentPlayer.target.x += message.x;
-    currentPlayer.target.y += message.y;
+    currentPlayer.velocity.x += message.x;
+    currentPlayer.velocity.y += message.y;
   });
 
 
@@ -53,9 +54,43 @@ io.on('connection', function (socket) {
 
 
 });
+
+function sign(x){
+  if(x >=0)
+    return 1;
+  else
+    return -1;
+}
+
+//reflect vector x1,y1 about vector x2,y2
+function reflect(x1,y1,x2,y2)
+{
+  var a1 = Math.atan2(y1,x1);
+
+  var a2 = Math.atan2(y2,x2);
+  var answer = 2*a2-a1;
+  var r = Math.sqrt(x1*x1+y1*y1);
+  console.log(x1+" "+y1);
+  console.log(a1);
+  console.log(a2);
+  console.log(answer);
+  return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
+}
+
+var friction = 0.2;
+var playerRadius = 30;
 function movePlayer(player){
-  player.x = player.target.x;
-  player.y = player.target.y;
+  var vx = 100*player.velocity.x;
+  var vy = 100*player.velocity.y;
+  
+  var speed = Math.sqrt(vx*vx+vy*vy);
+  if(speed>0){
+  player.velocity.x = player.velocity.x - (vx/speed)*friction; 
+  player.velocity.y = player.velocity.y - (vy/speed)*friction;
+  }
+  
+  player.x += player.velocity.x;
+  player.y += player.velocity.y;
   
   /*
   var x = player.target.x;
@@ -86,13 +121,22 @@ function movePlayer(player){
 
 //Move to boundary if outside
   var distFromCenter = Math.sqrt(player.x*player.x + player.y*player.y);
-  if (distFromCenter > ARENA_RADIUS) {
-    player.x *= (.99 * ARENA_RADIUS/distFromCenter);
-    player.y *= (.99* ARENA_RADIUS/distFromCenter);
+  if (distFromCenter > ARENA_RADIUS-playerRadius) {
+    player.x *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
+    player.y *= ( (ARENA_RADIUS-playerRadius)/distFromCenter);
+    newVelocity = reflect(player.velocity.x,player.velocity.y, -player.y, player.x);
+    player.velocity.x = newVelocity.x;
+    player.velocity.y = newVelocity.y;
+    player.x+=player.velocity.x;
+    player.y+=player.velocity.y;
+
+
+
   }
 
-  player.target.x = player.x;
-  player.target.y = player.y;
+
+  //player.target.x = player.x;
+  //player.target.y = player.y;
 
 }
 

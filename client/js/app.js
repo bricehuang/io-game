@@ -104,6 +104,7 @@ function sendNewMouseLocation(mouse){
 
 
 
+
 var map = {}; // You could also use an array
 onkeydown = onkeyup = function(e){
     e = e || event; // to deal with IE
@@ -113,7 +114,7 @@ onkeydown = onkeyup = function(e){
         map[e.keyCode] = false;
 
 }
-var movespeed = 8;
+var movespeed = 0.2;
 function move(){
 var vector = {x:0, y:0};
 /*
