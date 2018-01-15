@@ -19,6 +19,11 @@ function startGame() {
     document.getElementById('startMenuWrapper').style.display = 'none';
     socket = io();
     SetupSocket(socket);
+    socket.emit('player_information',{
+        name: playerName,
+        windowWidth: screenWidth,
+        windowHeight: screenHeight,
+    });
     animloop();
 }
 

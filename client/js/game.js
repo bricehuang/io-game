@@ -3,6 +3,10 @@ function Game() { };
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
+  socket.on('player_information', function(info){
+    // TODO Michael
+  })
+
   socket.on('bearing', function(message){
     console.log('bearing: ' + message);
   })
