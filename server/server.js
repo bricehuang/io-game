@@ -10,6 +10,10 @@ app.use(express.static(__dirname + '/../client'));
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
   // Write your code here
+  socket.on('mouse_location', function(message){
+    var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
+    socket.emit('bearing', bearing);
+  })
 });
 
 var serverPort = process.env.PORT || config.port;

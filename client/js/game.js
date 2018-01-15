@@ -3,6 +3,9 @@ function Game() { };
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
+  socket.on('bearing', function(message){
+    console.log('bearing: ' + message);
+  })
   // This is where you receive all socket messages
 }
 
