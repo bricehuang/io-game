@@ -309,7 +309,7 @@ function moveLoops(){
   var keysOfPlayersToExpel = [];
   for (var key of players.keys()) {
     var player = players.get(key);
-    if (player.health < 0) {
+    if (player.health <= 0) {
       keysOfPlayersToExpel.push(key);
     }
   }
