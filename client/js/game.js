@@ -69,7 +69,7 @@ function drawObjects(gfx) {
     var centerY = screenHeight/2 + player.y;
     var radius = 30;
     gfx.fillText(player.name, centerX, centerY-43);
-    gfx.fillText(player.health,centerX, centerY-36);
+    gfx.fillText(player.health,centerX, centerY+50);
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
