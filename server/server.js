@@ -34,7 +34,8 @@ io.on('connection', function (socket) {
     health: config.PLAYER_START_HEALTH,
     maxHealth: config.PLAYER_MAX_HEALTH,
     kills: 0,
-    lastfire: -1
+    lastfire: -1,
+    ammo: 0
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -74,7 +75,7 @@ io.on('connection', function (socket) {
   socket.on('fire', function(vector){
     player = players.get(socket.id);
     if (!player) return;
-    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS) {
+    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.ammo>0) {
       var length = util.magnitude(vector);
       var normalizedVector = {x: vector.x/length, y: vector.y/length};
       newBullet = {
@@ -89,6 +90,7 @@ io.on('connection', function (socket) {
       }
       bullets.set(newBullet.id,newBullet);
       player.lastfire = Date.now();
+      player.ammo--;
     }
   })
 
@@ -165,6 +167,9 @@ function registerPlayerPowerupHit(player, powerup){
     player.health = Math.min(
       player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
     );
+  }
+  if(powerup.type=="gun"){
+    player.ammo+=5;
   }
   powerups.delete(powerup.id);
   return;
