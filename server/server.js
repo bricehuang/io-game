@@ -12,7 +12,6 @@ var powerups = new Map();
 var bullets = new Map();
 var nextBulletID = 0;
 var nextPowerupID = 0;
-var ACCELERATION_MAGNITUDE = 0.15;
 
 
 app.use(express.static(__dirname + '/../client'));
@@ -58,8 +57,8 @@ io.on('connection', function (socket) {
     if (message[3]) {acceleration.y += 1};
     var magnitude = Math.sqrt(acceleration.x*acceleration.x+acceleration.y*acceleration.y);
     if (magnitude > 0) {
-      acceleration.x *= ACCELERATION_MAGNITUDE/magnitude;
-      acceleration.y *= ACCELERATION_MAGNITUDE/magnitude;
+      acceleration.x *= config.ACCELERATION_MAGNITUDE/magnitude;
+      acceleration.y *= config.ACCELERATION_MAGNITUDE/magnitude;
     }
     player.acceleration = acceleration;
   });
@@ -340,8 +339,8 @@ var serverPort = process.env.PORT || config.port;
 http.listen(serverPort, function() {
   console.log("Server is listening on port " + serverPort);
 });
-var updateRate = 60;
-setInterval(moveLoops, 1000 / updateRate);
+
+setInterval(moveLoops, 1000 / config.FRAME_RATE);
 var spawnRate = 0.5;
 setInterval(spawnPowerup, 1000 / spawnRate);
 
