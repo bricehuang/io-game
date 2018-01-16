@@ -58,7 +58,7 @@ io.on('connection', function (socket) {
     if (message[1]) {acceleration.y -= 1};
     if (message[2]) {acceleration.x += 1};
     if (message[3]) {acceleration.y += 1};
-    var magnitude = Math.sqrt(acceleration.x*acceleration.x+acceleration.y*acceleration.y);
+    var magnitude = util.magnitude(acceleration);
     if (magnitude > 0) {
       acceleration.x *= config.ACCELERATION_MAGNITUDE/magnitude;
       acceleration.y *= config.ACCELERATION_MAGNITUDE/magnitude;
@@ -77,7 +77,7 @@ io.on('connection', function (socket) {
 
     else if(Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS)
     {
-      var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+      var length = util.magnitude(vector);
       var normalizedVector = {x: vector.x/length, y: vector.y/length};
       newBullet = {
         corrPlayerID: socket.id,
@@ -117,7 +117,7 @@ function collisionDetect(){
     {
       var dx = players.get(key1).x - players.get(key2).x;
       var dy = players.get(key1).y - players.get(key2).y;
-      var dist = Math.sqrt(dx*dx+dy*dy);
+      var dist = util.magnitude({x:dx, y:dy});
 
       if(dist< 2*config.PLAYER_RADIUS && key1<key2)
 
@@ -195,7 +195,7 @@ function reflect(x1,y1,x2,y2)
 
   var a2 = Math.atan2(y2,x2);
   var answer = 2*a2-a1;
-  var r = Math.sqrt(x1*x1+y1*y1);
+  var r = util.magnitude({x:x1, y:y1});
   return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
 }
 
@@ -230,12 +230,12 @@ function movePlayer(player){
   var vx = player.velocity.x + player.acceleration.x;
   var vy = player.velocity.y + player.acceleration.y;
 
-  var speedBeforeFricton = Math.sqrt(vx*vx+vy*vy);
+  var speedBeforeFricton = util.magnitude({x:vx, y:vy});
   if(speedBeforeFricton>0){
     vx -= (vx/speedBeforeFricton)*config.FRICTION;
     vy -= (vy/speedBeforeFricton)*config.FRICTION;
   }
-  var speed = Math.sqrt(vx*vx+vy*vy);
+  var speed = util.magnitude({x:vx, y:vy});
   if (speed > config.PLAYER_SPEED_LIMIT) {
     vx *= config.PLAYER_SPEED_LIMIT/speed;
     vy *= config.PLAYER_SPEED_LIMIT/speed;

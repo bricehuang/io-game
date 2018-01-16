@@ -47,8 +47,11 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
 
 	return {x:genX*radius,y:genY*radius};
 };
+exports.magnitude = function(point){
+	return Math.sqrt(point.x*point.x + point.y*point.y);
+}
 exports.distance = function(firstPoint, secondPoint){
-	return Math.sqrt((firstPoint.x-secondPoint.x)*(firstPoint.x-secondPoint.x)+(firstPoint.y-secondPoint.y)*(firstPoint.y-secondPoint.y));
+	return exports.magnitude({x: firstPoint.x-secondPoint.x, y: firstPoint.y-secondPoint.y});
 };
 exports.collided = function(firstObject, secondObject,epsilon){
 	var dist = exports.distance(firstObject,secondObject);
