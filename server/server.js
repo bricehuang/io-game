@@ -73,33 +73,23 @@ io.on('connection', function (socket) {
   socket.on('fire', function(vector){
     player = players.get(socket.id);
     if (!player) return;
-    else if( Date.now() - player.lastfire >50)
+
+    else if(Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS)
     {
-    var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
-    var normalizedVector = {x: vector.x/length, y: vector.y/length};
-    newBullet = {
-      corrPlayerID: socket.id,
-      x: player.x + normalizedVector.x*40,
-      y: player.y + normalizedVector.y*40,
-      xHeading: normalizedVector.x,
-      yHeading: normalizedVector.y,
-      timeLeft: config.BULLET_AGE,
-      radius: config.BULLET_RADIUS,
-      id: nextBulletID++,
-    }
-    bullets.set(newBullet.id,newBullet);
-    player.lastfire = Date.now();
-    }
-    else
-    {
-      if(players.has(socket.id))
-      {
-        players.delete(socket.id);
-        console.log('death');
-        socket.emit('death');
+      var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+      var normalizedVector = {x: vector.x/length, y: vector.y/length};
+      newBullet = {
+        corrPlayerID: socket.id,
+        x: player.x + normalizedVector.x*40,
+        y: player.y + normalizedVector.y*40,
+        xHeading: normalizedVector.x,
+        yHeading: normalizedVector.y,
+        timeLeft: config.BULLET_AGE,
+        radius: config.BULLET_RADIUS,
+        id: nextBulletID++,
       }
-      
-      
+      bullets.set(newBullet.id,newBullet);
+      player.lastfire = Date.now();
     }
   })
 
