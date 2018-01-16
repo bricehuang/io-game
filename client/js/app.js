@@ -15,8 +15,8 @@ var KEY_ENTER = 13;
 
 var game = new Game();
 
-var gunImg = new Image();
-gunImg.src = 'js/images/gun.jpg';
+var bulletImg = new Image();
+bulletImg.src = 'js/images/bullet.jpg';
 var bombImg = new Image();
 // TODO bombImg.src
 var healthpackImg = new Image();
