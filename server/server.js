@@ -73,7 +73,7 @@ io.on('connection', function (socket) {
   socket.on('fire', function(vector){
     player = players.get(socket.id);
     if (!player) return;
-    else if( Date.now() - player.lastfire >1000)
+    else if( Date.now() - player.lastfire >50)
     {
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
@@ -92,10 +92,13 @@ io.on('connection', function (socket) {
     }
     else
     {
-      if(socket.id in players.keys())
+      if(players.has(socket.id))
+      {
         players.delete(socket.id);
-      console.log('death');
-      socket.emit('death');
+        console.log('death');
+        socket.emit('death');
+      }
+      
       
     }
   })
@@ -107,7 +110,8 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function(){
     console.log('user disconnected');
-    if (socket.id in players){
+    if(players.has(socket.id))
+      {
       players.delete(socket.id);
     }
   })
