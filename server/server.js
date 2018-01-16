@@ -11,6 +11,7 @@ var powerups = new Map();
 var bullets = new Map();
 var nextBulletID = 0;
 var nextPowerupID = 0;
+var leaderboard = [];
 
 app.use(express.static(__dirname + '/../client'));
 
@@ -25,7 +26,7 @@ io.on('connection', function (socket) {
     socket:socket,
     windowHeight : config.DEFAULT_WINDOW_HEIGHT,
     windowWidth  : config.DEFAULT_WINDOW_WIDTH,
-    // id : nextId,
+    id: socket.id,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
     acceleration: {x:0, y:0},
@@ -309,17 +310,30 @@ function sendView(player) {
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
       nearbyBullets: nearbyBullets,
-      myScore: player.kills
+      myScore: player.kills,
+      globalLeaderboard : leaderboard,
+      yourID: player.id,
     }
   );
 }
+function updateLeaderboard(){
+  leaderboard = [];
+  for(var key of players.keys()){
+    player = players.get(key)
+    leaderboard.push({name:player.name,score:player.kills, id:player.id,});
+
+  }
+  leaderboard.sort(function(a,b){return b.score-a.score});
+  leaderboard = leaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,leaderboard.length));
+}
 function moveLoops(){
   moveAllBullets();
+  collisionDetect();
+  updateLeaderboard();
   for (var key of players.keys()) {
     movePlayer(players.get(key));
     sendView(players.get(key));
   }
-  collisionDetect();
   var keysOfPlayersToExpel = [];
   for (var key of players.keys()) {
     var player = players.get(key);

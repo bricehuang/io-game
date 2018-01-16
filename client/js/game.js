@@ -8,6 +8,8 @@ var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
 var startPingTime;
 var numKills;
+var leaderboard =[];
+var myID;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -19,6 +21,8 @@ Game.prototype.handleNetwork = function(socket) {
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
     numKills = message.myScore;
+    leaderboard = message.globalLeaderboard;
+    myID = message.yourID;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -38,20 +42,7 @@ Game.prototype.handleLogic = function() {
 
 function drawBackgroundGrid(gfx) {
 
-  gfx.fillStyle = '#142DCC';
   gfx.strokeStyle = '#003300';
-  gfx.font = '100px Verdana'
-  gfx.textAlign = 'center'
-  //gfx.fillText()
-  if(typeof numKills != 'undefined'){
-    if(numKills==1){
-      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
-    }
-    else{
-      gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
-    }
-  }
-  gfx.stroke();
   var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
   if (smallestXLine < 0){
     smallestXLine += GRID_OFFSET;
@@ -89,10 +80,10 @@ function drawObjects(gfx) {
     var color = '#00ff00';
     var h = player.health;
 
-    var red = Math.round(((100-h)*255/100)).toString(16);
+    var red = Math.round((Math.min(200-2*h,100)*255/100)).toString(16);
     if(red.length==1)
       red = '0'+red;
-    var green = Math.round((h*255/100)).toString(16);
+    var green = Math.round((Math.min(2*h,100)*255/100)).toString(16);
     if(green.length==1)
       green = '0'+green;
     var blue = '00';
@@ -164,6 +155,7 @@ function getPowerupIcon(type) {
 }
 
 function drawBoundary(gfx) {
+
   var x = Math.abs(myAbsoluteCoord.x)+screenWidth/2; // max absolute x on screen
   var y = Math.abs(myAbsoluteCoord.y)+screenHeight/2; // max absolute y on screen
   if (Math.sqrt(x*x+y*y) >= ARENA_RADIUS) {
@@ -180,6 +172,52 @@ function drawBoundary(gfx) {
     gfx.closePath();
   }
 }
+function drawForeground(gfx){
+  gfx.fillStyle = '#142DCC';
+  gfx.strokeStyle = '#003300';
+  gfx.font = '100px Verdana'
+  gfx.textAlign = 'center'
+  //gfx.fillText()
+  if(typeof numKills != 'undefined'){
+    if(numKills==1){
+      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
+    }
+    else{
+      gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
+    }
+  }
+  gfx.stroke();
+  gfx.font = '48px Verdana';
+  gfx.textAlign = 'center';
+  leaderboardOffset = {x:100,y:30};
+  startTable = {x: screenWidth-300,y:100};
+  gfx.fillText('Leaderboard', startTable.x+leaderboardOffset.x,startTable.y);
+  gfx.textAlign = 'left';
+
+  gfx.font = '24px Verdana';
+  var onLeaderboard = false;
+  for(var i =  0;i<leaderboard.length;i++){
+    gfx.fillStyle = '#142DCC';
+    if(leaderboard[i].id==myID){
+      onLeaderboard = true;
+      gfx.fillStyle = 'red';
+    }
+    gfx.textAlign = 'left';
+    gfx.fillText(leaderboard[i].name,startTable.x,startTable.y+(i+1)*leaderboardOffset.y);
+    gfx.textAlign = 'right';
+    gfx.fillText(leaderboard[i].score,startTable.x+2*leaderboardOffset.x,startTable.y+(i+1)*leaderboardOffset.y);
+  }
+  if(!onLeaderboard){
+
+    gfx.fillStyle = 'red';
+    gfx.textAlign = 'left';
+    gfx.fillText(leaderboard[i].name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
+    gfx.textAlign = 'right';
+    gfx.fillText(leaderboard[i].score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
+
+  }
+  gfx.stroke();
+}
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
@@ -189,4 +227,5 @@ Game.prototype.handleGraphics = function(gfx,mouse) {
   drawBackgroundGrid(gfx);
   drawObjects(gfx);
   drawBoundary(gfx);
+  drawForeground(gfx);
 }
