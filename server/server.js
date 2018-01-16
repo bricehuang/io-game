@@ -160,9 +160,10 @@ function registerPlayerBulletHit(player, bullet){
 }
 function registerPlayerPowerupHit(player, powerup){
   console.log("Player Powerup Collision!");
-  player.health += config.HEALTHPACK_HP_GAIN;
-  if (player.health > player.maxHealth) {
-    player.health = player.maxHealth;
+  if (powerup.type == "healthpack") {
+    player.health = Math.min(
+      player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
+    );
   }
   powerups.delete(powerup.id);
   return;
@@ -192,6 +193,7 @@ function spawnPlayer(player){
   console.log("Player spawned at " + JSON.stringify(nextCoords));
 }
 function spawnPowerup(){
+  if (powerups.size >= config.MAX_POWERUPS) {return; }
   var r = config.MAP_RADIUS;
   var pos = util.gaussianCircleGenerate(r,0.01,0.00001);
   var type = config.WEAPON_TYPES[Math.floor(Math.random()*config.WEAPON_TYPES.length)];
@@ -271,26 +273,29 @@ function expelDeadPlayer(player) {
 function sendView(player) {
   var allPlayers = [];
   for (var key of players.keys()) {
-    var relX = players.get(key).x - player.x;
-    var relY = players.get(key).y - player.y;
+    var otherPlayer = players.get(key);
+    var relX = otherPlayer.x - player.x;
+    var relY = otherPlayer.y - player.y;
     if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
-      var current = {name:players.get(key).name, x:relX, y: relY, health: players.get(key).health};
+      var current = {name:otherPlayer.name, x:relX, y: relY, health: otherPlayer.health};
       allPlayers.push(current);
     }
   }
   var allPowerups = [];
   for (var key of powerups.keys()) {
-    var relX = powerups.get(key).x - player.x;
-    var relY = powerups.get(key).y - player.y;
+    var powerup = powerups.get(key);
+    var relX = powerup.x - player.x;
+    var relY = powerup.y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
-      var current = {name:powerups.get(key).type, x:relX, y: relY};
+      var current = {type:powerup.type, x:relX, y: relY};
       allPowerups.push(current);
     }
   }
   var nearbyBullets = [];
   for (var key of bullets.keys()) {
-    var relX = bullets.get(key).x - player.x;
-    var relY = bullets.get(key).y - player.y;
+    var bullet = bullets.get(key);
+    var relX = bullet.x - player.x;
+    var relY = bullet.y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {x:relX, y: relY};
       nearbyBullets.push(current);
@@ -338,6 +343,5 @@ http.listen(serverPort, function() {
 });
 
 setInterval(moveLoops, 1000 / config.FRAME_RATE);
-var spawnRate = 0.5;
-setInterval(spawnPowerup, 1000 / spawnRate);
+setInterval(spawnPowerup, 1000 / config.POWERUP_SPAWN_PER_SECOND);
 

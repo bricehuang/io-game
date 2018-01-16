@@ -14,7 +14,13 @@ c.width = screenWidth; c.height = screenHeight;
 var KEY_ENTER = 13;
 
 var game = new Game();
+
 var gunImg = new Image();
+gunImg.src = 'js/images/gun.jpg';
+var bombImg = new Image();
+// TODO bombImg.src
+var healthpackImg = new Image();
+healthpackImg.src = 'js/images/healthpack.ico';
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
@@ -27,7 +33,6 @@ function startGame() {
     windowWidth: screenWidth,
     windowHeight: screenHeight,
   });
-  gunImg.src = 'js/images/gun.jpg';
   animloop();
 }
 

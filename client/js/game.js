@@ -121,18 +121,28 @@ function drawObjects(gfx) {
     gfx.closePath();
   }
 
-  //powerups
+  // powerups
   for (var i=0; i<nearbyPowerups.length; i++) {
-    var bullet = nearbyPowerups[i];
-    var centerX = screenWidth/2 + bullet.x;
-    var centerY = screenHeight/2 + bullet.y;
+    var powerup = nearbyPowerups[i];
+    var centerX = screenWidth/2 + powerup.x;
+    var centerY = screenHeight/2 + powerup.y;
     var radius = 10;
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
 
-    gfx.drawImage(gunImg, centerX - 5 , centerY - 5,10,10);
+    var powerupImg = getPowerupIcon(powerup.type);
+    gfx.drawImage(powerupImg, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
+  }
+}
+
+function getPowerupIcon(type) {
+  switch(type) {
+    case "gun": return gunImg;
+    case "bomb": return bombImg;
+    case "healthpack": return healthpackImg;
+    default: return new Image();
   }
 }
 
