@@ -23,7 +23,6 @@ Game.prototype.handleNetwork = function(socket) {
     //numKills = message.myScore;
     leaderboard = message.globalLeaderboard;
     myStats = message.yourStats;
-    console.log("message " + message.yourStats);
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -174,7 +173,6 @@ function drawBoundary(gfx) {
   }
 }
 function drawForeground(gfx){
-  console.log(JSON.stringify(myStats));
   gfx.fillStyle = '#142DCC';
   gfx.strokeStyle = '#003300';
   gfx.font = '100px Verdana'

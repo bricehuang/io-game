@@ -127,8 +127,16 @@ function collisionDetect(){
         players.get(key1).velocity.y = v1_y + impulse * dy;
         players.get(key2).velocity.x = v2_x - impulse * dx;
         players.get(key2).velocity.y = v2_y - impulse * dy;
+        boolean firstAlive = (players.get(key1).health>0);
+        boolean secondAlive = (players.get(key2).health>0);
         players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
         players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
+        if(players.get(key1).health<=0 && firstAlive){
+          players.get(key2).kills++;
+        }
+        if(players.get(key2).health<=0 && secondAlive){
+          players.get(key1).kills++;
+        }
       }
     }
   }
@@ -154,8 +162,9 @@ function collisionDetect(){
 
 function registerPlayerBulletHit(player, bullet){
   console.log("Player Bullet Collision!");
+  boolean wasAlive = (player.health>0);
   player.health-=config.BULLET_COLLISION_DAMAGE;
-  if (player.health <= 0) {
+  if (player.health <= 0&&wasAlive) {
     players.get(bullet.corrPlayerID).kills++;
   }
   bullets.delete(bullet.id);
