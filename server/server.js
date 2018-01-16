@@ -302,7 +302,7 @@ function sendView(player) {
       nearbyBullets.push(current);
     }
   }
-
+  console.log("yourstats " + JSON.stringify({name:player.name, score:player.kills,id:player.id}));
   player.socket.emit(
     'gameState',
     {
@@ -310,9 +310,8 @@ function sendView(player) {
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
       nearbyBullets: nearbyBullets,
-      myScore: player.kills,
       globalLeaderboard : leaderboard,
-      yourID: player.id,
+      yourStats: {name:player.name, score:player.kills,id:player.id}
     }
   );
 }

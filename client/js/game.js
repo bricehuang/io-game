@@ -7,9 +7,9 @@ var myAbsoluteCoord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
 var startPingTime;
-var numKills;
+//var numKills;
 var leaderboard =[];
-var myID;
+var myStats;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -20,9 +20,10 @@ Game.prototype.handleNetwork = function(socket) {
     nearbyBullets = message.nearbyBullets;
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
-    numKills = message.myScore;
+    //numKills = message.myScore;
     leaderboard = message.globalLeaderboard;
-    myID = message.yourID;
+    myStats = message.yourStats;
+    console.log("message " + message.yourStats);
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -173,11 +174,13 @@ function drawBoundary(gfx) {
   }
 }
 function drawForeground(gfx){
+  console.log(JSON.stringify(myStats));
   gfx.fillStyle = '#142DCC';
   gfx.strokeStyle = '#003300';
   gfx.font = '100px Verdana'
   gfx.textAlign = 'center'
   //gfx.fillText()
+  /*
   if(typeof numKills != 'undefined'){
     if(numKills==1){
       gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
@@ -186,7 +189,7 @@ function drawForeground(gfx){
       gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
     }
   }
-  gfx.stroke();
+  gfx.stroke();*/
   gfx.font = '48px Verdana';
   gfx.textAlign = 'center';
   leaderboardOffset = {x:100,y:30};
@@ -198,7 +201,7 @@ function drawForeground(gfx){
   var onLeaderboard = false;
   for(var i =  0;i<leaderboard.length;i++){
     gfx.fillStyle = '#142DCC';
-    if(leaderboard[i].id==myID){
+    if(leaderboard[i].id==myStats.id){
       onLeaderboard = true;
       gfx.fillStyle = 'red';
     }
@@ -211,10 +214,9 @@ function drawForeground(gfx){
 
     gfx.fillStyle = 'red';
     gfx.textAlign = 'left';
-    gfx.fillText(leaderboard[i].name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
+    gfx.fillText(myStats.name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
     gfx.textAlign = 'right';
-    gfx.fillText(leaderboard[i].score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
-
+    gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
   }
   gfx.stroke();
 }
