@@ -43,11 +43,13 @@ function drawBackgroundGrid(gfx) {
   gfx.font = '100px Verdana'
   gfx.textAlign = 'center'
   //gfx.fillText()
-  if(numKills==1){
-    gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
-  }
-  else{
-    gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
+  if(typeof numKills != 'undefined'){
+    if(numKills==1){
+      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
+    }
+    else{
+      gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
+    }
   }
   gfx.stroke();
   var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
