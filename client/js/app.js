@@ -17,8 +17,8 @@ var game = new Game();
 
 var bulletImg = new Image();
 bulletImg.src = 'js/images/bullet.jpg';
-var bombImg = new Image();
-// TODO bombImg.src
+var sniperImg = new Image();
+sniperImg.src = 'js/images/gun.jpg';
 var healthpackImg = new Image();
 healthpackImg.src = 'js/images/healthpack.ico';
 
@@ -107,7 +107,6 @@ c.addEventListener('mousemove', setMouseCoords, false);
 
 
 
-
 var map = {}; // You could also use an array
 onkeydown = onkeyup = function(e){
   e = e || event; // to deal with IE
@@ -154,6 +153,17 @@ function sendClick(mouse) {
   socket.emit('fire', mouseCoords);
 }
 c.addEventListener('click', sendClick, false);
+
+function shootSniper() {
+  if (!socket) return;
+  socket.emit('fireSniper', mouseCoords);
+}
+c.addEventListener('keypress', function(event){
+  console.log('keypress recorded' + event.keyCode);
+  if (event.keyCode == 69 || event.keyCode == 101){ // e or E
+    shootSniper();
+  }
+}, false);
 
 function checkLatency() {
   startPingTime = Date.now();
