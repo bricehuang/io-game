@@ -55,6 +55,9 @@ function drawBackgroundGrid(gfx) {
   gfx.stroke();
 }
 
+
+
+
 function drawObjects(gfx) {
   gfx.fillStyle = '#2ecc71';
   gfx.strokeStyle = '#003300';
@@ -73,17 +76,14 @@ function drawObjects(gfx) {
     var color = '#00ff00';
     var h = player.health;
 
-    if(h==100) color = '#00ff00';
-    else if(h>=90) color = '#32ff00';
-    else if(h>=80) color = '#64ff00';
-    else if(h>=70) color = '#96ff00';
-    else if(h>=60) color = '#c8ff00';
-    else if(h>=50) color = '#ffff00';
-    else if(h>=40) color = '#ffc800';
-    else if(h>=30) color = '#ff9600';
-    else if(h>=20) color = '#ff6400';
-    else if(h>=10) color = '#ff3200';
-    else           color = '#ff0000';
+    var red = Math.round(((100-h)*255/100)).toString(16);
+    if(red.length==1)
+      red = '0'+red;
+    var green = Math.round((h*255/100)).toString(16);
+    if(green.length==1)
+      green = '0'+green;
+    var blue = '00';
+    color = '#'+red+green+blue;
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
@@ -91,17 +91,28 @@ function drawObjects(gfx) {
     gfx.fillStyle = color;
     gfx.fill();
     gfx.closePath();
-    gfx.fillStyle = '#2ecc71';
+    //gfx.fillStyle = '#2ecc71';
 
 
     //rotate gun
     var mag = Math.sqrt(mouseCoords.x * mouseCoords.x+ mouseCoords.y * mouseCoords.y);
     var dir = {x: mouseCoords.x/mag, y: mouseCoords.y/mag};
     gfx.beginPath();
-    gfx.moveTo(centerX+10*dir.x, centerY+10*dir.y);
-    gfx.lineTo(centerX-10*dir.x, centerY-10*dir.y);
+    gfx.moveTo(centerX+15*dir.x, centerY+15*dir.y);
+    gfx.lineTo(centerX, centerY);
     gfx.stroke();
     gfx.closePath();
+
+    gfx.beginPath();
+    gfx.arc(centerX, centerY, 5, 0, 2*Math.PI, false);
+    gfx.stroke();
+    gfx.fillStyle = "#000000";
+    gfx.fill();
+    gfx.closePath();
+
+
+
+    gfx.fillStyle = "#00ff00";
 
 
   }
@@ -127,9 +138,9 @@ function drawObjects(gfx) {
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
-    var img = new Image;
-    img.src = "http://basspro.scene7.com/is/image/BassPro/2039364_1307240621304_is?$Prod_PLPThumb$";
-    gfx.drawImage(img, centerX - 5 , centerY - 5,10,10);
+    var gun_img = new Image();
+    gun_img.src = 'js/images/gun.jpg';
+    gfx.drawImage(gun_img, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
   }
 

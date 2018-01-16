@@ -16,6 +16,9 @@ var KEY_ENTER = 13;
 
 var game = new Game();
 
+var gun_img = new Image();
+    
+
 function startGame() {
     playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
     document.getElementById('gameAreaWrapper').style.display = 'block';
@@ -27,6 +30,7 @@ function startGame() {
         windowWidth: screenWidth,
         windowHeight: screenHeight,
     });
+    gun_img.src = 'js/images/gun.jpg';
     animloop();
 }
 
