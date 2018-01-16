@@ -13,7 +13,16 @@ var nextBulletID = 0;
 var nextPowerupID = 0;
 var leaderboard = [];
 
+var numObstacles = 10;
+var obstacles=[];
+
+generateObstacles();
+
+
 app.use(express.static(__dirname + '/../client'));
+
+
+
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -107,6 +116,100 @@ io.on('connection', function (socket) {
   })
 });
 
+
+function newObstacle(){
+  check = false
+  while(!check)
+  {
+
+    var angle1 = 2*Math.PI*Math.random();
+    var r1 = 0.9*config.MAP_RADIUS*Math.sqrt(Math.random());
+    var angle2 = 2*Math.PI/5*Math.random() + angle1;
+    var r2 = 0.9*config.MAP_RADIUS*Math.sqrt(Math.random());
+    var x1 = r1*Math.cos(angle1);
+    var y1 = r1*Math.sin(angle1);
+    var x2 = r2 * Math.cos(angle2);
+    var y2 = r2 * Math.sin(angle2);
+    var segment = {point1:{x:x1, y: y1}, point2: {x:x2,y:y2}};
+    if(util.distance(segment.point1,segment.point2)<config.MAP_RADIUS && util.distance(segment.point1,segment.point2)>10*config.PLAYER_RADIUS)
+            check = true;
+
+  }
+  
+    return segment;
+}
+
+
+function generateObstacles(){
+  var counter = 0;
+  for(var i = 0 ; i<numObstacles; i++)
+  {
+    counter++;
+    if(i==0)
+    {
+      var segment = newObstacle();
+      obstacles.push(segment);
+    }
+    else {
+      startNew = Math.random();
+      if(startNew>0.4) {
+          var segment = newObstacle();
+          segment.point1.x = obstacles[i-1].point2.x;
+          segment.point1.y = obstacles[i-1].point2.y;
+          var good = true;
+
+          //Make sure new segment isn't too small
+          if(util.distance(segment.point1,segment.point2)<10*config.PLAYER_RADIUS)
+            good = false
+          else{
+            //Make sure angle isnt too small
+            var minAngle = 1.2;
+            angle1 = Math.atan2(obstacles[i-1].point1.y-obstacles[i-1].point2.y, obstacles[i-1].point1.x-obstacles[i-1].point2.x);
+            angle2 = Math.atan2(segment.point2.y-obstacles[i-1].point2.y, segment.point2.x-obstacles[i-1].point2.x);
+            if(Math.abs(angle1-angle2) < minAngle)
+              good = false;
+
+            //Check all Intersections
+            else{
+              for(var j=0; j<i-1; j++){
+                if(util.segmentIntersect(segment,obstacles[j]))
+                  good = false;
+              }
+            }
+          }
+          if(good){
+            obstacles.push(segment);
+            //console.log(segment);
+          }
+
+          else
+            i--;
+
+      }
+
+      else{
+        
+          var segment = newObstacle();
+          var good = true;
+          for(var j=0; j<i; j++)
+          {
+              if(util.segmentIntersect(segment,obstacles[j]))
+                good = false;
+          }
+          if(good){
+            obstacles.push(segment);
+            //console.log(segment);
+          }
+          else
+           i--;
+      }
+
+    }
+  }
+
+
+}
+
 function collisionDetect(){
   for (var key1 of players.keys()) {
     for (var key2 of players.keys()) {
@@ -150,6 +253,36 @@ function collisionDetect(){
       }
     }
   }
+
+  for(var i=0; i<numObstacles; i++)
+  {
+    for(var key of players.keys()){
+      var player = players.get(key);
+      if(util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist< config.PLAYER_RADIUS)
+        registerPlayerWallHit(player,obstacles[i]);
+
+    }
+  }
+
+
+
+}
+
+
+function registerPlayerWallHit(player, wall){
+  if(util.pointLineDistance({x:player.x, y:player.y}, wall).endpoint){
+    player.velocity.x = -player.velocity.x;
+    player.velocity.y = -player.velocity.y;
+  }
+  else{
+    var newVelocity = reflect(player.velocity.x, player.velocity.y, 
+      wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
+    player.velocity.x = newVelocity.x;
+    player.velocity.y = newVelocity.y;
+
+  }
+  player.x+=player.velocity.x;
+  player.y+=player.velocity.y;
 }
 
 function registerPlayerBulletHit(player, bullet){
@@ -259,6 +392,11 @@ function moveBullet(bullet){
   bullet.y += changeY;
   bullet.timeLeft -= 1;
   var isAlive = (bullet.timeLeft > 0 && util.distance(bullet, {x:0, y:0}) <= config.ARENA_RADIUS)
+  for(var i=0; i<numObstacles; i++)
+  {
+    if(util.pointLineDistance({x:bullet.x, y:bullet.y}, obstacles[i]).trueDist<config.BULLET_RADIUS)
+      isAlive = false;
+  }
   return isAlive;
 }
 function moveAllBullets() {
@@ -308,6 +446,16 @@ function sendView(player) {
     }
   }
 
+  var nearbyObstacles = [];
+  for(var i=0; i<obstacles.length; i++) {
+    var x1 = obstacles[i].point1.x - player.x;
+    var y1 = obstacles[i].point1.y - player.y;
+    var x2 = obstacles[i].point2.x - player.x;
+    var y2 = obstacles[i].point2.y - player.y;
+    var segment = {point1:{x:x1,y:y1}, point2: {x:x2,y:y2}};
+    nearbyObstacles.push(segment);
+  }
+
   player.socket.emit(
     'gameState',
     {
@@ -315,6 +463,7 @@ function sendView(player) {
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
       nearbyBullets: nearbyBullets,
+      nearbyObstacles: nearbyObstacles,
       myScore: player.kills,
       globalLeaderboard : leaderboard,
       yourID: player.id,

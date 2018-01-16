@@ -20,6 +20,7 @@ Game.prototype.handleNetwork = function(socket) {
     nearbyBullets = message.nearbyBullets;
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
+    nearbyObstacles = message.nearbyObstacles;
     numKills = message.myScore;
     leaderboard = message.globalLeaderboard;
     myID = message.yourID;
@@ -142,6 +143,24 @@ function drawObjects(gfx) {
     var powerupImg = getPowerupIcon(powerup.type);
     gfx.drawImage(powerupImg, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
+  }
+
+
+  for(var i=0; i<nearbyObstacles.length; i++) {
+    var segment = nearbyObstacles[i];
+    var x1 = segment.point1.x + screenWidth/2;
+    var y1 = segment.point1.y + screenHeight/2;
+    var x2 = segment.point2.x + screenWidth/2;
+    var y2 = segment.point2.y + screenHeight/2;
+    gfx.lineWidth=10;
+    gfx.beginPath();
+    gfx.moveTo(x1,y1);
+    gfx.lineTo(x2,y2);
+    gfx.stroke();
+    gfx.closePath();
+    gfx.lineWidth=1;
+
+
   }
 }
 
