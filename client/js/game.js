@@ -23,15 +23,11 @@ Game.prototype.handleNetwork = function(socket) {
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('startMenuWrapper').style.display = 'block';
   })
-  socket.on('pong', function(){
-    timeNow = Date.now();
+  socket.on('pongcheck', function(){
+    var timeNow = Date.now();
     console.log("Latency: " + (timeNow - startPingTime) + " ms.");
   })
   // This is where you receive all socket messages
-}
-function checkLatency() {
-    startPingTime = Date.now();
-    this.socket.emit('ping');
 }
 
 Game.prototype.handleLogic = function() {
@@ -88,8 +84,8 @@ function drawObjects(gfx) {
     gfx.lineTo(centerX-10*dir.x, centerY-10*dir.y);
     gfx.stroke();
     gfx.closePath();
-    
-    
+
+
   }
   gfx.lineWidth = 1;
   // bullets

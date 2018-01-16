@@ -31,6 +31,7 @@ io.on('connection', function (socket) {
     // id : nextId,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
+    acceleration: {x:0, y:0},
     radius: config.PLAYER_RADIUS,
     health: config.PLAYER_MAX_HEALTH,
   }
@@ -46,18 +47,10 @@ io.on('connection', function (socket) {
     player.windowHeight = data.windowHeight;
   });
 
-  socket.on('mouse_location', function(message){
-    player = players.get(socket.id);
-    if (!player) return;
-    player.target = {x:message.x,y:message.y};
-    // var bearing = Math.atan2(message.x, message.y) * 180 / Math.PI;
-    // socket.emit('bearing', bearing);
-  });
   socket.on('move', function(message){
     player = players.get(socket.id);
     if (!player) return;
-    player.velocity.x += message.x;
-    player.velocity.y += message.y;
+    player.acceleration = message;
   });
   socket.on('window_resized', function(dimensions){
     player = players.get(socket.id);
@@ -82,15 +75,16 @@ io.on('connection', function (socket) {
     bullets.set(newBullet.id,newBullet);
   })
 
+  socket.on('pingcheck', function() {
+    console.log('I was pinged!');
+    socket.emit('pongcheck');
+  })
+
   socket.on('disconnect', function(){
     console.log('user disconnected');
     if (socket.id in players){
       players.delete(socket.id);
     }
-  })
-
-  socket.on('ping', function() {
-    socket.emit('pong');
   })
 
 });
@@ -206,8 +200,8 @@ function spawnPowerup(){
 }
 
 function movePlayer(player){
-  var vx = player.velocity.x;
-  var vy = player.velocity.y;
+  var vx = player.velocity.x + player.acceleration.x;
+  var vy = player.velocity.y + player.acceleration.y;
 
   var speedBeforeFricton = Math.sqrt(vx*vx+vy*vy);
   if(speedBeforeFricton>0){

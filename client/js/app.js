@@ -118,10 +118,11 @@ onkeydown = onkeyup = function(e){
 
 }
 var movespeed = 0.1;
+var lastmove = {x:0, y:0};
 function move(){
-var vector = {x:0, y:0};
     if (!socket) return;
-/*
+    var vector = {x:0, y:0};
+    /*
     console.log(vector);
     vector.x -= movespeed*map[37];
     vector.y -= movespeed*map[38];
@@ -146,8 +147,12 @@ var vector = {x:0, y:0};
     if(map[83]==true){
         vector.y+=movespeed;
     }
-    console.log("moving: " + JSON.stringify(vector));
-    socket.emit('move',vector);
+    if (vector.x != lastmove.x || vector.y != lastmove.y) {
+        console.log('new move vector: ' + JSON.stringify(vector));
+        console.log(JSON.stringify(vector) + JSON.stringify(lastmove));
+        socket.emit('move',vector);
+        lastmove = vector;
+    }
 
 
 }
@@ -171,3 +176,8 @@ function sendClick(mouse) {
     socket.emit('fire', mouseCoords);
 }
 c.addEventListener('click', sendClick, false);
+
+function checkLatency() {
+    startPingTime = Date.now();
+    this.socket.emit('pingcheck');
+}
