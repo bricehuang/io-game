@@ -33,7 +33,8 @@ io.on('connection', function (socket) {
     velocity: {x:0,y:0},
     acceleration: {x:0, y:0},
     radius: config.PLAYER_RADIUS,
-    health: config.PLAYER_MAX_HEALTH,
+    health: config.PLAYER_START_HEALTH,
+    maxHealth: config.PLAYER_MAX_HEALTH,
     kills: 0,
     lastfire: -1
   }
@@ -171,7 +172,10 @@ function registerPlayerBulletHit(player, bullet){
 }
 function registerPlayerPowerupHit(player, powerup){
   console.log("Player Powerup Collision!");
-  player.health+=4;
+  player.health += config.HEALTHPACK_HP_GAIN;
+  if (player.health > player.maxHealth) {
+    player.health = player.maxHealth;
+  }
   powerups.delete(powerup.id);
   return;
 }
