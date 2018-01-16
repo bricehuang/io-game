@@ -73,7 +73,7 @@ io.on('connection', function (socket) {
   socket.on('fire', function(vector){
     player = players.get(socket.id);
     if (!player) return;
-    else if( Date.now() - player.lastfire >100)
+    else if( Date.now() - player.lastfire >1000)
     {
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
