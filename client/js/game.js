@@ -70,10 +70,28 @@ function drawObjects(gfx) {
     var radius = 30;
     gfx.fillText(player.name, centerX, centerY-43);
     gfx.fillText(player.health,centerX, centerY+50);
+    var color = '#00ff00';
+    var h = player.health;
+
+    if(h==100) color = '#00ff00';
+    else if(h>=90) color = '#32ff00';
+    else if(h>=80) color = '#64ff00';
+    else if(h>=70) color = '#96ff00';
+    else if(h>=60) color = '#c8ff00';
+    else if(h>=50) color = '#ffff00';
+    else if(h>=40) color = '#ffc800';
+    else if(h>=30) color = '#ff9600';
+    else if(h>=20) color = '#ff6400';
+    else if(h>=10) color = '#ff3200';
+    else           color = '#ff0000';
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
+
+    gfx.fillStyle = color;
+    gfx.fill();
     gfx.closePath();
+    gfx.fillStyle = '#2ecc71';
 
 
     //rotate gun
@@ -87,6 +105,7 @@ function drawObjects(gfx) {
 
 
   }
+
   gfx.lineWidth = 1;
   // bullets
   for (var i=0; i<nearby_bullets.length; i++) {
