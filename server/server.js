@@ -34,6 +34,7 @@ io.on('connection', function (socket) {
     acceleration: {x:0, y:0},
     radius: config.PLAYER_RADIUS,
     health: config.PLAYER_MAX_HEALTH,
+    kills: 0,
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -74,6 +75,7 @@ io.on('connection', function (socket) {
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
     newBullet = {
+      corrPlayerID: socket.id,
       x: player.x + normalizedVector.x*40,
       y: player.y + normalizedVector.y*40,
       xHeading: normalizedVector.x,
@@ -154,11 +156,15 @@ function collisionDetect(){
 function registerPlayerBulletHit(player, bullet){
   console.log("Player Bullet Collision!");
   player.health-=config.BULLET_COLLISION_DAMAGE;
+  if(player.health<=0){
+    players.get(bullet.corrPlayerID).kills++;
+  }
   bullets.delete(bullet.id);
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
   console.log("Player Powerup Collision!");
+  player.health+=4;
   powerups.delete(powerup.id);
   return;
 }
@@ -308,6 +314,7 @@ function sendView(player) {
       nearby_powerups: allPowerups,
       nearby_players: allPlayers,
       nearby_bullets: nearbyBullets,
+      my_score: player.kills
     }
   );
 }
