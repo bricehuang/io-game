@@ -94,6 +94,7 @@ io.on('connection', function (socket) {
     {
       if (socket.id in players){
       players.delete(socket.id);
+      socket.emit('death');
       }
     }
   })
