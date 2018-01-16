@@ -45,7 +45,8 @@ io.on('connection', function (socket) {
     maxHealth: config.PLAYER_MAX_HEALTH,
     kills: 0,
     lastfire: -1,
-    ammo: 0
+    ammo: config.STARTING_AMMO,
+    sniperAmmo: 0
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -99,6 +100,26 @@ io.on('connection', function (socket) {
       projectiles.set(bullet.id, bullet);
       player.lastfire = Date.now();
       player.ammo--;
+    }
+  })
+
+  socket.on('fireSniper', function(vector){
+    player = players.get(socket.id);
+    if (!player) return;
+    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.sniperAmmo>0) {
+      var length = util.magnitude(vector);
+      var normalizedVector = {x: vector.x/length, y: vector.y/length};
+      var sniperBullet = new obj.SniperBullet(
+        nextProjectileID++,
+        socket.id,
+        player.x + normalizedVector.x*40,
+        player.y + normalizedVector.y*40,
+        normalizedVector.x,
+        normalizedVector.y
+      )
+      projectiles.set(sniperBullet.id, sniperBullet);
+      player.lastfire = Date.now();
+      player.sniperAmmo--;
     }
   })
 
@@ -297,10 +318,12 @@ function registerPlayerProjectileHit(player, projectile){
   var wasAlive = (player.health>0);
   if (projectile.type == "bullet"){
     player.health -= config.BULLET_COLLISION_DAMAGE;
-    if (player.health <= 0 && wasAlive) {
-      players.get(projectile.corrPlayerID).kills++;
-    }
-    projectiles.delete(projectile.id);
+  } else if (projectile.type == "sniperBullet") {
+    player.health -= config.SNIPER_BULLET_DAMAGE;
+  }
+  projectiles.delete(projectile.id);
+  if (player.health <= 0 && wasAlive) {
+    players.get(projectile.corrPlayerID).kills++;
   }
   return;
 }
@@ -310,9 +333,10 @@ function registerPlayerPowerupHit(player, powerup){
     player.health = Math.min(
       player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
     );
-  }
-  if(powerup.type == "ammo"){
+  } else if (powerup.type == "ammo"){
     player.ammo += config.AMMO_POWERUP_BULLETS;
+  } else if (powerup.type == "sniperAmmo") {
+    player.sniperAmmo += config.SNIPER_AMMO_POWERUP_BULLETS;
   }
   powerups.delete(powerup.id);
   return;

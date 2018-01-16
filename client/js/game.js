@@ -123,13 +123,20 @@ function drawObjects(gfx) {
   // projectiles
   for (var i=0; i<nearbyProjectiles.length; i++) {
     var projectile = nearbyProjectiles[i];
+    var centerX = screenWidth/2 + projectile.x;
+    var centerY = screenHeight/2 + projectile.y;
     if (projectile.type == "bullet") {
-      var centerX = screenWidth/2 + projectile.x;
-      var centerY = screenHeight/2 + projectile.y;
       var radius = 5;
       gfx.beginPath();
       gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
       gfx.stroke();
+      gfx.closePath();
+    } else if (projectile.type == "sniperBullet") {
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.fillStyle = "#003300";
+      gfx.fill();
       gfx.closePath();
     }
   }
@@ -171,14 +178,13 @@ function drawObjects(gfx) {
 function getPowerupIcon(type) {
   switch(type) {
     case "ammo": return bulletImg;
-    case "bomb": return bombImg;
+    case "sniperAmmo": return sniperImg;
     case "healthpack": return healthpackImg;
     default: return new Image();
   }
 }
 
 function drawBoundary(gfx) {
-
   var x = Math.abs(myAbsoluteCoord.x)+screenWidth/2; // max absolute x on screen
   var y = Math.abs(myAbsoluteCoord.y)+screenHeight/2; // max absolute y on screen
   if (Math.sqrt(x*x+y*y) >= ARENA_RADIUS) {
