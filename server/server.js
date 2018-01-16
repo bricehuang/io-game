@@ -35,6 +35,7 @@ io.on('connection', function (socket) {
     radius: config.PLAYER_RADIUS,
     health: config.PLAYER_MAX_HEALTH,
     kills: 0,
+    lastfire: -1
   }
   spawnPlayer(currentPlayer);
   spawnPowerup();
@@ -72,6 +73,8 @@ io.on('connection', function (socket) {
   socket.on('fire', function(vector){
     player = players.get(socket.id);
     if (!player) return;
+    else if( Date.now() - player.lastfire >100)
+    {
     var length = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     var normalizedVector = {x: vector.x/length, y: vector.y/length};
     newBullet = {
@@ -85,6 +88,14 @@ io.on('connection', function (socket) {
       id: nextBulletID++,
     }
     bullets.set(newBullet.id,newBullet);
+    players.lastfire = Date.now();
+    }
+    else
+    {
+      if (socket.id in players){
+      players.delete(socket.id);
+      }
+    }
   })
 
   socket.on('pingcheck', function() {

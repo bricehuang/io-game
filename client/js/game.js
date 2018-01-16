@@ -7,7 +7,6 @@ var my_absolute_coord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
 var startPingTime;
-var numKills;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -18,7 +17,6 @@ Game.prototype.handleNetwork = function(socket) {
     nearby_bullets = message.nearby_bullets;
     nearby_powerups = message.nearby_powerups;
     my_absolute_coord = message.my_absolute_coord;
-    numKills = message.my_score;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -38,19 +36,6 @@ Game.prototype.handleLogic = function() {
 }
 
 function drawBackgroundGrid(gfx) {
-
-  gfx.fillStyle = '#142DCC';
-  gfx.strokeStyle = '#003300';
-  gfx.font = '100px Verdana'
-  gfx.textAlign = 'center'
-  //gfx.fillText()
-  if(numKills==1){
-    gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
-  }
-  else{
-    gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
-  }
-  gfx.stroke();
   var smallest_x_line = (screenWidth/2 - my_absolute_coord.x) % GRID_OFFSET;
   if (smallest_x_line < 0){
     smallest_x_line += GRID_OFFSET;
@@ -153,8 +138,7 @@ function drawObjects(gfx) {
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
-    var gun_img = new Image();
-    gun_img.src = 'js/images/gun.jpg';
+    
     gfx.drawImage(gun_img, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
   }
