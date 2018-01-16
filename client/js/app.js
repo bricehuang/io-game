@@ -117,44 +117,20 @@ onkeydown = onkeyup = function(e){
         map[e.keyCode] = false;
 
 }
-var movespeed = 0.1;
-var lastmove = {x:0, y:0};
+var lastmove = [false, false, false, false];
 function move(){
     if (!socket) return;
-    var vector = {x:0, y:0};
-    /*
-    console.log(vector);
-    vector.x -= movespeed*map[37];
-    vector.y -= movespeed*map[38];
-    vector.x += movespeed*map[39];
-    vector.y += movespeed*map[40];
-    console.log(vector);
-    map[37] = 0;
-    map[38] = 0;
-    map[39] = 0;
-    map[40] = 0;
-    */
-
-    if(map[65]==true){
-        vector.x -=movespeed;
+    var thismove = [map[65], map[87], map[68], map[83]];
+    if (
+        thismove[0] != lastmove[0] ||
+        thismove[1] != lastmove[1] ||
+        thismove[2] != lastmove[2] ||
+        thismove[3] != lastmove[3]
+    ){
+        console.log('new move input: ' + JSON.stringify(thismove));
+        socket.emit('move', thismove);
+        lastmove = thismove;
     }
-    if(map[87]==true){
-        vector.y-=movespeed;
-    }
-    if (map[68]==true){
-        vector.x+=movespeed;
-    }
-    if(map[83]==true){
-        vector.y+=movespeed;
-    }
-    if (vector.x != lastmove.x || vector.y != lastmove.y) {
-        console.log('new move vector: ' + JSON.stringify(vector));
-        console.log(JSON.stringify(vector) + JSON.stringify(lastmove));
-        socket.emit('move',vector);
-        lastmove = vector;
-    }
-
-
 }
 updateRate=100;
 setInterval(move, 1000 / updateRate);
