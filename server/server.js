@@ -5,17 +5,14 @@ var io      = require('socket.io')(http);
 var util    = require('./lib/util');
 
 var config  = require('./config.json');
+
 var players = new Map();
-
 var powerups = new Map();
-
 var bullets = new Map();
 var nextBulletID = 0;
 var nextPowerupID = 0;
 
-
 app.use(express.static(__dirname + '/../client'));
-
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -42,7 +39,7 @@ io.on('connection', function (socket) {
   spawnPowerup();
   players.set(socket.id,currentPlayer);
 
-  socket.on('player_information', function(data){
+  socket.on('playerInformation', function(data){
     player = players.get(socket.id);
     if (!player) return;
     player.name         = data.name;
@@ -65,18 +62,18 @@ io.on('connection', function (socket) {
     }
     player.acceleration = acceleration;
   });
-  socket.on('window_resized', function(dimensions){
+
+  socket.on('windowResized', function(dimensions){
     player = players.get(socket.id);
     if (!player) return;
     player.windowWidth = dimensions.windowWidth;
     player.windowHeight = dimensions.windowHeight;
   })
+
   socket.on('fire', function(vector){
     player = players.get(socket.id);
     if (!player) return;
-
-    else if(Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS)
-    {
+    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS) {
       var length = util.magnitude(vector);
       var normalizedVector = {x: vector.x/length, y: vector.y/length};
       newBullet = {
@@ -101,70 +98,61 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function(){
     console.log('user disconnected');
-    if(players.has(socket.id))
-      {
+    if (players.has(socket.id)) {
       players.delete(socket.id);
     }
   })
-
 });
 
-
 function collisionDetect(){
-  for(var key1 of players.keys())
-  {
-    for(var key2 of players.keys())
-    {
+  for (var key1 of players.keys()) {
+    for (var key2 of players.keys()) {
       var dx = players.get(key1).x - players.get(key2).x;
       var dy = players.get(key1).y - players.get(key2).y;
       var dist = util.magnitude({x:dx, y:dy});
 
-      if(dist< 2*config.PLAYER_RADIUS && key1<key2)
-
-      {
+      if (dist< 2*config.PLAYER_RADIUS && key1<key2) {
         var v1_x = players.get(key1).velocity.x;
         var v1_y = players.get(key1).velocity.y;
         var v2_x = players.get(key2).velocity.x;
         var v2_y = players.get(key2).velocity.y;
-        var impulse = ( dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
-        if(Math.abs(impulse)<.05)
+        var impulse = (dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
+        if (Math.abs(impulse)<.05) {
           impulse = .05;
-
+        }
         players.get(key1).velocity.x = v1_x + impulse * dx;
         players.get(key1).velocity.y = v1_y + impulse * dy;
         players.get(key2).velocity.x = v2_x - impulse * dx;
         players.get(key2).velocity.y = v2_y - impulse * dy;
         players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
         players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
-
-
-
       }
     }
   }
-  for(var key1 of players.keys()){
-    for(var key2 of bullets.keys()){
+  for (var key1 of players.keys()) {
+    for (var key2 of bullets.keys()) {
       var player = players.get(key1);
       var bullet = bullets.get(key2);
-      if(util.collided(player,bullet,config.EPS)){
+      if (util.collided(player,bullet,config.EPS)) {
         registerPlayerBulletHit(player,bullet);
       }
     }
   }
-  for(var key1 of players.keys()){
-    for(var key2 of powerups.keys()){
+  for (var key1 of players.keys()) {
+    for (var key2 of powerups.keys()) {
       var player = players.get(key1);
       var powerup = powerups.get(key2);
-      if(util.collided(player,powerup,config.EPS)){
+      if (util.collided(player,powerup,config.EPS)) {
         registerPlayerPowerupHit(player,powerup);
       }
     }
   }
 }
+
 function registerPlayerBulletHit(player, bullet){
   console.log("Player Bullet Collision!");
   player.health-=config.BULLET_COLLISION_DAMAGE;
-  if(player.health<=0){
+  if (player.health <= 0) {
     players.get(bullet.corrPlayerID).kills++;
   }
   bullets.delete(bullet.id);
@@ -180,17 +168,12 @@ function registerPlayerPowerupHit(player, powerup){
   return;
 }
 
-
 function sign(x){
-  if(x >=0)
-    return 1;
-  else
-    return -1;
+  return (x >= 0) ? 1 : -1;
 }
 
 //reflect vector x1,y1 about vector x2,y2
-function reflect(x1,y1,x2,y2)
-{
+function reflect(x1,y1,x2,y2) {
   var a1 = Math.atan2(y1,x1);
 
   var a2 = Math.atan2(y2,x2);
@@ -200,7 +183,6 @@ function reflect(x1,y1,x2,y2)
 }
 
 function spawnPlayer(player){
-
   var numPlayers = players.size;
   var nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
 
@@ -288,22 +270,19 @@ function expelDeadPlayer(player) {
 
 function sendView(player) {
   var allPlayers = [];
-  for(var key of players.keys())
-  {
+  for (var key of players.keys()) {
     var relX = players.get(key).x - player.x;
     var relY = players.get(key).y - player.y;
-    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
-    {
+    if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {name:players.get(key).name, x:relX, y: relY, health: players.get(key).health};
       allPlayers.push(current);
     }
   }
   var allPowerups = [];
-  for(var key of powerups.keys()){
+  for (var key of powerups.keys()) {
     var relX = powerups.get(key).x - player.x;
     var relY = powerups.get(key).y - player.y;
-    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2)
-    {
+    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {name:powerups.get(key).type, x:relX, y: relY};
       allPowerups.push(current);
     }
@@ -319,19 +298,19 @@ function sendView(player) {
   }
 
   player.socket.emit(
-    'game_state',
+    'gameState',
     {
-      my_absolute_coord: {x: player.x, y:player.y},
-      nearby_powerups: allPowerups,
-      nearby_players: allPlayers,
-      nearby_bullets: nearbyBullets,
-      my_score: player.kills
+      myAbsoluteCoord: {x: player.x, y:player.y},
+      nearbyPowerups: allPowerups,
+      nearbyPlayers: allPlayers,
+      nearbyBullets: nearbyBullets,
+      myScore: player.kills
     }
   );
 }
 function moveLoops(){
   moveAllBullets();
-  for(var key of players.keys()){
+  for (var key of players.keys()) {
     movePlayer(players.get(key));
     sendView(players.get(key));
   }

@@ -1,9 +1,9 @@
 function Game() { };
 
-var nearby_players = [];
-var nearby_bullets = [];
-var nearby_powerups = [];
-var my_absolute_coord = {x: 0, y: 0};
+var nearbyPlayers = [];
+var nearbyBullets = [];
+var nearbyPowerups = [];
+var myAbsoluteCoord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
 var startPingTime;
@@ -12,11 +12,11 @@ Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
 
-  socket.on('game_state', function(message){
-    nearby_players = message.nearby_players;
-    nearby_bullets = message.nearby_bullets;
-    nearby_powerups = message.nearby_powerups;
-    my_absolute_coord = message.my_absolute_coord;
+  socket.on('gameState', function(message){
+    nearbyPlayers = message.nearbyPlayers;
+    nearbyBullets = message.nearbyBullets;
+    nearbyPowerups = message.nearbyPowerups;
+    myAbsoluteCoord = message.myAbsoluteCoord;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -27,7 +27,6 @@ Game.prototype.handleNetwork = function(socket) {
     var timeNow = Date.now();
     console.log("Latency: " + (timeNow - startPingTime) + " ms.");
   })
-  // This is where you receive all socket messages
 }
 
 Game.prototype.handleLogic = function() {
@@ -36,27 +35,24 @@ Game.prototype.handleLogic = function() {
 }
 
 function drawBackgroundGrid(gfx) {
-  var smallest_x_line = (screenWidth/2 - my_absolute_coord.x) % GRID_OFFSET;
-  if (smallest_x_line < 0){
-    smallest_x_line += GRID_OFFSET;
+  var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
+  if (smallestXLine < 0){
+    smallestXLine += GRID_OFFSET;
   }
-  for (var x = smallest_x_line; x<screenWidth; x+=GRID_OFFSET) {
+  for (var x = smallestXLine; x<screenWidth; x+=GRID_OFFSET) {
     gfx.moveTo(x, 0);
     gfx.lineTo(x, screenHeight);
   }
-  var smallest_y_line = (screenHeight/2 - my_absolute_coord.y) % GRID_OFFSET;
-  if (smallest_y_line < 0){
-    smallest_y_line += GRID_OFFSET;
+  var smallestYLine = (screenHeight/2 - myAbsoluteCoord.y) % GRID_OFFSET;
+  if (smallestYLine < 0){
+    smallestYLine += GRID_OFFSET;
   }
-  for (var y = smallest_y_line; y<screenHeight; y+=GRID_OFFSET) {
+  for (var y = smallestYLine; y<screenHeight; y+=GRID_OFFSET) {
     gfx.moveTo(0, y);
     gfx.lineTo(screenWidth, y);
   }
   gfx.stroke();
 }
-
-
-
 
 function drawObjects(gfx) {
   gfx.fillStyle = '#2ecc71';
@@ -66,8 +62,8 @@ function drawObjects(gfx) {
 
   // players
   gfx.lineWidth=5;
-  for (var i=0; i<nearby_players.length; i++) {
-    var player = nearby_players[i];
+  for (var i=0; i<nearbyPlayers.length; i++) {
+    var player = nearbyPlayers[i];
     var centerX = screenWidth/2 + player.x;
     var centerY = screenHeight/2 + player.y;
     var radius = 30;
@@ -93,7 +89,6 @@ function drawObjects(gfx) {
     gfx.closePath();
     //gfx.fillStyle = '#2ecc71';
 
-
     //rotate gun
     var mag = Math.sqrt(mouseCoords.x * mouseCoords.x+ mouseCoords.y * mouseCoords.y);
     var dir = {x: mouseCoords.x/mag, y: mouseCoords.y/mag};
@@ -110,17 +105,13 @@ function drawObjects(gfx) {
     gfx.fill();
     gfx.closePath();
 
-
-
     gfx.fillStyle = "#00ff00";
-
-
   }
 
   gfx.lineWidth = 1;
   // bullets
-  for (var i=0; i<nearby_bullets.length; i++) {
-    var bullet = nearby_bullets[i];
+  for (var i=0; i<nearbyBullets.length; i++) {
+    var bullet = nearbyBullets[i];
     var centerX = screenWidth/2 + bullet.x;
     var centerY = screenHeight/2 + bullet.y;
     var radius = 5;
@@ -129,34 +120,31 @@ function drawObjects(gfx) {
     gfx.stroke();
     gfx.closePath();
   }
+
   //powerups
-  for (var i=0; i<nearby_powerups.length; i++) {
-    var bullet = nearby_powerups[i];
+  for (var i=0; i<nearbyPowerups.length; i++) {
+    var bullet = nearbyPowerups[i];
     var centerX = screenWidth/2 + bullet.x;
     var centerY = screenHeight/2 + bullet.y;
     var radius = 10;
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
-    
-    gfx.drawImage(gun_img, centerX - 5 , centerY - 5,10,10);
+
+    gfx.drawImage(gunImg, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
   }
-
 }
 
 function drawBoundary(gfx) {
-  var x = Math.abs(my_absolute_coord.x)+screenWidth/2; // max absolute x on screen
-  var y = Math.abs(my_absolute_coord.y)+screenHeight/2; // max absolute y on screen
-  if (Math.sqrt(x*x+y*y) < ARENA_RADIUS) {
-    // all four corners of screen are in the arena
-    return;
-  } else {
+  var x = Math.abs(myAbsoluteCoord.x)+screenWidth/2; // max absolute x on screen
+  var y = Math.abs(myAbsoluteCoord.y)+screenHeight/2; // max absolute y on screen
+  if (Math.sqrt(x*x+y*y) >= ARENA_RADIUS) {
     // TODO: draw only the relevant part?
     gfx.beginPath();
     gfx.arc(
-      -my_absolute_coord.x+screenWidth/2,
-      -my_absolute_coord.y+screenHeight/2,
+      -myAbsoluteCoord.x+screenWidth/2,
+      -myAbsoluteCoord.y+screenHeight/2,
       ARENA_RADIUS, 0,
       2*Math.PI,
       false
