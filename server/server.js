@@ -92,8 +92,10 @@ io.on('connection', function (socket) {
       var bullet = new obj.Bullet(
         nextProjectileID++,
         socket.id,
-        player.x + normalizedVector.x*40,
-        player.y + normalizedVector.y*40,
+        player.x + normalizedVector.x*30,
+        player.y + normalizedVector.y*30,
+       // player.x + normalizedVector.x*40,
+        //player.y + normalizedVector.y*40,
         normalizedVector.x,
         normalizedVector.y
       )
@@ -112,8 +114,8 @@ io.on('connection', function (socket) {
       var sniperBullet = new obj.SniperBullet(
         nextProjectileID++,
         socket.id,
-        player.x + normalizedVector.x*40,
-        player.y + normalizedVector.y*40,
+        player.x + normalizedVector.x*30,
+        player.y + normalizedVector.y*30,
         normalizedVector.x,
         normalizedVector.y
       )
@@ -420,13 +422,15 @@ function movePlayer(player){
 function moveProjectile(projectile){
   // moves a projectile, and returns whether the projectile is still alive
   // (i.e. has not run out of time or escaped the arena)
-  projectile.timeStep();
+  
   var isAlive = (projectile.timeLeft > 0 && util.magnitude(projectile) <= config.ARENA_RADIUS)
   for(var i=0; i<numObstacles; i++)
   {
-    if(util.pointLineDistance({x:projectile.x, y:projectile.y}, obstacles[i]).trueDist<config.BULLET_RADIUS)
+    if(util.pointLineDistance({x:projectile.x, y:projectile.y}, obstacles[i]).trueDist< 2*config.BULLET_RADIUS)
       isAlive = false;
   }
+  if(isAlive)
+    projectile.timeStep();
   return isAlive;
 
 }
