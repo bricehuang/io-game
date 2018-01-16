@@ -134,7 +134,7 @@ function move(){
     lastmove = thismove;
   }
 }
-updateRate=100;
+updateRate=10;
 setInterval(move, 1000 / updateRate);
 
 function resize() {
