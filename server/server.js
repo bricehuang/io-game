@@ -88,14 +88,15 @@ io.on('connection', function (socket) {
       id: nextBulletID++,
     }
     bullets.set(newBullet.id,newBullet);
-    players.lastfire = Date.now();
+    player.lastfire = Date.now();
     }
     else
     {
-      if (socket.id in players){
-      players.delete(socket.id);
+      if(socket.id in players.keys())
+        players.delete(socket.id);
+      console.log('death');
       socket.emit('death');
-      }
+      
     }
   })
 
