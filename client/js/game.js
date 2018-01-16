@@ -1,7 +1,7 @@
 function Game() { };
 
 var nearbyPlayers = [];
-var nearbyBullets = [];
+var nearbyProjectiles = [];
 var nearbyPowerups = [];
 var myAbsoluteCoord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
@@ -17,7 +17,7 @@ Game.prototype.handleNetwork = function(socket) {
 
   socket.on('gameState', function(message){
     nearbyPlayers = message.nearbyPlayers;
-    nearbyBullets = message.nearbyBullets;
+    nearbyProjectiles = message.nearbyProjectiles;
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
     //numKills = message.myScore;
@@ -117,16 +117,18 @@ function drawObjects(gfx) {
   }
 
   gfx.lineWidth = 1;
-  // bullets
-  for (var i=0; i<nearbyBullets.length; i++) {
-    var bullet = nearbyBullets[i];
-    var centerX = screenWidth/2 + bullet.x;
-    var centerY = screenHeight/2 + bullet.y;
-    var radius = 5;
-    gfx.beginPath();
-    gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    gfx.stroke();
-    gfx.closePath();
+  // projectiles
+  for (var i=0; i<nearbyProjectiles.length; i++) {
+    var projectile = nearbyProjectiles[i];
+    if (projectile.type == "bullet") {
+      var centerX = screenWidth/2 + projectile.x;
+      var centerY = screenHeight/2 + projectile.y;
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.stroke();
+      gfx.closePath();
+    }
   }
 
   // powerups
@@ -147,7 +149,7 @@ function drawObjects(gfx) {
 
 function getPowerupIcon(type) {
   switch(type) {
-    case "gun": return gunImg;
+    case "ammo": return bulletImg;
     case "bomb": return bombImg;
     case "healthpack": return healthpackImg;
     default: return new Image();
@@ -181,7 +183,7 @@ function drawForeground(gfx){
   /*
   if(typeof numKills != 'undefined'){
     if(numKills==1){
-      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
+      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8);
     }
     else{
       gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
