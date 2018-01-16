@@ -50,7 +50,17 @@ io.on('connection', function (socket) {
   socket.on('move', function(message){
     player = players.get(socket.id);
     if (!player) return;
-    player.acceleration = message;
+    var acceleration = {x:0, y:0};
+    if (message[0]) {acceleration.x -= 1};
+    if (message[1]) {acceleration.y -= 1};
+    if (message[2]) {acceleration.x += 1};
+    if (message[3]) {acceleration.y += 1};
+    var magnitude = Math.sqrt(acceleration.x*acceleration.x+acceleration.y*acceleration.y);
+    if (magnitude > 0) {
+      acceleration.x *= config.ACCELERATION_MAGNITUDE/magnitude;
+      acceleration.y *= config.ACCELERATION_MAGNITUDE/magnitude;
+    }
+    player.acceleration = acceleration;
   });
   socket.on('window_resized', function(dimensions){
     player = players.get(socket.id);
@@ -329,8 +339,8 @@ var serverPort = process.env.PORT || config.port;
 http.listen(serverPort, function() {
   console.log("Server is listening on port " + serverPort);
 });
-var updateRate = 60;
-setInterval(moveLoops, 1000 / updateRate);
+
+setInterval(moveLoops, 1000 / config.FRAME_RATE);
 var spawnRate = 0.5;
 setInterval(spawnPowerup, 1000 / spawnRate);
 
