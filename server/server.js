@@ -2,14 +2,15 @@ var express = require('express');
 var app     = express();
 var http    = require('http').Server(app);
 var io      = require('socket.io')(http);
-var util    = require('./lib/util');
 
 var config  = require('./config.json');
+var util    = require('./lib/util');
+var obj     = require('./lib/objects');
 
 var players = new Map();
 var powerups = new Map();
-var bullets = new Map();
-var nextBulletID = 0;
+var projectiles = new Map();
+var nextProjectileID = 0;
 var nextPowerupID = 0;
 var leaderboard = [];
 
@@ -87,17 +88,15 @@ io.on('connection', function (socket) {
     if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.ammo>0) {
       var length = util.magnitude(vector);
       var normalizedVector = {x: vector.x/length, y: vector.y/length};
-      newBullet = {
-        corrPlayerID: socket.id,
-        x: player.x + normalizedVector.x*40,
-        y: player.y + normalizedVector.y*40,
-        xHeading: normalizedVector.x,
-        yHeading: normalizedVector.y,
-        timeLeft: config.BULLET_AGE,
-        radius: config.BULLET_RADIUS,
-        id: nextBulletID++,
-      }
-      bullets.set(newBullet.id,newBullet);
+      var bullet = new obj.Bullet(
+        nextProjectileID++,
+        socket.id,
+        player.x + normalizedVector.x*40,
+        player.y + normalizedVector.y*40,
+        normalizedVector.x,
+        normalizedVector.y
+      )
+      projectiles.set(bullet.id, bullet);
       player.lastfire = Date.now();
       player.ammo--;
     }
@@ -230,17 +229,25 @@ function collisionDetect(){
         players.get(key1).velocity.y = v1_y + impulse * dy;
         players.get(key2).velocity.x = v2_x - impulse * dx;
         players.get(key2).velocity.y = v2_y - impulse * dy;
+        var firstAlive = (players.get(key1).health>0);
+        var secondAlive = (players.get(key2).health>0);
         players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
         players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
+        if(players.get(key1).health<=0 && firstAlive){
+          players.get(key2).kills++;
+        }
+        if(players.get(key2).health<=0 && secondAlive){
+          players.get(key1).kills++;
+        }
       }
     }
   }
   for (var key1 of players.keys()) {
-    for (var key2 of bullets.keys()) {
+    for (var key2 of projectiles.keys()) {
       var player = players.get(key1);
-      var bullet = bullets.get(key2);
-      if (util.collided(player,bullet,config.EPS)) {
-        registerPlayerBulletHit(player,bullet);
+      var projectile = projectiles.get(key2);
+      if (util.collided(player,projectile,config.EPS)) {
+        registerPlayerProjectileHit(player,projectile);
       }
     }
   }
@@ -285,13 +292,16 @@ function registerPlayerWallHit(player, wall){
   player.y+=player.velocity.y;
 }
 
-function registerPlayerBulletHit(player, bullet){
-  console.log("Player Bullet Collision!");
-  player.health-=config.BULLET_COLLISION_DAMAGE;
-  if (player.health <= 0) {
-    players.get(bullet.corrPlayerID).kills++;
+function registerPlayerProjectileHit(player, projectile){
+  console.log("Player Projectile Collision!");
+  var wasAlive = (player.health>0);
+  if (projectile.type == "bullet"){
+    player.health -= config.BULLET_COLLISION_DAMAGE;
+    if (player.health <= 0 && wasAlive) {
+      players.get(projectile.corrPlayerID).kills++;
+    }
+    projectiles.delete(projectile.id);
   }
-  bullets.delete(bullet.id);
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
@@ -301,8 +311,8 @@ function registerPlayerPowerupHit(player, powerup){
       player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
     );
   }
-  if(powerup.type=="gun"){
-    player.ammo+=5;
+  if(powerup.type == "ammo"){
+    player.ammo += config.AMMO_POWERUP_BULLETS;
   }
   powerups.delete(powerup.id);
   return;
@@ -335,7 +345,7 @@ function spawnPowerup(){
   if (powerups.size >= config.MAX_POWERUPS) {return; }
   var r = config.MAP_RADIUS;
   var pos = util.gaussianCircleGenerate(r,0.01,0.00001);
-  var type = config.WEAPON_TYPES[Math.floor(Math.random()*config.WEAPON_TYPES.length)];
+  var type = config.POWERUP_TYPES[Math.floor(Math.random()*config.POWERUP_TYPES.length)];
 
   var nextPowerup = {
     type:type,
@@ -383,27 +393,24 @@ function movePlayer(player){
   }
 }
 
-function moveBullet(bullet){
-  // moves a bullet, and returns whether the bullet is still alive
+function moveProjectile(projectile){
+  // moves a projectile, and returns whether the projectile is still alive
   // (i.e. has not run out of time or escaped the arena)
-  var changeX = bullet.xHeading * config.BULLET_SPEED;
-  var changeY = bullet.yHeading * config.BULLET_SPEED;
-  bullet.x += changeX;
-  bullet.y += changeY;
-  bullet.timeLeft -= 1;
-  var isAlive = (bullet.timeLeft > 0 && util.distance(bullet, {x:0, y:0}) <= config.ARENA_RADIUS)
+  projectile.timeStep();
+  var isAlive = (projectile.timeLeft > 0 && util.magnitude(projectile) <= config.ARENA_RADIUS)
   for(var i=0; i<numObstacles; i++)
   {
-    if(util.pointLineDistance({x:bullet.x, y:bullet.y}, obstacles[i]).trueDist<config.BULLET_RADIUS)
+    if(util.pointLineDistance({x:projectile.x, y:projectile.y}, obstacles[i]).trueDist<config.BULLET_RADIUS)
       isAlive = false;
   }
   return isAlive;
+
 }
-function moveAllBullets() {
-  for(var key of bullets.keys()){
-    bullet = bullets.get(key);
-    if(!moveBullet(bullet)){
-      bullets.delete(key);
+function moveAllProjectiles() {
+  for(var key of projectiles.keys()){
+    projectile = projectiles.get(key);
+    if(!moveProjectile(projectile)){
+      projectiles.delete(key);
     }
   }
 }
@@ -435,16 +442,17 @@ function sendView(player) {
       allPowerups.push(current);
     }
   }
-  var nearbyBullets = [];
-  for (var key of bullets.keys()) {
-    var bullet = bullets.get(key);
-    var relX = bullet.x - player.x;
-    var relY = bullet.y - player.y;
+  var nearbyProjectiles = [];
+  for (var key of projectiles.keys()) {
+    var projectile = projectiles.get(key);
+    var relX = projectile.x - player.x;
+    var relY = projectile.y - player.y;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
-      var current = {x:relX, y: relY};
-      nearbyBullets.push(current);
+      var current = {x:relX, y:relY, type: projectile.type};
+      nearbyProjectiles.push(current);
     }
   }
+
 
   var nearbyObstacles = [];
   for(var i=0; i<obstacles.length; i++) {
@@ -456,17 +464,20 @@ function sendView(player) {
     nearbyObstacles.push(segment);
   }
 
+
   player.socket.emit(
     'gameState',
     {
       myAbsoluteCoord: {x: player.x, y:player.y},
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
-      nearbyBullets: nearbyBullets,
+
       nearbyObstacles: nearbyObstacles,
       myScore: player.kills,
+
+      nearbyProjectiles: nearbyProjectiles,
       globalLeaderboard : leaderboard,
-      yourID: player.id,
+      yourStats: {name:player.name, score:player.kills,id:player.id}
     }
   );
 }
@@ -481,7 +492,7 @@ function updateLeaderboard(){
   leaderboard = leaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,leaderboard.length));
 }
 function moveLoops(){
-  moveAllBullets();
+  moveAllProjectiles();
   collisionDetect();
   updateLeaderboard();
   for (var key of players.keys()) {

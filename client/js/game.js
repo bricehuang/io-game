@@ -1,15 +1,15 @@
 function Game() { };
 
 var nearbyPlayers = [];
-var nearbyBullets = [];
+var nearbyProjectiles = [];
 var nearbyPowerups = [];
 var myAbsoluteCoord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
 var startPingTime;
-var numKills;
+//var numKills;
 var leaderboard =[];
-var myID;
+var myStats;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -17,13 +17,15 @@ Game.prototype.handleNetwork = function(socket) {
 
   socket.on('gameState', function(message){
     nearbyPlayers = message.nearbyPlayers;
-    nearbyBullets = message.nearbyBullets;
+    nearbyProjectiles = message.nearbyProjectiles;
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
+
     nearbyObstacles = message.nearbyObstacles;
     numKills = message.myScore;
+
     leaderboard = message.globalLeaderboard;
-    myID = message.yourID;
+    myStats = message.yourStats;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -118,16 +120,18 @@ function drawObjects(gfx) {
   }
 
   gfx.lineWidth = 1;
-  // bullets
-  for (var i=0; i<nearbyBullets.length; i++) {
-    var bullet = nearbyBullets[i];
-    var centerX = screenWidth/2 + bullet.x;
-    var centerY = screenHeight/2 + bullet.y;
-    var radius = 5;
-    gfx.beginPath();
-    gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    gfx.stroke();
-    gfx.closePath();
+  // projectiles
+  for (var i=0; i<nearbyProjectiles.length; i++) {
+    var projectile = nearbyProjectiles[i];
+    if (projectile.type == "bullet") {
+      var centerX = screenWidth/2 + projectile.x;
+      var centerY = screenHeight/2 + projectile.y;
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.stroke();
+      gfx.closePath();
+    }
   }
 
   // powerups
@@ -166,7 +170,7 @@ function drawObjects(gfx) {
 
 function getPowerupIcon(type) {
   switch(type) {
-    case "gun": return gunImg;
+    case "ammo": return bulletImg;
     case "bomb": return bombImg;
     case "healthpack": return healthpackImg;
     default: return new Image();
@@ -197,15 +201,16 @@ function drawForeground(gfx){
   gfx.font = '100px Verdana'
   gfx.textAlign = 'center'
   //gfx.fillText()
+  /*
   if(typeof numKills != 'undefined'){
     if(numKills==1){
-      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
+      gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8);
     }
     else{
       gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
     }
   }
-  gfx.stroke();
+  gfx.stroke();*/
   gfx.font = '48px Verdana';
   gfx.textAlign = 'center';
   leaderboardOffset = {x:100,y:30};
@@ -217,7 +222,7 @@ function drawForeground(gfx){
   var onLeaderboard = false;
   for(var i =  0;i<leaderboard.length;i++){
     gfx.fillStyle = '#142DCC';
-    if(leaderboard[i].id==myID){
+    if(leaderboard[i].id==myStats.id){
       onLeaderboard = true;
       gfx.fillStyle = 'red';
     }
@@ -230,10 +235,9 @@ function drawForeground(gfx){
 
     gfx.fillStyle = 'red';
     gfx.textAlign = 'left';
-    gfx.fillText(leaderboard[i].name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
+    gfx.fillText(myStats.name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
     gfx.textAlign = 'right';
-    gfx.fillText(leaderboard[i].score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
-
+    gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
   }
   gfx.stroke();
 }
