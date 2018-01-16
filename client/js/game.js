@@ -7,6 +7,7 @@ var myAbsoluteCoord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
 var startPingTime;
+var numKills;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -17,6 +18,7 @@ Game.prototype.handleNetwork = function(socket) {
     nearbyBullets = message.nearbyBullets;
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
+    numKills = message.myScore;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -35,6 +37,19 @@ Game.prototype.handleLogic = function() {
 }
 
 function drawBackgroundGrid(gfx) {
+
+  gfx.fillStyle = '#142DCC';
+  gfx.strokeStyle = '#003300';
+  gfx.font = '100px Verdana'
+  gfx.textAlign = 'center'
+  //gfx.fillText()
+  if(numKills==1){
+    gfx.fillText(numKills + " kill",screenWidth/2,screenHeight/8); 
+  }
+  else{
+    gfx.fillText(numKills + " kills",screenWidth/2,screenHeight/8);
+  }
+  gfx.stroke();
   var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
   if (smallestXLine < 0){
     smallestXLine += GRID_OFFSET;
