@@ -312,7 +312,7 @@ function sendView(player) {
       nearbyProjectiles.push(current);
     }
   }
-  console.log("yourstats " + JSON.stringify({name:player.name, score:player.kills,id:player.id}));
+  //console.log("yourstats " + JSON.stringify({name:player.name, score:player.kills,id:player.id}));
   player.socket.emit(
     'gameState',
     {
