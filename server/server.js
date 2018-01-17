@@ -386,23 +386,7 @@ function registerPlayerProjectileHit(player, projectile){
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
-  if (powerup.type == "healthpack") {
-    player.health = Math.min(
-      player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
-    );
-  } else if (powerup.type == "ammo"){
-    player.ammo = Math.min(
-      player.ammo + config.AMMO_POWERUP_BULLETS, config.MAX_AMMO
-    );
-  } else if (powerup.type == "sniperAmmo") {
-    player.sniperAmmo = Math.min(
-      player.sniperAmmo + config.SNIPER_AMMO_POWERUP_BULLETS, config.MAX_SNIPER_AMMO
-    );
-  } else if (powerup.type == "spike"){
-    player.isSpiky = true;
-  }else if (powerup.type == "fast"){
-    player.isFast = true;
-  }
+  powerup.effectOnPlayer(player);
   powerups.delete(powerup.id);
   spawnPowerup();
   return;
@@ -449,13 +433,7 @@ function spawnPowerup(){
   var pos = util.gaussianCircleGenerate(r,0.1,0.00001);
   var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
 
-  var nextPowerup = {
-    type:type,
-    x:pos.x,
-    y:pos.y,
-    radius:config.POWERUP_RADIUS,
-    id:nextPowerupID++,
-  }
+  var nextPowerup = obj.makePowerUp(type, nextPowerupID++, pos.x, pos.y)
 
   powerups.set(nextPowerup.id,nextPowerup);
 }
