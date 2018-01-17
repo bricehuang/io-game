@@ -70,9 +70,9 @@ function drawBackgroundGrid(gfx) {
 }
 
 function drawObjects(gfx) {
-  gfx.fillStyle = '#2ecc71';
+  gfx.fillStyle = '#009933';
   gfx.strokeStyle = '#003300';
-  gfx.font = '12px Verdana';
+  gfx.font = 'bold 24px Verdana';
   gfx.textAlign = 'center';
 
   // players
@@ -83,7 +83,7 @@ function drawObjects(gfx) {
     var centerY = screenHeight/2 + player.y;
     var radius = 30;
     gfx.fillText(player.name, centerX, centerY-43);
-    gfx.fillText(player.health,centerX, centerY+50);
+    gfx.fillText(player.health,centerX, centerY+55);
     var color = '#00ff00';
     var h = player.health;
 
