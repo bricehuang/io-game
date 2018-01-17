@@ -84,14 +84,14 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
     curY*=radius;
     if(count==1){
       genX = curX;
-      genY = curY; 
+      genY = curY;
     }
     if(otherPoints.size==0) break;
     var minDistance = Infinity;
     for (var [key,point] of otherPoints){
       potentialDistance = exports.distance({x:curX,y:curY},point);
       minDistance = Math.min(minDistance,potentialDistance);
-    } 
+    }
     if(minDistance>bestDistance){
       genX = curX;
       genY = curY;
@@ -111,7 +111,6 @@ exports.collided = function(firstObject, secondObject,epsilon){
   var dist = exports.distance(firstObject,secondObject);
   return (dist<=(1+epsilon)*(firstObject.radius+secondObject.radius))
 };
-
 
 exports.pointLineDistance = function(point, segment){
 	var slope = (segment.point2.y-segment.point1.y)/(segment.point2.x-segment.point1.x);
