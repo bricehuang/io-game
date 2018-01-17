@@ -153,10 +153,12 @@ function drawObjects(gfx) {
     var powerup = nearbyPowerups[i];
     var centerX = screenWidth/2 + powerup.x;
     var centerY = screenHeight/2 + powerup.y;
-    var radius = 10;
+    var radius = 15;
+    //gfx.fillStyle = 'green';
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
+    //gfx.fill();
 
     var powerupImg = getPowerupIcon(powerup.type);
     gfx.drawImage(powerupImg, centerX - 5 , centerY - 5,10,10);

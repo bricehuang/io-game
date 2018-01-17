@@ -39,6 +39,7 @@ io.on('connection', function (socket) {
     id: socket.id,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
+    previousVelocity :{x:0,y:0},
     acceleration: {x:0, y:0},
     radius: config.PLAYER_RADIUS,
     health: config.PLAYER_START_HEALTH,
@@ -196,7 +197,7 @@ function generateObstacles(){
             good = false
           else{
             //Make sure angle isnt too small
-            var minAngle = 1.2;
+            var minAngle = 1.58;
             angle1 = Math.atan2(obstacles[i-1].point1.y-obstacles[i-1].point2.y, obstacles[i-1].point1.x-obstacles[i-1].point2.x);
             angle2 = Math.atan2(segment.point2.y-obstacles[i-1].point2.y, segment.point2.x-obstacles[i-1].point2.x);
             if(Math.abs(angle1-angle2) < minAngle || 2*Math.PI - Math.abs(angle1 - angle2) < minAngle)
@@ -295,14 +296,21 @@ function collisionDetect(){
     }
   }
 
-  for(var i=0; i<numObstacles; i++)
-  {
-    for(var key of players.keys()){
+  for(var key of players.keys()){
       var player = players.get(key);
-      if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS)
-        registerPlayerWallHit(player,obstacles[i]);
+      var count = 0;
+      for(var i=0; i<numObstacles; i++){
+        var tempV = {x:player.previousVelocity.x, y: player.previousVelocity.y};
+        if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
+          registerPlayerWallHit(player,obstacles[i]);
+          count++;
+        }
+      }
 
-    }
+      player.x += player.velocity.x;
+      player.y += player.velocity.y;
+
+      
   }
 
 
@@ -315,7 +323,6 @@ function registerPlayerWallHit(player, wall){
  
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
-    if(Date.now()- player.lastCollision > 100){
     var wallVector;
     if(hitType.index ==1){
       wallVector = {x: wall.point2.x - wall.point1.x, y:wall.point2.y - wall.point1.y };
@@ -324,7 +331,8 @@ function registerPlayerWallHit(player, wall){
         wallVector = {x: wall.point1.x - wall.point2.x, y:wall.point1.y - wall.point2.y };
     }
 
-    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) || hitType.dist<0.25*config.PLAYER_RADIUS)
+    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) || 
+      hitType.dist<0.25*config.PLAYER_RADIUS)
     {
        var newVelocity = reflect(player.velocity.x, player.velocity.y, 
         wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
@@ -339,18 +347,22 @@ function registerPlayerWallHit(player, wall){
     
     player.velocity.x = newVelocity.x;
     player.velocity.y = newVelocity.y;
+    
     }
    
-  }
+  
   else{
-    var newVelocity = reflect(player.velocity.x, player.velocity.y,
-      wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
-    player.velocity.x = newVelocity.x;
-    player.velocity.y = newVelocity.y;
-
+    if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall) ){
+      var newVelocity = reflect(player.velocity.x, player.velocity.y,
+        wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
+      player.velocity.x = newVelocity.x;
+      player.velocity.y = newVelocity.y;
+    }
   }
-  player.x+=player.velocity.x;
-  player.y+=player.velocity.y;
+  
+  
+  
+  
   player.lastCollision = Date.now();
   
 }
@@ -442,6 +454,9 @@ function spawnPowerup(){
 }
 
 function movePlayer(player){
+  player.previousVelocity = player.velocity;
+  player.x += player.velocity.x;
+  player.y += player.velocity.y;
   var vx = player.velocity.x + player.acceleration.x;
   var vy = player.velocity.y + player.acceleration.y;
 
@@ -459,8 +474,7 @@ function movePlayer(player){
   player.velocity.x = vx;
   player.velocity.y = vy;
 
-  player.x += player.velocity.x;
-  player.y += player.velocity.y;
+  
 
   //Move to boundary if outside
   var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
@@ -473,6 +487,7 @@ function movePlayer(player){
     player.x+=player.velocity.x;
     player.y+=player.velocity.y;
   }
+
 }
 
 function moveProjectile(projectile){

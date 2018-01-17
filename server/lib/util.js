@@ -158,3 +158,16 @@ exports.segmentIntersect = function(segment1,segment2){
 
 	return check;
 }
+
+exports.intoWall = function(point, vector, segment){
+	var slope = (segment.point2.y - segment.point1.y)/(segment.point2.x - segment.point1.x);
+	var intercept = segment.point1.y - slope * segment.point1.x;
+	var above = (point.y > slope*point.x + intercept);
+	if(vector.x<0)
+		above = !above;
+	if(above)
+		return(vector.y/vector.x<slope);
+	else
+		return(vector.y/vector.x>slope);
+	
+}
