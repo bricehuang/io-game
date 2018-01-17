@@ -3,6 +3,7 @@ function Game() { };
 var nearbyPlayers = [];
 var nearbyProjectiles = [];
 var nearbyPowerups = [];
+var nearbyObstacles = [];
 var myAbsoluteCoord = {x: 0, y: 0};
 var GRID_OFFSET = 200;
 var ARENA_RADIUS = 1500;
@@ -79,7 +80,7 @@ function drawBackgroundGrid(gfx) {
   gradient.addColorStop(1,"white");
   gradient.addColorStop(0,'rgba(231, 76, 60,0.5)');
   gfx.fillStyle = gradient;
-  gfx.fillRect(0,0,screenWidth,screenHeight);  
+  gfx.fillRect(0,0,screenWidth,screenHeight);
 }
 
 function drawObjects(gfx) {
@@ -307,7 +308,7 @@ function updateOscillate(){
 }
 
 var cycleLength = 6;
-setInterval(updateOscillate, cycleLength*1000/numOscillateSteps); 
+setInterval(updateOscillate, cycleLength*1000/numOscillateSteps);
 
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
