@@ -303,9 +303,10 @@ function collisionDetect(){
 
 function registerPlayerWallHit(player, wall){
 
-  if(Date.now()- player.lastCollision > 100){
+ 
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
+    if(Date.now()- player.lastCollision > 100){
     var wallVector;
     if(hitType.index ==1){
       wallVector = {x: wall.point2.x - wall.point1.x, y:wall.point2.y - wall.point1.y };
@@ -314,7 +315,7 @@ function registerPlayerWallHit(player, wall){
         wallVector = {x: wall.point1.x - wall.point2.x, y:wall.point1.y - wall.point2.y };
     }
 
-    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) )
+    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) || hitType.dist<0.25*config.PLAYER_RADIUS)
     {
        var newVelocity = reflect(player.velocity.x, player.velocity.y, 
         wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
@@ -329,7 +330,7 @@ function registerPlayerWallHit(player, wall){
     
     player.velocity.x = newVelocity.x;
     player.velocity.y = newVelocity.y;
-    
+    }
    
   }
   else{
@@ -342,7 +343,7 @@ function registerPlayerWallHit(player, wall){
   player.x+=player.velocity.x;
   player.y+=player.velocity.y;
   player.lastCollision = Date.now();
-  }
+  
 }
 
 function registerPlayerProjectileHit(player, projectile){
