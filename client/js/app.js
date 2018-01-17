@@ -129,7 +129,6 @@ function move(){
     thismove[2] != lastmove[2] ||
     thismove[3] != lastmove[3]
   ){
-    console.log('new move input: ' + JSON.stringify(thismove));
     socket.emit('move', thismove);
     lastmove = thismove;
   }
@@ -159,7 +158,6 @@ function shootSniper() {
   socket.emit('fireSniper', mouseCoords);
 }
 c.addEventListener('keypress', function(event){
-  console.log('keypress recorded' + event.keyCode);
   if (event.keyCode == 69 || event.keyCode == 101){ // e or E
     shootSniper();
   }

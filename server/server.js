@@ -157,7 +157,7 @@ function newObstacle(){
             check = true;
 
   }
-  
+
     return segment;
 }
 
@@ -210,7 +210,7 @@ function generateObstacles(){
       }
 
       else{
-        
+
           var segment = newObstacle();
           var good = true;
           for(var j=0; j<i; j++)
@@ -305,7 +305,7 @@ function registerPlayerWallHit(player, wall){
     player.velocity.y = -player.velocity.y;
   }
   else{
-    var newVelocity = reflect(player.velocity.x, player.velocity.y, 
+    var newVelocity = reflect(player.velocity.x, player.velocity.y,
       wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
     player.velocity.x = newVelocity.x;
     player.velocity.y = newVelocity.y;
@@ -316,7 +316,6 @@ function registerPlayerWallHit(player, wall){
 }
 
 function registerPlayerProjectileHit(player, projectile){
-  console.log("Player Projectile Collision!");
   var wasAlive = (player.health>0);
   if (projectile.type == "bullet"){
     player.health -= config.BULLET_COLLISION_DAMAGE;
@@ -330,7 +329,6 @@ function registerPlayerProjectileHit(player, projectile){
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
-  console.log("Player Powerup Collision!");
   if (powerup.type == "healthpack") {
     player.health = Math.min(
       player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
@@ -381,7 +379,6 @@ function spawnPowerup(){
     id:nextPowerupID++,
   }
 
-  //console.log("Powerup spawned " + JSON.stringify(nextPowerup));
   powerups.set(nextPowerup.id,nextPowerup);
 }
 
@@ -422,7 +419,7 @@ function movePlayer(player){
 function moveProjectile(projectile){
   // moves a projectile, and returns whether the projectile is still alive
   // (i.e. has not run out of time or escaped the arena)
-  
+
   var isAlive = (projectile.timeLeft > 0 && util.magnitude(projectile) <= config.ARENA_RADIUS)
   for(var i=0; i<numObstacles; i++)
   {
@@ -534,7 +531,6 @@ function moveLoops(){
       keysOfPlayersToExpel.push(key);
     }
   }
-  // console.log(players);
   if (keysOfPlayersToExpel.length > 0){
     console.log("expelling dead players: " + keysOfPlayersToExpel);
   }

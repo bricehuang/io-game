@@ -80,7 +80,7 @@ exports.segmentIntersect = function(segment1,segment2){
 	var slope2 = (segment2.point2.y-segment2.point1.y)/(segment2.point2.x-segment2.point1.x);
 	var check = true;
 
-	if(exports.pointLineDistance(segment1.point1,segment2).dist>100 && exports.pointLineDistance(segment1.point2,segment2).dist>100 
+	if(exports.pointLineDistance(segment1.point1,segment2).dist>100 && exports.pointLineDistance(segment1.point2,segment2).dist>100
 		&& exports.pointLineDistance(segment2.point1,segment1).dist>100 && exports.pointLineDistance(segment2.point2,segment1).dist>100)
 	{
 	var intersectX = (segment2.point1.y - segment1.point1.y - slope2 * segment2.point1.x + slope1 * segment1.point1.x)/(slope1-slope2);
