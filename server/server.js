@@ -27,6 +27,7 @@ app.use(express.static(__dirname + '/../client'));
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
+  for(var i = 0;i<config.POWERUPS_PER_PLAYER;i++) spawnPowerup();
   // Write your code here
   // nextId = players.size;
   currentPlayer = {
@@ -398,6 +399,7 @@ function registerPlayerPowerupHit(player, powerup){
     player.isSpiky = true;
   }
   powerups.delete(powerup.id);
+  spawnPowerup();
   return;
 }
 
@@ -620,8 +622,9 @@ function moveLoops(){
 var serverPort = process.env.PORT || config.port;
 http.listen(serverPort, function() {
   console.log("Server is listening on port " + serverPort);
+  for(var i = 0 ;i<config.STARTING_POWERUPS; i ++) spawnPowerup();
 });
 
 setInterval(moveLoops, 1000 / config.FRAME_RATE);
-setInterval(spawnPowerup, 1000 / config.POWERUP_SPAWN_PER_SECOND);
+//setInterval(spawnPowerup, 1000 / config.POWERUP_SPAWN_PER_SECOND);
 
