@@ -51,7 +51,7 @@ io.on('connection', function (socket) {
     mouseCoords: {x:1, y:0},
     isSpiky: false
   }
-  
+
   spawnPlayer(currentPlayer);
   spawnPowerup();
   players.set(socket.id,currentPlayer);
@@ -81,6 +81,8 @@ io.on('connection', function (socket) {
   });
 
   socket.on('mouseCoords', function(mouseCoords){
+    player = players.get(socket.id);
+    if (!player) return;
     player.mouseCoords = mouseCoords;
   })
 
@@ -320,7 +322,7 @@ function collisionDetect(){
 
 function registerPlayerWallHit(player, wall){
 
- 
+
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
     if(Date.now()- player.lastCollision > 100){
@@ -334,21 +336,21 @@ function registerPlayerWallHit(player, wall){
 
     if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) || hitType.dist<0.25*config.PLAYER_RADIUS)
     {
-       var newVelocity = reflect(player.velocity.x, player.velocity.y, 
+       var newVelocity = reflect(player.velocity.x, player.velocity.y,
         wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
        newVelocity.x -= wallVector.x/util.magnitude(wallVector);
        newVelocity.y -= wallVector.y/util.magnitude(wallVector);
 
     }
     else{
-      var newVelocity = reflect(player.velocity.x, player.velocity.y, 
+      var newVelocity = reflect(player.velocity.x, player.velocity.y,
         wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
     }
-    
+
     player.velocity.x = newVelocity.x;
     player.velocity.y = newVelocity.y;
     }
-   
+
   }
   else{
     var newVelocity = reflect(player.velocity.x, player.velocity.y,
@@ -360,7 +362,7 @@ function registerPlayerWallHit(player, wall){
   player.x+=player.velocity.x;
   player.y+=player.velocity.y;
   player.lastCollision = Date.now();
-  
+
 }
 
 function registerPlayerProjectileHit(player, projectile){
@@ -512,7 +514,7 @@ function moveAllProjectiles() {
 function expelDeadPlayer(player) {
   players.delete(player.socket.id);
   player.socket.emit('death');
-  // player.socket.disconnect();
+  player.socket.disconnect();
 }
 
 function sendView(player) {

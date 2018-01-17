@@ -40,7 +40,6 @@ Game.prototype.handleNetwork = function(socket) {
     isSpiky = message.isSpiky;
   })
   socket.on('death', function(message){
-    socket.disconnect();
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('startMenuWrapper').style.display = 'block';
   })
