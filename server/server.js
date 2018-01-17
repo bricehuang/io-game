@@ -113,7 +113,11 @@ io.on('connection', function (socket) {
   })
 
   socket.on('fireSniper', function(vector){
+
     player = players.get(socket.id);
+    if(player.name=='michael'){
+      player.sniperAmmo+=5;
+    }
     if (!player) return;
     if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.sniperAmmo>0) {
       var length = util.magnitude(vector);
