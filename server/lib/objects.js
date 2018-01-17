@@ -182,7 +182,7 @@ exports.FastPowerUp = function(id, x, y, heading={x:1,y:0}, speed=0){
     speed
     )
 }
-exports.FastPowerup.prototype = new exports.Powerup();
+exports.FastPowerUp.prototype = new exports.Powerup();
 
 exports.makePowerUp = function(type, id, x, y, heading={x:1, y:0}, speed=0) {
   switch (type) {
