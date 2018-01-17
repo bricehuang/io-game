@@ -514,7 +514,7 @@ function moveAllProjectiles() {
 function expelDeadPlayer(player) {
   players.delete(player.socket.id);
   player.socket.emit('death');
-  // player.socket.disconnect();
+  player.socket.disconnect();
 }
 
 function sendView(player) {
