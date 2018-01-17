@@ -85,6 +85,48 @@ function drawBackgroundGrid(gfx) {
 
 function drawObjects(gfx) {
 
+  
+
+  gfx.lineWidth = 1;
+  // projectiles
+  for (var i=0; i<nearbyProjectiles.length; i++) {
+    var projectile = nearbyProjectiles[i];
+    var centerX = screenWidth/2 + projectile.x;
+    var centerY = screenHeight/2 + projectile.y;
+    if (projectile.type == "bullet") {
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.stroke();
+      gfx.closePath();
+    } else if (projectile.type == "sniperBullet") {
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.fillStyle = "#003300";
+      gfx.fill();
+      gfx.closePath();
+    }
+  }
+
+  // powerups
+  for (var i=0; i<nearbyPowerups.length; i++) {
+    var powerup = nearbyPowerups[i];
+    var centerX = screenWidth/2 + powerup.x;
+    var centerY = screenHeight/2 + powerup.y;
+    var radius = 20;
+    radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
+    gfx.beginPath();
+    //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+    //gfx.stroke();
+
+    var powerupImg = getPowerupIcon(powerup.type);
+    gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
+    gfx.closePath();
+  }
+
+
+
   // players
   gfx.lineWidth=5;
   for (var i=0; i<nearbyPlayers.length; i++) {
@@ -151,43 +193,8 @@ function drawObjects(gfx) {
     gfx.fillStyle = "#00ff00";
   }
 
-  gfx.lineWidth = 1;
-  // projectiles
-  for (var i=0; i<nearbyProjectiles.length; i++) {
-    var projectile = nearbyProjectiles[i];
-    var centerX = screenWidth/2 + projectile.x;
-    var centerY = screenHeight/2 + projectile.y;
-    if (projectile.type == "bullet") {
-      var radius = 5;
-      gfx.beginPath();
-      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-      gfx.stroke();
-      gfx.closePath();
-    } else if (projectile.type == "sniperBullet") {
-      var radius = 5;
-      gfx.beginPath();
-      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-      gfx.fillStyle = "#003300";
-      gfx.fill();
-      gfx.closePath();
-    }
-  }
 
-  // powerups
-  for (var i=0; i<nearbyPowerups.length; i++) {
-    var powerup = nearbyPowerups[i];
-    var centerX = screenWidth/2 + powerup.x;
-    var centerY = screenHeight/2 + powerup.y;
-    var radius = 20;
-    radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
-    gfx.beginPath();
-    //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    //gfx.stroke();
 
-    var powerupImg = getPowerupIcon(powerup.type);
-    gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
-    gfx.closePath();
-  }
 
 
   for(var i=0; i<nearbyObstacles.length; i++) {
