@@ -47,7 +47,8 @@ io.on('connection', function (socket) {
     lastfire: -1,
     lastCollision: -1,
     ammo: config.STARTING_AMMO,
-    sniperAmmo: 0
+    sniperAmmo: 0,
+    mouseCoords: {x:1, y:0}
   }
   
   spawnPlayer(currentPlayer);
@@ -77,6 +78,10 @@ io.on('connection', function (socket) {
     }
     player.acceleration = acceleration;
   });
+
+  socket.on('mouseCoords', function(mouseCoords){
+    player.mouseCoords = mouseCoords;
+  })
 
   socket.on('windowResized', function(dimensions){
     player = players.get(socket.id);
@@ -190,7 +195,7 @@ function generateObstacles(){
             var minAngle = 1.2;
             angle1 = Math.atan2(obstacles[i-1].point1.y-obstacles[i-1].point2.y, obstacles[i-1].point1.x-obstacles[i-1].point2.x);
             angle2 = Math.atan2(segment.point2.y-obstacles[i-1].point2.y, segment.point2.x-obstacles[i-1].point2.x);
-            if(Math.abs(angle1-angle2) < minAngle)
+            if(Math.abs(angle1-angle2) < minAngle || 2*Math.PI - Math.abs(angle1 - angle2) < minAngle)
               good = false;
 
             //Check all Intersections
@@ -503,7 +508,13 @@ function sendView(player) {
     var relX = otherPlayer.x - player.x;
     var relY = otherPlayer.y - player.y;
     if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
-      var current = {name:otherPlayer.name, x:relX, y: relY, health: otherPlayer.health};
+      var current = {
+        name: otherPlayer.name,
+        x:relX,
+        y: relY,
+        health: otherPlayer.health,
+        mouseCoords: otherPlayer.mouseCoords
+      };
       allPlayers.push(current);
     }
   }
