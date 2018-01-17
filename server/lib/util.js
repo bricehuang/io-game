@@ -21,7 +21,7 @@ exports.metropolisHastings = function(pdf){
 }
 exports.quad = function(x,y){
   var ans = 4;
-  if(x*x+y*y<=0.1) ans+= 16;
+  if(x*x+y*y<=0.1) ans+= 4;
   return ans;
   //return 1/(1+10*(x*x+y*y)*(x*x+y*y));
 }
