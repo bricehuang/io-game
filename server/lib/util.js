@@ -123,13 +123,21 @@ exports.pointLineDistance = function(point, segment){
 		return {dist:exports.distance(foot,point), trueDist:exports.distance(foot,point), endpoint: false};
 	}
 	else{
-		var trueDist = Math.min(exports.distance(point,segment.point1), exports.distance(point,segment.point2));
-		return {dist:exports.distance(foot,point), trueDist: trueDist, endpoint: true};
+		var d1 = exports.distance(point,segment.point1);
+		var d2 = exports.distance(point,segment.point2);
+		if(d1<d2)
+			return {dist:exports.distance(foot,point), trueDist: d1, endpoint: true, index:1};
+		else
+			return {dist:exports.distance(foot,point), trueDist: d2, endpoint: true, index:2};
 	}
 
 
 }
 
+
+exports.dotProduct = function(vector1, vector2){
+	return vector1.x*vector2.x + vector1.y * vector2.y;
+}
 
 exports.segmentIntersect = function(segment1,segment2){
 	var slope1 = (segment1.point2.y-segment1.point1.y)/(segment1.point2.x-segment1.point1.x);

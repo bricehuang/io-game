@@ -45,6 +45,7 @@ io.on('connection', function (socket) {
     maxHealth: config.PLAYER_MAX_HEALTH,
     kills: 0,
     lastfire: -1,
+    lastCollision: -1,
     ammo: config.STARTING_AMMO,
     sniperAmmo: 0
   }
@@ -289,7 +290,7 @@ function collisionDetect(){
   {
     for(var key of players.keys()){
       var player = players.get(key);
-      if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist< config.PLAYER_RADIUS)
+      if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS)
         registerPlayerWallHit(player,obstacles[i]);
 
     }
@@ -301,9 +302,36 @@ function collisionDetect(){
 
 
 function registerPlayerWallHit(player, wall){
-  if(util.pointLineDistance({x:player.x, y:player.y}, wall).endpoint){
-    player.velocity.x = -player.velocity.x;
-    player.velocity.y = -player.velocity.y;
+
+ 
+  var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
+  if(hitType.endpoint){
+    if(Date.now()- player.lastCollision > 100){
+    var wallVector;
+    if(hitType.index ==1){
+      wallVector = {x: wall.point2.x - wall.point1.x, y:wall.point2.y - wall.point1.y };
+    }
+    else{
+        wallVector = {x: wall.point1.x - wall.point2.x, y:wall.point1.y - wall.point2.y };
+    }
+
+    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) || hitType.dist<0.25*config.PLAYER_RADIUS)
+    {
+       var newVelocity = reflect(player.velocity.x, player.velocity.y, 
+        wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
+       newVelocity.x -= wallVector.x/util.magnitude(wallVector);
+       newVelocity.y -= wallVector.y/util.magnitude(wallVector);
+
+    }
+    else{
+      var newVelocity = reflect(player.velocity.x, player.velocity.y, 
+        wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
+    }
+    
+    player.velocity.x = newVelocity.x;
+    player.velocity.y = newVelocity.y;
+    }
+   
   }
   else{
     var newVelocity = reflect(player.velocity.x, player.velocity.y,
@@ -314,6 +342,8 @@ function registerPlayerWallHit(player, wall){
   }
   player.x+=player.velocity.x;
   player.y+=player.velocity.y;
+  player.lastCollision = Date.now();
+  
 }
 
 function registerPlayerProjectileHit(player, projectile){
