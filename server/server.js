@@ -190,7 +190,7 @@ function generateObstacles(){
             var minAngle = 1.2;
             angle1 = Math.atan2(obstacles[i-1].point1.y-obstacles[i-1].point2.y, obstacles[i-1].point1.x-obstacles[i-1].point2.x);
             angle2 = Math.atan2(segment.point2.y-obstacles[i-1].point2.y, segment.point2.x-obstacles[i-1].point2.x);
-            if(Math.abs(angle1-angle2) < minAngle)
+            if(Math.abs(angle1-angle2) < minAngle || 2*Math.PI - Math.abs(angle1 - angle2) < minAngle)
               good = false;
 
             //Check all Intersections
