@@ -76,8 +76,8 @@ function drawBackgroundGrid(gfx) {
   */
   var gradient = gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,0,
                                           -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,ARENA_RADIUS);
-  gradient.addColorStop(1,"white");
-  gradient.addColorStop(0,'rgba(231, 76, 60,0.5)');
+  gradient.addColorStop(0,"white");
+  gradient.addColorStop(1,'rgba(218,112,214,0.5)');
   gfx.fillStyle = gradient;
   gfx.fillRect(0,0,screenWidth,screenHeight);  
 }
@@ -180,8 +180,8 @@ function drawObjects(gfx) {
     var radius = 20;
     radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
     gfx.beginPath();
-    gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    gfx.stroke();
+    //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+    //gfx.stroke();
 
     var powerupImg = getPowerupIcon(powerup.type);
     gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
