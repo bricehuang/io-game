@@ -10,6 +10,8 @@ var startPingTime;
 //var numKills;
 var leaderboard =[];
 var myStats;
+var ammo = 30;
+var sniperAmmo = 0;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -20,9 +22,14 @@ Game.prototype.handleNetwork = function(socket) {
     nearbyProjectiles = message.nearbyProjectiles;
     nearbyPowerups = message.nearbyPowerups;
     myAbsoluteCoord = message.myAbsoluteCoord;
-    //numKills = message.myScore;
+
+    nearbyObstacles = message.nearbyObstacles;
+    numKills = message.myScore;
+
     leaderboard = message.globalLeaderboard;
     myStats = message.yourStats;
+    ammo = message.ammo;
+    sniperAmmo = message.sniperAmmo;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -120,13 +127,20 @@ function drawObjects(gfx) {
   // projectiles
   for (var i=0; i<nearbyProjectiles.length; i++) {
     var projectile = nearbyProjectiles[i];
+    var centerX = screenWidth/2 + projectile.x;
+    var centerY = screenHeight/2 + projectile.y;
     if (projectile.type == "bullet") {
-      var centerX = screenWidth/2 + projectile.x;
-      var centerY = screenHeight/2 + projectile.y;
       var radius = 5;
       gfx.beginPath();
       gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
       gfx.stroke();
+      gfx.closePath();
+    } else if (projectile.type == "sniperBullet") {
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.fillStyle = "#003300";
+      gfx.fill();
       gfx.closePath();
     }
   }
@@ -146,19 +160,36 @@ function drawObjects(gfx) {
     gfx.drawImage(powerupImg, centerX - 5 , centerY - 5,10,10);
     gfx.closePath();
   }
+
+
+  for(var i=0; i<nearbyObstacles.length; i++) {
+    var segment = nearbyObstacles[i];
+    var x1 = segment.point1.x + screenWidth/2;
+    var y1 = segment.point1.y + screenHeight/2;
+    var x2 = segment.point2.x + screenWidth/2;
+    var y2 = segment.point2.y + screenHeight/2;
+    gfx.lineWidth=10;
+    gfx.beginPath();
+    gfx.moveTo(x1,y1);
+    gfx.lineTo(x2,y2);
+    gfx.stroke();
+    gfx.closePath();
+    gfx.lineWidth=1;
+
+
+  }
 }
 
 function getPowerupIcon(type) {
   switch(type) {
     case "ammo": return bulletImg;
-    case "bomb": return bombImg;
+    case "sniperAmmo": return sniperImg;
     case "healthpack": return healthpackImg;
     default: return new Image();
   }
 }
 
 function drawBoundary(gfx) {
-
   var x = Math.abs(myAbsoluteCoord.x)+screenWidth/2; // max absolute x on screen
   var y = Math.abs(myAbsoluteCoord.y)+screenHeight/2; // max absolute y on screen
   if (Math.sqrt(x*x+y*y) >= ARENA_RADIUS) {
@@ -221,6 +252,27 @@ function drawForeground(gfx){
   }
   gfx.stroke();
 }
+function drawAmmo(gfx) {
+  gfx.strokeStyle = "#000000";
+  gfx.fillStyle = "#000000";
+  gfx.font = "16px Verdana";
+
+  gfx.beginPath();
+  gfx.rect(screenWidth - 120, screenHeight - 40, 25, 25);
+  gfx.drawImage(bulletImg, screenWidth - 120 , screenHeight - 40, 25, 25);
+  var offset = 0;
+  if (ammo.toString().length == 1) {
+    offset = 10;
+  } // this makes the ammo count appear next to the icon.  TODO is there a better way?
+  gfx.fillText(ammo, screenWidth-72-offset, screenHeight-15);
+  gfx.rect(screenWidth - 60, screenHeight - 40, 25, 25);
+  gfx.drawImage(bulletImg, screenWidth - 60 , screenHeight - 40, 25, 25);
+  gfx.fillText(sniperAmmo, screenWidth - 22, screenHeight - 15);
+  gfx.closePath();
+
+  gfx.stroke();
+  gfx.asdf
+}
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
@@ -231,4 +283,5 @@ Game.prototype.handleGraphics = function(gfx,mouse) {
   drawObjects(gfx);
   drawBoundary(gfx);
   drawForeground(gfx);
+  drawAmmo(gfx);
 }

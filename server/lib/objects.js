@@ -46,3 +46,20 @@ exports.Bullet = function(id, corrPlayerID, x, y, xHeading, yHeading) {
   )
 }
 exports.Bullet.prototype = new exports.Projectile();
+
+exports.SniperBullet = function(id, corrPlayerID, x, y, xHeading, yHeading) {
+   exports.Projectile.call(
+    this,
+    "sniperBullet",
+    id,
+    corrPlayerID,
+    x,
+    y,
+    xHeading,
+    yHeading,
+    config.SNIPER_BULLET_SPEED,
+    config.SNIPER_BULLET_AGE,
+    config.BULLET_RADIUS
+  )
+}
+exports.SniperBullet.prototype = new exports.Projectile();

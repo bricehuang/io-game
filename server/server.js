@@ -14,7 +14,16 @@ var nextProjectileID = 0;
 var nextPowerupID = 0;
 var leaderboard = [];
 
+var numObstacles = 10;
+var obstacles=[];
+
+generateObstacles();
+
+
 app.use(express.static(__dirname + '/../client'));
+
+
+
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
@@ -36,7 +45,8 @@ io.on('connection', function (socket) {
     maxHealth: config.PLAYER_MAX_HEALTH,
     kills: 0,
     lastfire: -1,
-    ammo: 0
+    ammo: config.STARTING_AMMO,
+    sniperAmmo: 0
   }
   
   spawnPlayer(currentPlayer);
@@ -83,14 +93,36 @@ io.on('connection', function (socket) {
       var bullet = new obj.Bullet(
         nextProjectileID++,
         socket.id,
-        player.x + normalizedVector.x*40,
-        player.y + normalizedVector.y*40,
+        player.x + normalizedVector.x*30,
+        player.y + normalizedVector.y*30,
+       // player.x + normalizedVector.x*40,
+        //player.y + normalizedVector.y*40,
         normalizedVector.x,
         normalizedVector.y
       )
       projectiles.set(bullet.id, bullet);
       player.lastfire = Date.now();
       player.ammo--;
+    }
+  })
+
+  socket.on('fireSniper', function(vector){
+    player = players.get(socket.id);
+    if (!player) return;
+    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.sniperAmmo>0) {
+      var length = util.magnitude(vector);
+      var normalizedVector = {x: vector.x/length, y: vector.y/length};
+      var sniperBullet = new obj.SniperBullet(
+        nextProjectileID++,
+        socket.id,
+        player.x + normalizedVector.x*30,
+        player.y + normalizedVector.y*30,
+        normalizedVector.x,
+        normalizedVector.y
+      )
+      projectiles.set(sniperBullet.id, sniperBullet);
+      player.lastfire = Date.now();
+      player.sniperAmmo--;
     }
   })
 
@@ -106,6 +138,100 @@ io.on('connection', function (socket) {
     }
   })
 });
+
+
+function newObstacle(){
+  check = false
+  while(!check)
+  {
+
+    var angle1 = 2*Math.PI*Math.random();
+    var r1 = 0.9*config.MAP_RADIUS*Math.sqrt(Math.random());
+    var angle2 = 2*Math.PI/5*Math.random() + angle1;
+    var r2 = 0.9*config.MAP_RADIUS*Math.sqrt(Math.random());
+    var x1 = r1*Math.cos(angle1);
+    var y1 = r1*Math.sin(angle1);
+    var x2 = r2 * Math.cos(angle2);
+    var y2 = r2 * Math.sin(angle2);
+    var segment = {point1:{x:x1, y: y1}, point2: {x:x2,y:y2}};
+    if(util.distance(segment.point1,segment.point2)<config.MAP_RADIUS && util.distance(segment.point1,segment.point2)>10*config.PLAYER_RADIUS)
+            check = true;
+
+  }
+
+    return segment;
+}
+
+
+function generateObstacles(){
+  var counter = 0;
+  for(var i = 0 ; i<numObstacles; i++)
+  {
+    counter++;
+    if(i==0)
+    {
+      var segment = newObstacle();
+      obstacles.push(segment);
+    }
+    else {
+      startNew = Math.random();
+      if(startNew>0.4) {
+          var segment = newObstacle();
+          segment.point1.x = obstacles[i-1].point2.x;
+          segment.point1.y = obstacles[i-1].point2.y;
+          var good = true;
+
+          //Make sure new segment isn't too small
+          if(util.distance(segment.point1,segment.point2)<10*config.PLAYER_RADIUS)
+            good = false
+          else{
+            //Make sure angle isnt too small
+            var minAngle = 1.2;
+            angle1 = Math.atan2(obstacles[i-1].point1.y-obstacles[i-1].point2.y, obstacles[i-1].point1.x-obstacles[i-1].point2.x);
+            angle2 = Math.atan2(segment.point2.y-obstacles[i-1].point2.y, segment.point2.x-obstacles[i-1].point2.x);
+            if(Math.abs(angle1-angle2) < minAngle)
+              good = false;
+
+            //Check all Intersections
+            else{
+              for(var j=0; j<i-1; j++){
+                if(util.segmentIntersect(segment,obstacles[j]))
+                  good = false;
+              }
+            }
+          }
+          if(good){
+            obstacles.push(segment);
+            //console.log(segment);
+          }
+
+          else
+            i--;
+
+      }
+
+      else{
+
+          var segment = newObstacle();
+          var good = true;
+          for(var j=0; j<i; j++)
+          {
+              if(util.segmentIntersect(segment,obstacles[j]))
+                good = false;
+          }
+          if(good){
+            obstacles.push(segment);
+            //console.log(segment);
+          }
+          else
+           i--;
+      }
+
+    }
+  }
+
+
+}
 
 function collisionDetect(){
   for (var key1 of players.keys()) {
@@ -144,7 +270,7 @@ function collisionDetect(){
     for (var key2 of projectiles.keys()) {
       var player = players.get(key1);
       var projectile = projectiles.get(key2);
-      if (util.collided(player,projectile,config.EPS)) {
+      if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
       }
     }
@@ -153,34 +279,72 @@ function collisionDetect(){
     for (var key2 of powerups.keys()) {
       var player = players.get(key1);
       var powerup = powerups.get(key2);
-      if (util.collided(player,powerup,config.EPS)) {
+      if (player && powerup && util.collided(player,powerup,config.EPS)) {
         registerPlayerPowerupHit(player,powerup);
       }
     }
   }
+
+  for(var i=0; i<numObstacles; i++)
+  {
+    for(var key of players.keys()){
+      var player = players.get(key);
+      if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist< config.PLAYER_RADIUS)
+        registerPlayerWallHit(player,obstacles[i]);
+
+    }
+  }
+
+
+
+}
+
+
+function registerPlayerWallHit(player, wall){
+  if(util.pointLineDistance({x:player.x, y:player.y}, wall).endpoint){
+    player.velocity.x = -player.velocity.x;
+    player.velocity.y = -player.velocity.y;
+  }
+  else{
+    var newVelocity = reflect(player.velocity.x, player.velocity.y,
+      wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
+    player.velocity.x = newVelocity.x;
+    player.velocity.y = newVelocity.y;
+
+  }
+  player.x+=player.velocity.x;
+  player.y+=player.velocity.y;
 }
 
 function registerPlayerProjectileHit(player, projectile){
-  console.log("Player Projectile Collision!");
   var wasAlive = (player.health>0);
   if (projectile.type == "bullet"){
     player.health -= config.BULLET_COLLISION_DAMAGE;
-    if (player.health <= 0 && wasAlive) {
-      players.get(projectile.corrPlayerID).kills++;
+  } else if (projectile.type == "sniperBullet") {
+    player.health -= config.SNIPER_BULLET_DAMAGE;
+  }
+  projectiles.delete(projectile.id);
+  if (player.health <= 0 && wasAlive) {
+    var shooterPlayer = players.get(projectile.corrPlayerID);
+    if (shooterPlayer) { // make sure shooterPlayer isn't already dead
+      shooterPlayer.kills++;
     }
-    projectiles.delete(projectile.id);
   }
   return;
 }
 function registerPlayerPowerupHit(player, powerup){
-  console.log("Player Powerup Collision!");
   if (powerup.type == "healthpack") {
     player.health = Math.min(
       player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
     );
-  }
-  if(powerup.type == "ammo"){
-    player.ammo += config.AMMO_POWERUP_BULLETS;
+  } else if (powerup.type == "ammo"){
+    player.ammo = Math.min(
+      player.ammo + config.AMMO_POWERUP_BULLETS, config.MAX_AMMO
+    );
+  } else if (powerup.type == "sniperAmmo") {
+    player.sniperAmmo = Math.min(
+      player.sniperAmmo + config.SNIPER_AMMO_POWERUP_BULLETS, config.MAX_SNIPER_AMMO
+    );
   }
   powerups.delete(powerup.id);
   return;
@@ -223,7 +387,6 @@ function spawnPowerup(){
     id:nextPowerupID++,
   }
 
-  //console.log("Powerup spawned " + JSON.stringify(nextPowerup));
   powerups.set(nextPowerup.id,nextPowerup);
 }
 
@@ -264,8 +427,17 @@ function movePlayer(player){
 function moveProjectile(projectile){
   // moves a projectile, and returns whether the projectile is still alive
   // (i.e. has not run out of time or escaped the arena)
-  projectile.timeStep();
-  return (projectile.timeLeft > 0 && util.magnitude(projectile) <= config.ARENA_RADIUS)
+
+  var isAlive = (projectile.timeLeft > 0 && util.magnitude(projectile) <= config.ARENA_RADIUS)
+  for(var i=0; i<numObstacles; i++)
+  {
+    if(util.pointLineDistance({x:projectile.x, y:projectile.y}, obstacles[i]).trueDist< 2*config.BULLET_RADIUS)
+      isAlive = false;
+  }
+  if(isAlive)
+    projectile.timeStep();
+  return isAlive;
+
 }
 function moveAllProjectiles() {
   for(var key of projectiles.keys()){
@@ -313,16 +485,31 @@ function sendView(player) {
       nearbyProjectiles.push(current);
     }
   }
-  //console.log("yourstats " + JSON.stringify({name:player.name, score:player.kills,id:player.id}));
+
+
+  var nearbyObstacles = [];
+  for(var i=0; i<obstacles.length; i++) {
+    var x1 = obstacles[i].point1.x - player.x;
+    var y1 = obstacles[i].point1.y - player.y;
+    var x2 = obstacles[i].point2.x - player.x;
+    var y2 = obstacles[i].point2.y - player.y;
+    var segment = {point1:{x:x1,y:y1}, point2: {x:x2,y:y2}};
+    nearbyObstacles.push(segment);
+  }
+
+
   player.socket.emit(
     'gameState',
     {
       myAbsoluteCoord: {x: player.x, y:player.y},
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
+      nearbyObstacles: nearbyObstacles,
       nearbyProjectiles: nearbyProjectiles,
       globalLeaderboard : leaderboard,
-      yourStats: {name:player.name, score:player.kills,id:player.id}
+      yourStats: {name:player.name, score:player.kills,id:player.id},
+      ammo: player.ammo,
+      sniperAmmo: player.sniperAmmo
     }
   );
 }
@@ -331,7 +518,6 @@ function updateLeaderboard(){
   for(var key of players.keys()){
     player = players.get(key)
     leaderboard.push({name:player.name,score:player.kills, id:player.id,});
-
   }
   leaderboard.sort(function(a,b){return b.score-a.score});
   leaderboard = leaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,leaderboard.length));
@@ -351,7 +537,6 @@ function moveLoops(){
       keysOfPlayersToExpel.push(key);
     }
   }
-  // console.log(players);
   if (keysOfPlayersToExpel.length > 0){
     console.log("expelling dead players: " + keysOfPlayersToExpel);
   }
