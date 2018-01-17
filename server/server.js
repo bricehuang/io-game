@@ -47,7 +47,8 @@ io.on('connection', function (socket) {
     lastfire: -1,
     lastCollision: -1,
     ammo: config.STARTING_AMMO,
-    sniperAmmo: 0
+    sniperAmmo: 0,
+    mouseCoords: {x:1, y:0}
   }
   
   spawnPlayer(currentPlayer);
@@ -77,6 +78,10 @@ io.on('connection', function (socket) {
     }
     player.acceleration = acceleration;
   });
+
+  socket.on('mouseCoords', function(mouseCoords){
+    player.mouseCoords = mouseCoords;
+  })
 
   socket.on('windowResized', function(dimensions){
     player = players.get(socket.id);
@@ -396,7 +401,19 @@ function reflect(x1,y1,x2,y2) {
 
 function spawnPlayer(player){
   var numPlayers = players.size;
-  var nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
+  var nextCoords;
+  while(true){
+    nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
+    var failed = false;
+    for(var i=0; i<numObstacles; i++)
+    {
+      if(util.pointLineDistance(nextCoords,obstacles[i]).trueDist<config.PLAYER_RADIUS){
+        failed = true;
+        break;
+      }
+    }
+    if(!failed) break;
+  }
 
   player.x = nextCoords.x;
   player.y = nextCoords.y;
@@ -491,7 +508,13 @@ function sendView(player) {
     var relX = otherPlayer.x - player.x;
     var relY = otherPlayer.y - player.y;
     if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
-      var current = {name:otherPlayer.name, x:relX, y: relY, health: otherPlayer.health};
+      var current = {
+        name: otherPlayer.name,
+        x:relX,
+        y: relY,
+        health: otherPlayer.health,
+        mouseCoords: otherPlayer.mouseCoords
+      };
       allPlayers.push(current);
     }
   }

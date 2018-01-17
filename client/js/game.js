@@ -105,8 +105,11 @@ function drawObjects(gfx) {
     //gfx.fillStyle = '#2ecc71';
 
     //rotate gun
-    var mag = Math.sqrt(mouseCoords.x * mouseCoords.x+ mouseCoords.y * mouseCoords.y);
-    var dir = {x: mouseCoords.x/mag, y: mouseCoords.y/mag};
+    var mag = Math.sqrt(
+      player.mouseCoords.x * player.mouseCoords.x +
+      player.mouseCoords.y * player.mouseCoords.y
+    );
+    var dir = {x: player.mouseCoords.x/mag, y: player.mouseCoords.y/mag};
     gfx.beginPath();
     gfx.moveTo(centerX+15*dir.x, centerY+15*dir.y);
     gfx.lineTo(centerX, centerY);
@@ -153,7 +156,6 @@ function drawObjects(gfx) {
     var radius = 10;
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    gfx.fill();//edit this out later lol
     gfx.stroke();
 
     var powerupImg = getPowerupIcon(powerup.type);

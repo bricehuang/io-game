@@ -90,16 +90,13 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
     var minDistance = Infinity;
     for (var [key,point] of otherPoints){
       potentialDistance = exports.distance({x:curX,y:curY},point);
-      console.log("potential distance is " + potentialDistance);
       minDistance = Math.min(minDistance,potentialDistance);
-      console.log("min is now " + minDistance);
     } 
     if(minDistance>bestDistance){
       genX = curX;
       genY = curY;
       bestDistance = minDistance;
     }
-    console.log("current best distance after " + count + " tries is " + bestDistance);
 
   }
   return {x:genX,y:genY};
