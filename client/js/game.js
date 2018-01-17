@@ -14,6 +14,7 @@ var ammo = 30;
 var sniperAmmo = 0;
 var oscillateStep = 0;
 var numOscillateSteps = 64;
+var isSpiky = false;
 //oscillateStep and numOscillateSteps maybe shouldn't be random global variables
 
 
@@ -34,6 +35,7 @@ Game.prototype.handleNetwork = function(socket) {
     myStats = message.yourStats;
     ammo = message.ammo;
     sniperAmmo = message.sniperAmmo;
+    isSpiky = message.isSpiky;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -52,7 +54,7 @@ Game.prototype.handleLogic = function() {
 }
 
 function drawBackgroundGrid(gfx) {
-
+  /*
   gfx.strokeStyle = '#003300';
   var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
   if (smallestXLine < 0){
@@ -71,13 +73,16 @@ function drawBackgroundGrid(gfx) {
     gfx.lineTo(screenWidth, y);
   }
   gfx.stroke();
+  */
+  var gradient = gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,0,
+                                          -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,ARENA_RADIUS);
+  gradient.addColorStop(1,"white");
+  gradient.addColorStop(0,'rgba(231, 76, 60,0.5)');
+  gfx.fillStyle = gradient;
+  gfx.fillRect(0,0,screenWidth,screenHeight);  
 }
 
 function drawObjects(gfx) {
-  gfx.fillStyle = '#009933';
-  gfx.strokeStyle = '#003300';
-  gfx.font = 'bold 24px Verdana';
-  gfx.textAlign = 'center';
 
   // players
   gfx.lineWidth=5;
@@ -86,6 +91,21 @@ function drawObjects(gfx) {
     var centerX = screenWidth/2 + player.x;
     var centerY = screenHeight/2 + player.y;
     var radius = 30;
+    if(player.isSpiky){
+      gfx.beginPath();
+      for(var j = 0; j<=36;j++){
+        var angle = j*2*Math.PI/36-Math.PI/2;
+        var rad = (j%2==0) ? radius*3/2 : radius;
+        gfx.lineTo(centerX + rad*Math.cos(angle),centerY + rad*Math.sin(angle));
+      }
+      gfx.fillStyle= '#000000';
+      gfx.fill();
+      gfx.closePath();
+    }
+    gfx.fillStyle = '#009933';
+    gfx.strokeStyle = '#003300';
+    gfx.font = 'bold 24px Verdana';
+    gfx.textAlign = 'center';
     gfx.fillText(player.name, centerX, centerY-43);
     gfx.fillText(player.health,centerX, centerY+55);
     var color = '#00ff00';
@@ -192,6 +212,7 @@ function getPowerupIcon(type) {
     case "ammo": return bulletImg;
     case "sniperAmmo": return sniperImg;
     case "healthpack": return healthpackImg;
+    case "spike": return spikeImg;
     default: return new Image();
   }
 }

@@ -16,11 +16,13 @@ var KEY_ENTER = 13;
 var game = new Game();
 
 var bulletImg = new Image();
-bulletImg.src = 'js/images/bullet.jpg';
+bulletImg.src = 'js/images/bullet.png';
 var sniperImg = new Image();
-sniperImg.src = 'js/images/gun.jpg';
+sniperImg.src = 'js/images/gun.png';
 var healthpackImg = new Image();
 healthpackImg.src = 'js/images/healthpack.ico';
+var spikeImg = new Image();
+spikeImg.src = 'js/images/spike.png';
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
@@ -103,7 +105,7 @@ window.addEventListener('resize', function() {
 function setMouseCoords(mouse){
   mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
   socket.emit('mouseCoords', mouseCoords);
-  console.log(mouseCoords);
+  //console.log(mouseCoords);
 }
 c.addEventListener('mousemove', setMouseCoords, false);
 
