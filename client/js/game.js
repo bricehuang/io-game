@@ -85,7 +85,7 @@ function drawBackgroundGrid(gfx) {
 
 function drawObjects(gfx) {
 
-  
+
 
   gfx.lineWidth = 1;
   // projectiles
@@ -279,8 +279,7 @@ function drawForeground(gfx){
     gfx.textAlign = 'right';
     gfx.fillText(leaderboard[i].score,startTable.x+2*leaderboardOffset.x,startTable.y+(i+1)*leaderboardOffset.y);
   }
-  if(!onLeaderboard){
-
+  if(!onLeaderboard && myStats){
     gfx.fillStyle = 'red';
     gfx.textAlign = 'left';
     console.log(JSON.stringify(myStats));

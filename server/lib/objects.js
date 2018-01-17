@@ -1,4 +1,5 @@
 var config  = require('../config.json');
+var util  = require('./util.js');
 
 exports.Projectile = function(
   type,
@@ -27,6 +28,7 @@ exports.Projectile = function(
 exports.Projectile.prototype.timeStep = function() {
   this.x += this.xHeading*this.speed;
   this.y += this.yHeading*this.speed;
+
   this.timeLeft -= 1;
 }
 
@@ -87,6 +89,13 @@ exports.Powerup.prototype.timeStep = function() {
   this.x += this.heading.x*this.speed;
   this.y += this.heading.y*this.speed;
   this.speed -= config.FRICTION*this.speed;
+  var mag = util.magnitude({x: this.x, y:this.y});
+  var eff_arena_radius = config.ARENA_RADIUS - this.radius;
+  if (mag > eff_arena_radius) {
+    this.x *= eff_arena_radius / mag;
+    this.y *= eff_arena_radius / mag;
+    this.speed = 0;
+  }
 }
 
 exports.HealthPackPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
