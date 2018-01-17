@@ -49,6 +49,7 @@ io.on('connection', function (socket) {
     ammo: config.STARTING_AMMO,
     sniperAmmo: 0
   }
+  
   spawnPlayer(currentPlayer);
   spawnPowerup();
   players.set(socket.id,currentPlayer);
@@ -404,7 +405,7 @@ function spawnPlayer(player){
 function spawnPowerup(){
   if (powerups.size >= config.MAX_POWERUPS) {return; }
   var r = config.MAP_RADIUS;
-  var pos = util.gaussianCircleGenerate(r,0.01,0.00001);
+  var pos = util.gaussianCircleGenerate(r,0.1,0.00001);
   var type = config.POWERUP_TYPES[Math.floor(Math.random()*config.POWERUP_TYPES.length)];
 
   var nextPowerup = {
