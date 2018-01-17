@@ -12,6 +12,10 @@ var leaderboard =[];
 var myStats;
 var ammo = 30;
 var sniperAmmo = 0;
+var oscillateStep = 0;
+var numOscillateSteps = 64;
+//oscillateStep and numOscillateSteps maybe shouldn't be random global variables
+
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -153,13 +157,14 @@ function drawObjects(gfx) {
     var powerup = nearbyPowerups[i];
     var centerX = screenWidth/2 + powerup.x;
     var centerY = screenHeight/2 + powerup.y;
-    var radius = 10;
+    var radius = 20;
+    radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
 
     var powerupImg = getPowerupIcon(powerup.type);
-    gfx.drawImage(powerupImg, centerX - 5 , centerY - 5,10,10);
+    gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
     gfx.closePath();
   }
 
@@ -275,6 +280,14 @@ function drawAmmo(gfx) {
   gfx.stroke();
   gfx.asdf
 }
+
+function updateOscillate(){
+  oscillateStep = (oscillateStep+1)%numOscillateSteps;
+}
+
+var cycleLength = 6;
+setInterval(updateOscillate, cycleLength*1000/numOscillateSteps); 
+
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
