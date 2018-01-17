@@ -303,7 +303,7 @@ function collisionDetect(){
 
 function registerPlayerWallHit(player, wall){
 
-  if(Date.now()- player.lastCollision > 200){
+  if(Date.now()- player.lastCollision > 100){
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
     var wallVector;
