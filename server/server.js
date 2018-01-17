@@ -434,6 +434,22 @@ function spawnPowerup(){
 
   powerups.set(nextPowerup.id,nextPowerup);
 }
+function spawnMovingPowerupFromPoint(type, position) {
+  var angle = Math.random() * 2 * Math.PI;
+  var heading = {x: Math.cos(angle), y: Math.sin(angle)}
+  var speed = Math.random() * 4 + 16; // uniformly random between 16 and 20
+  var nextPowerup = obj.makePowerUp(type, nextPowerupID++, position.x, position.y, heading, speed)
+  powerups.set(nextPowerup.id,nextPowerup);
+}
+
+function spawnPowerupsOnPlayerDeath(player) {
+  // currently just spawns five random powerups.
+  // TODO spawn according to a player-dependent distribution?
+  for (var i=0; i<5; i++) {
+    var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
+    spawnMovingPowerupFromPoint(type, {x: player.x, y: player.y});
+  }
+}
 
 function movePlayer(player){
   var vx = player.velocity.x + player.acceleration.x;
@@ -490,6 +506,12 @@ function moveAllProjectiles() {
     if(!moveProjectile(projectile)){
       projectiles.delete(key);
     }
+  }
+}
+function moveAllPowerups() {
+  for (var key of powerups.keys()) {
+    powerup = powerups.get(key);
+    powerup.timeStep();
   }
 }
 
@@ -577,6 +599,7 @@ function updateLeaderboard(){
 }
 function moveLoops(){
   moveAllProjectiles();
+  moveAllPowerups();
   collisionDetect();
   updateLeaderboard();
   for (var key of players.keys()) {
@@ -588,6 +611,7 @@ function moveLoops(){
     var player = players.get(key);
     if (player.health <= 0) {
       keysOfPlayersToExpel.push(key);
+      spawnPowerupsOnPlayerDeath(player);
     }
   }
   if (keysOfPlayersToExpel.length > 0){
