@@ -158,3 +158,25 @@ exports.segmentIntersect = function(segment1,segment2){
 
 	return check;
 }
+exports.multinomialSelect = function(choices, weights){
+  //weights and choices are equal length arrays. weights should add to 1. the probability of choosing choice[i] is weight[i].
+  var alpha = Math.random();
+  var boundary = 0;
+  if(choices.length!=weights.length){
+    console.log("SOMETHING WENT REALLY WRONG IN MULTINOMIAL SELECT YOU MIGHT WANT TO CHECK THIS OUT");
+    return choices[0];
+  }
+  for(var i = 0;i<weights.length;i++){
+    boundary+=weights[i];
+    if(boundary>=alpha){
+      return choices[i];
+    }
+  }
+  if(boundary<0.9999){
+    console.log("SOMETHING WENT REALLY WRONG IN MULTINOMIAL SELECT YOU MIGHT WANT TO CHECK THIS OUT");
+    return choices[0];
+  }
+  else{
+    return choices[Math.floor(alpha*choices.length)];
+  }
+}

@@ -154,15 +154,15 @@ function newObstacle(){
   {
 
     var angle1 = 2*Math.PI*Math.random();
-    var r1 = 0.9*config.MAP_RADIUS*Math.sqrt(Math.random());
+    var r1 = 0.9*config.ARENA_RADIUS*Math.sqrt(Math.random());
     var angle2 = 2*Math.PI/5*Math.random() + angle1;
-    var r2 = 0.9*config.MAP_RADIUS*Math.sqrt(Math.random());
+    var r2 = 0.9*config.ARENA_RADIUS*Math.sqrt(Math.random());
     var x1 = r1*Math.cos(angle1);
     var y1 = r1*Math.sin(angle1);
     var x2 = r2 * Math.cos(angle2);
     var y2 = r2 * Math.sin(angle2);
     var segment = {point1:{x:x1, y: y1}, point2: {x:x2,y:y2}};
-    if(util.distance(segment.point1,segment.point2)<config.MAP_RADIUS && util.distance(segment.point1,segment.point2)>10*config.PLAYER_RADIUS)
+    if(util.distance(segment.point1,segment.point2)<config.ARENA_RADIUS && util.distance(segment.point1,segment.point2)>10*config.PLAYER_RADIUS)
             check = true;
 
   }
@@ -417,7 +417,7 @@ function spawnPlayer(player){
   var numPlayers = players.size;
   var nextCoords;
   while(true){
-    nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
+    nextCoords = util.uniformCircleGenerate(config.ARENA_RADIUS,players);
     var failed = false;
     for(var i=0; i<numObstacles; i++)
     {
@@ -436,9 +436,9 @@ function spawnPlayer(player){
 }
 function spawnPowerup(){
   if (powerups.size >= config.MAX_POWERUPS) {return; }
-  var r = config.MAP_RADIUS;
+  var r = config.ARENA_RADIUS;
   var pos = util.gaussianCircleGenerate(r,0.1,0.00001);
-  var type = config.POWERUP_TYPES[Math.floor(Math.random()*config.POWERUP_TYPES.length)];
+  var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
 
   var nextPowerup = {
     type:type,

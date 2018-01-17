@@ -15,8 +15,9 @@ var ammo = 30;
 var sniperAmmo = 0;
 var oscillateStep = 0;
 var numOscillateSteps = 64;
-var isSpiky = false;
 //oscillateStep and numOscillateSteps maybe shouldn't be random global variables
+
+var isSpiky = false;
 
 
 Game.prototype.handleNetwork = function(socket) {
@@ -307,7 +308,7 @@ function updateOscillate(){
   oscillateStep = (oscillateStep+1)%numOscillateSteps;
 }
 
-var cycleLength = 6;
+var cycleLength = 3;
 setInterval(updateOscillate, cycleLength*1000/numOscillateSteps);
 
 
