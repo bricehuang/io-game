@@ -10,6 +10,8 @@ var startPingTime;
 //var numKills;
 var leaderboard =[];
 var myStats;
+var ammo = 30;
+var sniperAmmo = 0;
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -26,6 +28,8 @@ Game.prototype.handleNetwork = function(socket) {
 
     leaderboard = message.globalLeaderboard;
     myStats = message.yourStats;
+    ammo = message.ammo;
+    sniperAmmo = message.sniperAmmo;
   })
   socket.on('death', function(message){
     socket.disconnect();
@@ -247,6 +251,27 @@ function drawForeground(gfx){
   }
   gfx.stroke();
 }
+function drawAmmo(gfx) {
+  gfx.strokeStyle = "#000000";
+  gfx.fillStyle = "#000000";
+  gfx.font = "16px Verdana";
+
+  gfx.beginPath();
+  gfx.rect(screenWidth - 120, screenHeight - 40, 25, 25);
+  gfx.drawImage(bulletImg, screenWidth - 120 , screenHeight - 40, 25, 25);
+  var offset = 0;
+  if (ammo.toString().length == 1) {
+    offset = 10;
+  } // this makes the ammo count appear next to the icon.  TODO is there a better way?
+  gfx.fillText(ammo, screenWidth-72-offset, screenHeight-15);
+  gfx.rect(screenWidth - 60, screenHeight - 40, 25, 25);
+  gfx.drawImage(bulletImg, screenWidth - 60 , screenHeight - 40, 25, 25);
+  gfx.fillText(sniperAmmo, screenWidth - 22, screenHeight - 15);
+  gfx.closePath();
+
+  gfx.stroke();
+  gfx.asdf
+}
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
@@ -257,4 +282,5 @@ Game.prototype.handleGraphics = function(gfx,mouse) {
   drawObjects(gfx);
   drawBoundary(gfx);
   drawForeground(gfx);
+  drawAmmo(gfx);
 }

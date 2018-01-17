@@ -337,9 +337,13 @@ function registerPlayerPowerupHit(player, powerup){
       player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth
     );
   } else if (powerup.type == "ammo"){
-    player.ammo += config.AMMO_POWERUP_BULLETS;
+    player.ammo = Math.min(
+      player.ammo + config.AMMO_POWERUP_BULLETS, config.MAX_AMMO
+    );
   } else if (powerup.type == "sniperAmmo") {
-    player.sniperAmmo += config.SNIPER_AMMO_POWERUP_BULLETS;
+    player.sniperAmmo = Math.min(
+      player.sniperAmmo + config.SNIPER_AMMO_POWERUP_BULLETS, config.MAX_SNIPER_AMMO
+    );
   }
   powerups.delete(powerup.id);
   return;
@@ -499,13 +503,12 @@ function sendView(player) {
       myAbsoluteCoord: {x: player.x, y:player.y},
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
-
       nearbyObstacles: nearbyObstacles,
-      myScore: player.kills,
-
       nearbyProjectiles: nearbyProjectiles,
       globalLeaderboard : leaderboard,
-      yourStats: {name:player.name, score:player.kills,id:player.id}
+      yourStats: {name:player.name, score:player.kills,id:player.id},
+      ammo: player.ammo,
+      sniperAmmo: player.sniperAmmo
     }
   );
 }
