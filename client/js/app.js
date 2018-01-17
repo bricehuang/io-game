@@ -23,6 +23,8 @@ var healthpackImg = new Image();
 healthpackImg.src = 'js/images/healthpack.ico';
 var spikeImg = new Image();
 spikeImg.src = 'js/images/spike.png';
+var fastImg = new Image();
+fastImg.src = 'js/images/fast.png';
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');

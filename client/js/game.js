@@ -221,6 +221,7 @@ function getPowerupIcon(type) {
     case "sniperAmmo": return sniperImg;
     case "healthpack": return healthpackImg;
     case "spike": return spikeImg;
+    case "fast": return fastImg;
     default: return new Image();
   }
 }
@@ -282,6 +283,7 @@ function drawForeground(gfx){
 
     gfx.fillStyle = 'red';
     gfx.textAlign = 'left';
+    console.log(JSON.stringify(myStats));
     gfx.fillText(myStats.name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
     gfx.textAlign = 'right';
     gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);

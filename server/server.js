@@ -50,7 +50,8 @@ io.on('connection', function (socket) {
     ammo: config.STARTING_AMMO,
     sniperAmmo: 0,
     mouseCoords: {x:1, y:0},
-    isSpiky: false
+    isSpiky: false,
+    isFast: false
   }
 
   spawnPlayer(currentPlayer);
@@ -74,9 +75,11 @@ io.on('connection', function (socket) {
     if (message[2]) {acceleration.x += 1};
     if (message[3]) {acceleration.y += 1};
     var magnitude = util.magnitude(acceleration);
+    var currentAccelerationMagnitude = config.ACCELERATION_MAGNITUDE;
+    if(player.isFast) currentAccelerationMagnitude*=3/2;
     if (magnitude > 0) {
-      acceleration.x *= config.ACCELERATION_MAGNITUDE/magnitude;
-      acceleration.y *= config.ACCELERATION_MAGNITUDE/magnitude;
+      acceleration.x *= currentAccelerationMagnitude/magnitude;
+      acceleration.y *= currentAccelerationMagnitude/magnitude;
     }
     player.acceleration = acceleration;
   });
@@ -397,6 +400,8 @@ function registerPlayerPowerupHit(player, powerup){
     );
   } else if (powerup.type == "spike"){
     player.isSpiky = true;
+  }else if (powerup.type == "fast"){
+    player.isFast = true;
   }
   powerups.delete(powerup.id);
   spawnPowerup();
@@ -465,9 +470,13 @@ function movePlayer(player){
     vy -= (vy/speedBeforeFricton)*config.FRICTION;
   }
   var speed = util.magnitude({x:vx, y:vy});
-  if (speed > config.PLAYER_SPEED_LIMIT) {
-    vx *= config.PLAYER_SPEED_LIMIT/speed;
-    vy *= config.PLAYER_SPEED_LIMIT/speed;
+  currentSpeedLimit = config.PLAYER_SPEED_LIMIT;
+  if(player.isFast){
+    currentSpeedLimit*=3/2;
+  }
+  if (speed > currentSpeedLimit) {
+    vx *= currentSpeedLimit/speed;
+    vy *= currentSpeedLimit/speed;
   }
 
   player.velocity.x = vx;
