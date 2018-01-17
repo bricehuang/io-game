@@ -269,7 +269,7 @@ function collisionDetect(){
     for (var key2 of projectiles.keys()) {
       var player = players.get(key1);
       var projectile = projectiles.get(key2);
-      if (util.collided(player,projectile,config.EPS)) {
+      if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
       }
     }
@@ -278,7 +278,7 @@ function collisionDetect(){
     for (var key2 of powerups.keys()) {
       var player = players.get(key1);
       var powerup = powerups.get(key2);
-      if (util.collided(player,powerup,config.EPS)) {
+      if (player && powerup && util.collided(player,powerup,config.EPS)) {
         registerPlayerPowerupHit(player,powerup);
       }
     }
@@ -288,7 +288,7 @@ function collisionDetect(){
   {
     for(var key of players.keys()){
       var player = players.get(key);
-      if(util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist< config.PLAYER_RADIUS)
+      if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist< config.PLAYER_RADIUS)
         registerPlayerWallHit(player,obstacles[i]);
 
     }
@@ -324,7 +324,10 @@ function registerPlayerProjectileHit(player, projectile){
   }
   projectiles.delete(projectile.id);
   if (player.health <= 0 && wasAlive) {
-    players.get(projectile.corrPlayerID).kills++;
+    var shooterPlayer = players.get(projectile.corrPlayerID);
+    if (shooterPlayer) { // make sure shooterPlayer isn't already dead
+      shooterPlayer.kills++;
+    }
   }
   return;
 }
@@ -511,7 +514,6 @@ function updateLeaderboard(){
   for(var key of players.keys()){
     player = players.get(key)
     leaderboard.push({name:player.name,score:player.kills, id:player.id,});
-
   }
   leaderboard.sort(function(a,b){return b.score-a.score});
   leaderboard = leaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,leaderboard.length));
