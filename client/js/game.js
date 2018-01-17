@@ -153,7 +153,6 @@ function drawObjects(gfx) {
     var radius = 10;
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    gfx.fill();//edit this out later lol
     gfx.stroke();
 
     var powerupImg = getPowerupIcon(powerup.type);

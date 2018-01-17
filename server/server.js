@@ -366,7 +366,19 @@ function reflect(x1,y1,x2,y2) {
 
 function spawnPlayer(player){
   var numPlayers = players.size;
-  var nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
+  var nextCoords;
+  while(true){
+    nextCoords = util.uniformCircleGenerate(config.MAP_RADIUS,players);
+    var failed = false;
+    for(var i=0; i<numObstacles; i++)
+    {
+      if(util.pointLineDistance(nextCoords,obstacles[i]).trueDist<config.PLAYER_RADIUS){
+        failed = true;
+        break;
+      }
+    }
+    if(!failed) break;
+  }
 
   player.x = nextCoords.x;
   player.y = nextCoords.y;
