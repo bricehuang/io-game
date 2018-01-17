@@ -505,8 +505,8 @@ function sendView(player) {
   var allPlayers = [];
   for (var key of players.keys()) {
     var otherPlayer = players.get(key);
-    var relX = otherPlayer.x - player.x;
-    var relY = otherPlayer.y - player.y;
+    var relX = (otherPlayer.x - player.x)|0;
+    var relY = (otherPlayer.y - player.y)|0;
     if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {
         name: otherPlayer.name,
@@ -521,8 +521,8 @@ function sendView(player) {
   var allPowerups = [];
   for (var key of powerups.keys()) {
     var powerup = powerups.get(key);
-    var relX = powerup.x - player.x;
-    var relY = powerup.y - player.y;
+    var relX = (powerup.x - player.x)|0;
+    var relY = (powerup.y - player.y)|0;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {type:powerup.type, x:relX, y: relY};
       allPowerups.push(current);
@@ -531,8 +531,8 @@ function sendView(player) {
   var nearbyProjectiles = [];
   for (var key of projectiles.keys()) {
     var projectile = projectiles.get(key);
-    var relX = projectile.x - player.x;
-    var relY = projectile.y - player.y;
+    var relX = (projectile.x - player.x)|0;
+    var relY = (projectile.y - player.y)|0;
     if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {x:relX, y:relY, type: projectile.type};
       nearbyProjectiles.push(current);
@@ -542,10 +542,10 @@ function sendView(player) {
 
   var nearbyObstacles = [];
   for(var i=0; i<obstacles.length; i++) {
-    var x1 = obstacles[i].point1.x - player.x;
-    var y1 = obstacles[i].point1.y - player.y;
-    var x2 = obstacles[i].point2.x - player.x;
-    var y2 = obstacles[i].point2.y - player.y;
+    var x1 = (obstacles[i].point1.x - player.x)|0;
+    var y1 = (obstacles[i].point1.y - player.y)|0;
+    var x2 = (obstacles[i].point2.x - player.x)|0;
+    var y2 = (obstacles[i].point2.y - player.y)|0;
     var segment = {point1:{x:x1,y:y1}, point2: {x:x2,y:y2}};
     nearbyObstacles.push(segment);
   }

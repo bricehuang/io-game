@@ -103,6 +103,7 @@ window.addEventListener('resize', function() {
 function setMouseCoords(mouse){
   mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
   socket.emit('mouseCoords', mouseCoords);
+  console.log(mouseCoords);
 }
 c.addEventListener('mousemove', setMouseCoords, false);
 
