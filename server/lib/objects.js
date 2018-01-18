@@ -241,10 +241,10 @@ exports.Player = function(socket, spawnPosition) {
     return (Date.now() - this.lastSpikePickup < config.SPIKE_DURATION_MILLIS);
   }
 
-  this.isVectorOnScreen = function(vector) {
+  this.isVectorOnScreen = function(vector, buffer=config.BUFFER) {
     return (
-      Math.abs(vector.x) <= this.windowDimensions.width/2 &&
-      Math.abs(vector.y) <= this.windowDimensions.height/2
+      Math.abs(vector.x) <= buffer+this.windowDimensions.width/2 &&
+      Math.abs(vector.y) <= buffer+this.windowDimensions.height/2
     );
   }
 }

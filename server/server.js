@@ -495,7 +495,6 @@ function expelDeadPlayer(player) {
 
 function sendView(player) {
   var allPlayers = [];
-  var buffer = 2*config.PLAYER_RADIUS;
   for (var key of players.keys()) {
     var otherPlayer = players.get(key);
     var relPosition = util.intify(util.diff(otherPlayer.position, player.position));
