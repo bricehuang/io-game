@@ -123,6 +123,7 @@ onkeydown = onkeyup = function(e){
       map[e.keyCode] = false;
 }
 var lastmove = [false, false, false, false];
+var lastFireMove = false;
 function move(){
   if (!socket) return;
   //w = 87
@@ -142,6 +143,19 @@ function move(){
 }
 updateRate=10;
 setInterval(move, 1000 / updateRate);
+
+function updateContinuousFire(){
+  if(!socket) return;
+  //space = 32
+  var thisFireMove = map[32];
+  if(
+    thisFireMove!=lastFireMove
+    ){
+    socket.emit('continuousFire', thisFireMove);
+    lastFireMove=thisFireMove;
+  }
+
+}
 
 function resize() {
   if (!socket) return;
