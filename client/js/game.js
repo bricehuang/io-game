@@ -55,7 +55,7 @@ Game.prototype.handleLogic = function() {
 }
 
 function drawBackgroundGrid(gfx) {
-  
+
   gfx.strokeStyle = '#003300';
   var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
   if (smallestXLine < 0){
@@ -74,7 +74,7 @@ function drawBackgroundGrid(gfx) {
     gfx.lineTo(screenWidth, y);
   }
   gfx.stroke();
-  
+
   /*
   var gradient = gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,0,
                                           -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,ARENA_RADIUS);
@@ -93,8 +93,8 @@ function drawObjects(gfx) {
   // projectiles
   for (var i=0; i<nearbyProjectiles.length; i++) {
     var projectile = nearbyProjectiles[i];
-    var centerX = screenWidth/2 + projectile.x;
-    var centerY = screenHeight/2 + projectile.y;
+    var centerX = screenWidth/2 + projectile.position.x;
+    var centerY = screenHeight/2 + projectile.position.y;
     if (projectile.type == "bullet") {
       var radius = 5;
       gfx.beginPath();
@@ -114,8 +114,8 @@ function drawObjects(gfx) {
   // powerups
   for (var i=0; i<nearbyPowerups.length; i++) {
     var powerup = nearbyPowerups[i];
-    var centerX = screenWidth/2 + powerup.x;
-    var centerY = screenHeight/2 + powerup.y;
+    var centerX = screenWidth/2 + powerup.position.x;
+    var centerY = screenHeight/2 + powerup.position.y;
     var radius = 20;
     radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
     gfx.beginPath();
@@ -133,8 +133,8 @@ function drawObjects(gfx) {
   gfx.lineWidth=5;
   for (var i=0; i<nearbyPlayers.length; i++) {
     var player = nearbyPlayers[i];
-    var centerX = screenWidth/2 + player.x;
-    var centerY = screenHeight/2 + player.y;
+    var centerX = screenWidth/2 + player.position.x;
+    var centerY = screenHeight/2 + player.position.y;
     var radius = 30;
     if(player.isSpiky){
       gfx.beginPath();

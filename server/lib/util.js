@@ -105,7 +105,7 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
 };
 
 exports.collided = function(firstObject, secondObject, epsilon) {
-  var dist = exports.distance(firstObject.position, secondObject);
+  var dist = exports.distance(firstObject.position, secondObject.position);
   return dist <= (1 + epsilon) * (firstObject.radius + secondObject.radius);
 };
 

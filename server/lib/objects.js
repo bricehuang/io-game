@@ -5,10 +5,8 @@ exports.Projectile = function(
   type,
   id,
   corrPlayerID,
-  x,
-  y,
-  xHeading,
-  yHeading,
+  position,
+  heading,
   speed,
   timeLeft,
   radius
@@ -16,32 +14,26 @@ exports.Projectile = function(
   this.type = type;
   this.id = id;
   this.corrPlayerID = corrPlayerID;
-  this.x = x;
-  this.y = y;
-  this.xHeading = xHeading;
-  this.yHeading = yHeading;
+  this.position = position;
+  this.heading = heading;
   this.speed = speed;
   this.timeLeft = timeLeft;
   this.radius = radius;
 }
 
 exports.Projectile.prototype.timeStep = function() {
-  this.x += this.xHeading*this.speed;
-  this.y += this.yHeading*this.speed;
-
+  this.position = util.add(this.position, util.scale(this.heading, this.speed));
   this.timeLeft -= 1;
 }
 
-exports.Bullet = function(id, corrPlayerID, x, y, xHeading, yHeading) {
+exports.Bullet = function(id, corrPlayerID, position, heading) {
   exports.Projectile.call(
     this,
     "bullet",
     id,
     corrPlayerID,
-    x,
-    y,
-    xHeading,
-    yHeading,
+    position,
+    heading,
     config.BULLET_SPEED,
     config.BULLET_AGE,
     config.BULLET_RADIUS
@@ -49,16 +41,14 @@ exports.Bullet = function(id, corrPlayerID, x, y, xHeading, yHeading) {
 }
 exports.Bullet.prototype = new exports.Projectile();
 
-exports.SniperBullet = function(id, corrPlayerID, x, y, xHeading, yHeading) {
+exports.SniperBullet = function(id, corrPlayerID, position, heading) {
    exports.Projectile.call(
     this,
     "sniperBullet",
     id,
     corrPlayerID,
-    x,
-    y,
-    xHeading,
-    yHeading,
+    position,
+    heading,
     config.SNIPER_BULLET_SPEED,
     config.SNIPER_BULLET_AGE,
     config.BULLET_RADIUS
@@ -69,8 +59,7 @@ exports.SniperBullet.prototype = new exports.Projectile();
 exports.Powerup = function(
   id,
   type,
-  x,
-  y,
+  position,
   effectOnPlayer,
   heading={x:1, y:0},
   speed=0,
@@ -78,33 +67,28 @@ exports.Powerup = function(
 ) {
   this.id = id;
   this.type = type;
-  this.x = x;
-  this.y = y;
+  this.position = position;
   this.effectOnPlayer = effectOnPlayer;
   this.heading = heading;
   this.speed = speed;
   this.radius = radius;
 }
 exports.Powerup.prototype.timeStep = function() {
-  this.x += this.heading.x*this.speed;
-  this.y += this.heading.y*this.speed;
+  this.position = util.add(this.position, util.scale(this.heading, this.speed));
   this.speed -= config.FRICTION*this.speed;
-  var mag = util.magnitude({x: this.x, y:this.y});
   var eff_arena_radius = config.ARENA_RADIUS - this.radius;
-  if (mag > eff_arena_radius) {
-    this.x *= eff_arena_radius / mag;
-    this.y *= eff_arena_radius / mag;
+  if (util.magnitude(this.position) > eff_arena_radius) {
+    this.position = util.scaleToLength(this.position, eff_arena_radius);
     this.speed = 0;
   }
 }
 
-exports.HealthPackPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
+exports.HealthPackPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
   exports.Powerup.call(
     this,
     id,
     "healthpack",
-    x,
-    y,
+    position,
     function(player) {
       player.health = Math.min(player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth);
     },
@@ -114,13 +98,12 @@ exports.HealthPackPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
 }
 exports.HealthPackPowerUp.prototype = new exports.Powerup();
 
-exports.AmmoPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
+exports.AmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
   exports.Powerup.call(
     this,
     id,
     "ammo",
-    x,
-    y,
+    position,
     function(player) {
       player.ammo = Math.min(
         player.ammo + config.AMMO_POWERUP_BULLETS,
@@ -133,13 +116,12 @@ exports.AmmoPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
 }
 exports.AmmoPowerUp.prototype = new exports.Powerup();
 
-exports.SniperAmmoPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
+exports.SniperAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
   exports.Powerup.call(
     this,
     id,
     "sniperAmmo",
-    x,
-    y,
+    position,
     function(player) {
       player.sniperAmmo = Math.min(
         player.sniperAmmo + config.SNIPER_AMMO_POWERUP_BULLETS,
@@ -152,13 +134,12 @@ exports.SniperAmmoPowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
 }
 exports.SniperAmmoPowerUp.prototype = new exports.Powerup();
 
-exports.SpikePowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
+exports.SpikePowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
   exports.Powerup.call(
     this,
     id,
     "spike",
-    x,
-    y,
+    position,
     function(player) {
       player.refreshSpikeTimestamp();
     },
@@ -168,13 +149,12 @@ exports.SpikePowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
 }
 exports.SpikePowerUp.prototype = new exports.Powerup();
 
-exports.FastPowerUp = function(id, x, y, heading={x:1,y:0}, speed=0){
+exports.FastPowerUp = function(id, position, heading={x:1,y:0}, speed=0){
   exports.Powerup.call(
     this,
     id,
     "fast",
-    x,
-    y,
+    position,
     function(player){
       player.refreshFastTimestamp();
     },
@@ -184,13 +164,13 @@ exports.FastPowerUp = function(id, x, y, heading={x:1,y:0}, speed=0){
 }
 exports.FastPowerUp.prototype = new exports.Powerup();
 
-exports.makePowerUp = function(type, id, x, y, heading={x:1, y:0}, speed=0) {
+exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) {
   switch (type) {
-    case "healthpack": return new exports.HealthPackPowerUp(id, x, y, heading, speed);
-    case "ammo": return new exports.AmmoPowerUp(id, x, y, heading, speed);
-    case "sniperAmmo": return new exports.SniperAmmoPowerUp(id, x, y, heading, speed);
-    case "spike": return new exports.SpikePowerUp(id, x, y, heading, speed);
-    case "fast": return new exports.FastPowerUp(id, x, y, heading, speed);
+    case "healthpack": return new exports.HealthPackPowerUp(id, position, heading, speed);
+    case "ammo": return new exports.AmmoPowerUp(id, position, heading, speed);
+    case "sniperAmmo": return new exports.SniperAmmoPowerUp(id, position, heading, speed);
+    case "spike": return new exports.SpikePowerUp(id, position, heading, speed);
+    case "fast": return new exports.FastPowerUp(id, position, heading, speed);
     default: console.assert('invalid powerup type');
   }
 }
@@ -205,7 +185,6 @@ exports.Player = function(socket, spawnPosition) {
   this.mouseCoords = {x:1, y:0};
 
   this.position = spawnPosition;
-  this.target = spawnPosition;
   this.velocity = {x:0,y:0};
   this.acceleration = {x:0, y:0};
 

@@ -74,17 +74,17 @@ io.on('connection', function (socket) {
 
   socket.on('fire', function(vector){
     if (!(vector && "x" in vector && "y" in vector)) { return; }
+    if (vector.x == 0 && vector.y == 0) { return; }
     player = players.get(socket.id);
     if (!player) return;
     if (player.canFireNow() && player.ammo > 0) {
-      var normalizedVector = util.normalize(vector);
+      var heading = util.normalize(vector);
+      var position = util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST));
       var bullet = new obj.Bullet(
         nextProjectileID++,
         socket.id,
-        player.position.x + normalizedVector.x*config.BULLET_TO_PLAYER_SPAWN_DIST,
-        player.position.y + normalizedVector.y*config.BULLET_TO_PLAYER_SPAWN_DIST,
-        normalizedVector.x,
-        normalizedVector.y
+        position,
+        heading
       )
       projectiles.set(bullet.id, bullet);
       player.refreshFireTimestamp();
@@ -94,17 +94,16 @@ io.on('connection', function (socket) {
 
   socket.on('fireSniper', function(vector){
     if (!(vector && "x" in vector && "y" in vector)) { return; }
+    if (vector.x == 0 && vector.y == 0) { return; }
     player = players.get(socket.id);
     if (!player) return;
     if (player.canFireNow() && player.sniperAmmo>0) {
-      var normalizedVector = util.normalize(vector);
+      var heading = util.normalize(vector);
       var sniperBullet = new obj.SniperBullet(
         nextProjectileID++,
         socket.id,
-        player.position.x + normalizedVector.x*config.BULLET_TO_PLAYER_SPAWN_DIST,
-        player.position.y + normalizedVector.y*config.BULLET_TO_PLAYER_SPAWN_DIST,
-        normalizedVector.x,
-        normalizedVector.y
+        util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST)),
+        heading
       )
       projectiles.set(sniperBullet.id, sniperBullet);
       player.refreshFireTimestamp();
@@ -258,6 +257,7 @@ function collisionDetect(){
     for (var key2 of projectiles.keys()) {
       var player = players.get(key1);
       var projectile = projectiles.get(key2);
+      // TODO this is hacky
       if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
       }
@@ -398,15 +398,15 @@ function spawnPowerup(){
   var pos = util.gaussianCircleGenerate(r,0.1,0.00001);
   var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
 
-  var nextPowerup = obj.makePowerUp(type, nextPowerupID++, pos.x, pos.y)
+  var nextPowerup = obj.makePowerUp(type, nextPowerupID++, pos)
 
-  powerups.set(nextPowerup.id,nextPowerup);
+  powerups.set(nextPowerup.id, nextPowerup);
 }
 function spawnMovingPowerupFromPoint(type, position) {
   var angle = Math.random() * 2 * Math.PI;
   var heading = {x: Math.cos(angle), y: Math.sin(angle)}
   var speed = Math.random() * 4 + 16; // uniformly random between 16 and 20
-  var nextPowerup = obj.makePowerUp(type, nextPowerupID++, position.x, position.y, heading, speed)
+  var nextPowerup = obj.makePowerUp(type, nextPowerupID++, position, heading, speed)
   powerups.set(nextPowerup.id,nextPowerup);
 }
 
@@ -454,16 +454,18 @@ function moveProjectile(projectile){
   // moves a projectile, and returns whether the projectile is still alive
   // (i.e. has not run out of time or escaped the arena)
 
-  var isAlive = (projectile.timeLeft > 0 && util.magnitude(projectile) <= config.ARENA_RADIUS)
-  for(var i=0; i<numObstacles; i++)
-  {
-    if(util.pointLineDistance({x:projectile.x, y:projectile.y}, obstacles[i]).trueDist< 2*config.BULLET_RADIUS)
+  var isAlive = (
+    projectile.timeLeft > 0 && util.magnitude(projectile.position) <= config.ARENA_RADIUS
+  );
+  for (var i=0; i<numObstacles; i++) {
+    if(util.pointLineDistance(projectile.position, obstacles[i]).trueDist < 2*config.BULLET_RADIUS){
       isAlive = false;
+    }
   }
-  if(isAlive)
+  if (isAlive) {
     projectile.timeStep();
+  }
   return isAlive;
-
 }
 function moveAllProjectiles() {
   for(var key of projectiles.keys()){
@@ -491,12 +493,11 @@ function sendView(player) {
   var buffer = 2*config.PLAYER_RADIUS;
   for (var key of players.keys()) {
     var otherPlayer = players.get(key);
-    var posDiff = util.intify(util.diff(otherPlayer.position, player.position));
-    if (player.isVectorOnScreen(posDiff)) {
+    var relPosition = util.intify(util.diff(otherPlayer.position, player.position));
+    if (player.isVectorOnScreen(relPosition)) {
       var current = {
         name: otherPlayer.name,
-        x: posDiff.x,
-        y: posDiff.y,
+        position: relPosition,
         health: otherPlayer.health,
         mouseCoords: otherPlayer.mouseCoords,
         isSpiky : otherPlayer.isSpiky()
@@ -507,18 +508,18 @@ function sendView(player) {
   var allPowerups = [];
   for (var key of powerups.keys()) {
     var powerup = powerups.get(key);
-    var posDiff = util.intify(util.diff({x: powerup.x, y:powerup.y}, player.position));
-    if (player.isVectorOnScreen(posDiff)) {
-      var current = {type: powerup.type, x: posDiff.x, y: posDiff.y};
+    var relPosition = util.intify(util.diff(powerup.position, player.position));
+    if (player.isVectorOnScreen(relPosition)) {
+      var current = {type: powerup.type, position: relPosition};
       allPowerups.push(current);
     }
   }
   var nearbyProjectiles = [];
   for (var key of projectiles.keys()) {
     var projectile = projectiles.get(key);
-    var posDiff = util.intify(util.diff({x: projectile.x, y: projectile.y}, player.position));
-    if (player.isVectorOnScreen(posDiff)) {
-      var current = {type: projectile.type, x: posDiff.x, y: posDiff.y};
+    var relPosition = util.intify(util.diff(projectile.position, player.position));
+    if (player.isVectorOnScreen(relPosition)) {
+      var current = {type: projectile.type, position: relPosition};
       nearbyProjectiles.push(current);
     }
   }
@@ -589,5 +590,3 @@ http.listen(serverPort, function() {
 });
 
 setInterval(moveLoops, 1000 / config.FRAME_RATE);
-//setInterval(spawnPowerup, 1000 / config.POWERUP_SPAWN_PER_SECOND);
-
