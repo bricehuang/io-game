@@ -113,6 +113,7 @@ exports.pointLineDistance = function(point, segment) {
       ret.index = 2;
     }
 	}
+  return ret;
 };
 
 exports.segmentIntersect = function(segment1, segment2){
