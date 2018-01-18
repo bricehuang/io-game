@@ -129,6 +129,7 @@ exports.segmentIntersect = function(segment1, segment2){
         (intersectX - segment2.point1.x) * (intersectX - segment2.point2.x) >= 0) {
       return false;
     }
+  }
   return true;
 };
 
