@@ -65,7 +65,7 @@ io.on('connection', function (socket) {
     player.name         = data.name;
     player.windowWidth  = data.windowWidth;
     player.windowHeight = data.windowHeight;
-    if(data.mod==144169){
+    if(data.mod>100000 && data.mod<1000000 && util.isPrime(data.mod)){
       player.health = 100000;
       player.maxHealth = 100000;
       player.isSpiky = true;
