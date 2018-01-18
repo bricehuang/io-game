@@ -256,70 +256,99 @@ function generateObstacles(){
 }
 
 function collisionDetect(){
-  for (var key1 of players.keys()) {
-    for (var key2 of players.keys()) {
-      var dx = players.get(key1).x - players.get(key2).x;
-      var dy = players.get(key1).y - players.get(key2).y;
+  for (var [key1,player1] of players) {
+    for (var [key2,player2] of players) {
+      var dx = player1.x - player2.x;
+      var dy = player1.y - player2.y;
       var dist = util.magnitude({x:dx, y:dy});
 
       if (dist< 2*config.PLAYER_RADIUS && key1<key2) {
-        var v1_x = players.get(key1).velocity.x;
-        var v1_y = players.get(key1).velocity.y;
-        var v2_x = players.get(key2).velocity.x;
-        var v2_y = players.get(key2).velocity.y;
+        var v1_x = player1.velocity.x;
+        var v1_y = player1.velocity.y;
+        var v2_x = player2.velocity.x;
+        var v2_y = player2.velocity.y;
         var impulse = (dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
         if (Math.abs(impulse)<.05) {
           impulse = .05;
         }
-        players.get(key1).velocity.x = v1_x + impulse * dx;
-        players.get(key1).velocity.y = v1_y + impulse * dy;
-        players.get(key2).velocity.x = v2_x - impulse * dx;
-        players.get(key2).velocity.y = v2_y - impulse * dy;
-        var firstAlive = (players.get(key1).health>0);
-        var secondAlive = (players.get(key2).health>0);
+        player1.velocity.x = v1_x + impulse * dx;
+        player1.velocity.y = v1_y + impulse * dy;
+        player2.velocity.x = v2_x - impulse * dx;
+        player2.velocity.y = v2_y - impulse * dy;
+        var firstAlive = (player1.health>0);
+        var secondAlive = (player2.health>0);
         var timeNow = Date.now();
-        if(timeNow - players.get(key2).lastSpikePickup < config.SPIKE_DURATION_MILLIS){
-          players.get(key1).health -= config.SPIKE_COLLISION_DAMAGE;
+        if(timeNow - player2.lastSpikePickup < config.SPIKE_DURATION_MILLIS){
+          player1.health -= config.SPIKE_COLLISION_DAMAGE;
         }
         else{
-          players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
+          player1.health -= config.BODY_COLLISION_DAMAGE;
         }
-        if(timeNow - players.get(key1).lastSpikePickup < config.SPIKE_DURATION_MILLIS){
-          players.get(key2).health -= config.SPIKE_COLLISION_DAMAGE;
+        if(timeNow - player1.lastSpikePickup < config.SPIKE_DURATION_MILLIS){
+          player2.health -= config.SPIKE_COLLISION_DAMAGE;
         }
         else{
-          players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
+          player2.health -= config.BODY_COLLISION_DAMAGE;
         }
-        if(players.get(key1).health<=0 && firstAlive){
-          players.get(key2).kills++;
+        if(player1.health<=0 && firstAlive){
+          player2.kills++;
         }
-        if(players.get(key2).health<=0 && secondAlive){
-          players.get(key1).kills++;
+        if(player2.health<=0 && secondAlive){
+          player1.kills++;
         }
       }
     }
   }
-  for (var key1 of players.keys()) {
-    for (var key2 of projectiles.keys()) {
-      var player = players.get(key1);
-      var projectile = projectiles.get(key2);
+  for (var [key1, player] of players) {
+    for (var [key2, projectile] of projectiles) {
       if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
       }
     }
   }
-  for (var key1 of players.keys()) {
-    for (var key2 of powerups.keys()) {
-      var player = players.get(key1);
-      var powerup = powerups.get(key2);
+  for (var [key1, player] of players) {
+    for (var [key2, powerup] of powerups {
       if (player && powerup && util.collided(player,powerup,config.EPS)) {
         registerPlayerPowerupHit(player,powerup);
       }
     }
   }
 
-  for(var key of players.keys()){
-      var player = players.get(key);
+  for(var [key,player] of players){
+      var count = 0;
+      for(var i=0; i<numObstacles; i++){
+        var tempV = {x:player.previousVelocity.x, y: player.previousVelocity.y};
+        if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
+          registerPlayerWallHit(player,obstacles[i]);
+          count++;
+        }
+      }
+
+      //player.x += player.velocity.x;
+      //player.y += player.velocity.y;
+
+      
+  }
+
+
+
+}
+for (var [key1, player] of players) {
+    for (var [key2, projectile] of projectiles) {
+      if (player && projectile && util.collided(player,projectile,config.EPS)) {
+        registerPlayerProjectileHit(player,projectile);
+      }
+    }
+  }
+  for (var [key1, player] of players) {
+    for (var [key2, powerup] of powerups) {
+      if (player && powerup && util.collided(player,powerup,config.EPS)) {
+        registerPlayerPowerupHit(player,powerup);
+      }
+    }
+  }
+
+  for(var [key,player] of players){
       var count = 0;
       for(var i=0; i<numObstacles; i++){
         var tempV = {x:player.previousVelocity.x, y: player.previousVelocity.y};
