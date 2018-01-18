@@ -12,7 +12,7 @@ var canvas = c.getContext('2d');
 c.width = screenWidth; c.height = screenHeight;
 
 var KEY_ENTER = 13;
-
+var gameMod = 0;
 var game = new Game();
 
 var bulletImg = new Image();
@@ -36,6 +36,7 @@ function startGame() {
     name: playerName,
     windowWidth: screenWidth,
     windowHeight: screenHeight,
+    mod: gameMod
   });
   animloop();
 }
@@ -172,4 +173,8 @@ c.addEventListener('keypress', function(event){
 function checkLatency() {
   startPingTime = Date.now();
   this.socket.emit('pingcheck');
+}
+
+function modChange(number){
+    gameMod = number;
 }

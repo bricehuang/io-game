@@ -157,6 +157,7 @@ exports.segmentIntersect = function(segment1,segment2){
 
 	return check;
 }
+
 exports.multinomialSelect = function(choices, weights){
   //weights and choices are equal length arrays. weights should add to 1. the probability of choosing choice[i] is weight[i].
   var alpha = Math.random();
@@ -188,3 +189,23 @@ exports.hash = function(input, mod){
     input = (a*input+b)%mod;
   }
 }
+}
+exports.gcd = function(a,b){
+
+}
+
+
+exports.intoWall = function(point, vector, segment){
+	var slope = (segment.point2.y - segment.point1.y)/(segment.point2.x - segment.point1.x);
+	var intercept = segment.point1.y - slope * segment.point1.x;
+	var above = (point.y > slope*point.x + intercept);
+	if(vector.x<0)
+		above = !above;
+	if(above)
+		return(vector.y/vector.x<slope);
+	else
+		return(vector.y/vector.x>slope);
+	
+}
+
+>>>>>>> 466459494c1c5b2aa9c64773ab4cda5ec9706792

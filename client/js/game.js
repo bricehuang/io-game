@@ -199,6 +199,7 @@ function drawObjects(gfx) {
 
 
 
+
   for(var i=0; i<nearbyObstacles.length; i++) {
     var segment = nearbyObstacles[i];
     var x1 = segment.point1.x + screenWidth/2;
