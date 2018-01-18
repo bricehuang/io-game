@@ -60,6 +60,7 @@ io.on('connection', function (socket) {
   players.set(socket.id,currentPlayer);
 
   socket.on('playerInformation', function(data){
+    if (!(data && "name" in data && "windowWidth" in data && "windowHeight" in data)) { return; }
     player = players.get(socket.id);
     if (!player) return;
     player.name         = data.name;
@@ -89,12 +90,14 @@ io.on('connection', function (socket) {
   });
 
   socket.on('mouseCoords', function(mouseCoords){
+    if (!(mouseCoords && "x" in mouseCoords && "y" in mouseCoords)) { return; }
     player = players.get(socket.id);
     if (!player) return;
     player.mouseCoords = mouseCoords;
   })
 
   socket.on('windowResized', function(dimensions){
+    if (!(dimensions && "windowWidth" in dimensions && "windowHeight" in dimensions)) { return; }
     player = players.get(socket.id);
     if (!player) return;
     player.windowWidth = dimensions.windowWidth;
@@ -102,6 +105,7 @@ io.on('connection', function (socket) {
   })
 
   socket.on('fire', function(vector){
+    if (!(vector && "x" in vector && "y" in vector)) { return; }
     player = players.get(socket.id);
     if (!player) return;
     if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.ammo>0) {
@@ -124,7 +128,7 @@ io.on('connection', function (socket) {
   })
 
   socket.on('fireSniper', function(vector){
-
+    if (!(vector && "x" in vector && "y" in vector)) { return; }
     player = players.get(socket.id);
     if (!player) return;
     if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.sniperAmmo>0) {
