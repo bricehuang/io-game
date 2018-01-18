@@ -40,7 +40,6 @@ io.on('connection', function (socket) {
     id: socket.id,
     target  : {x:0,y:0},
     velocity: {x:0,y:0},
-    previousVelocity :{x:0,y:0},
     acceleration: {x:0, y:0},
     radius: config.PLAYER_RADIUS,
     health: config.PLAYER_START_HEALTH,
@@ -351,7 +350,6 @@ function collisionDetect(){
   for(var [key,player] of players){
       var count = 0;
       for(var i=0; i<numObstacles; i++){
-        var tempV = {x:player.previousVelocity.x, y: player.previousVelocity.y};
         if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
           registerPlayerWallHit(player,obstacles[i]);
           count++;
@@ -508,7 +506,6 @@ function spawnPowerupsOnPlayerDeath(player) {
 }
 
 function movePlayer(player){
-  player.previousVelocity = player.velocity;
   player.x += player.velocity.x;
   player.y += player.velocity.y;
   var vx = player.velocity.x + player.acceleration.x;
