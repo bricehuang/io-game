@@ -30,41 +30,19 @@ io.on('connection', function (socket) {
   for(var i = 0;i<config.POWERUPS_PER_PLAYER;i++) spawnPowerup();
   // Write your code here
   // nextId = players.size;
-  currentPlayer = {
-    name:config.DEFAULT_NAME,
-    x:0,
-    y:0,
-    socket:socket,
-    windowHeight : config.DEFAULT_WINDOW_HEIGHT,
-    windowWidth  : config.DEFAULT_WINDOW_WIDTH,
-    id: socket.id,
-    target  : {x:0,y:0},
-    velocity: {x:0,y:0},
-    acceleration: {x:0, y:0},
-    radius: config.PLAYER_RADIUS,
-    health: config.PLAYER_START_HEALTH,
-    maxHealth: config.PLAYER_MAX_HEALTH,
-    kills: 0,
-    lastfire: -1,
-    lastCollision: -1,
-    ammo: config.STARTING_AMMO,
-    sniperAmmo: 0,
-    mouseCoords: {x:1, y:0},
-    lastSpikePickup: 0,
-    lastFastPickup: 0
-  }
 
-  spawnPlayer(currentPlayer);
-  spawnPowerup();
-  players.set(socket.id,currentPlayer);
+  var spawnPosition = findSpawnLocation();
+  currentPlayer = new obj.Player(socket, spawnPosition);
+
+  players.set(socket.id, currentPlayer);
 
   socket.on('playerInformation', function(data){
     if (!(data && "name" in data && "windowWidth" in data && "windowHeight" in data)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    player.name         = data.name;
-    player.windowWidth  = data.windowWidth;
-    player.windowHeight = data.windowHeight;
+    player.setName(data.name);
+    player.setWindowWidth(data.windowWidth);
+    player.setWindowHeight(data.windowHeight);
   });
 
   socket.on('move', function(message){
@@ -77,13 +55,10 @@ io.on('connection', function (socket) {
     if (message[2]) {acceleration.x += 1};
     if (message[3]) {acceleration.y += 1};
     var magnitude = util.magnitude(acceleration);
-    var currentAccelerationMagnitude = config.ACCELERATION_MAGNITUDE;
-    if(Date.now() - player.lastFastPickup < config.FAST_DURATION_MILLIS) {
-      currentAccelerationMagnitude*=3/2;
-    }
     if (magnitude > 0) {
-      acceleration.x *= currentAccelerationMagnitude/magnitude;
-      acceleration.y *= currentAccelerationMagnitude/magnitude;
+      var accelerationMagnitude = player.accelerationMagnitude();
+      acceleration.x *= accelerationMagnitude/magnitude;
+      acceleration.y *= accelerationMagnitude/magnitude;
     }
     player.acceleration = acceleration;
   });
@@ -92,22 +67,22 @@ io.on('connection', function (socket) {
     if (!(mouseCoords && "x" in mouseCoords && "y" in mouseCoords)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    player.mouseCoords = mouseCoords;
+    player.setMouseCoords(mouseCoords);
   })
 
   socket.on('windowResized', function(dimensions){
     if (!(dimensions && "windowWidth" in dimensions && "windowHeight" in dimensions)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    player.windowWidth = dimensions.windowWidth;
-    player.windowHeight = dimensions.windowHeight;
+    player.setWindowWidth(windowWidth);
+    player.setWindowHeight(windowHeight);
   })
 
   socket.on('fire', function(vector){
     if (!(vector && "x" in vector && "y" in vector)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.ammo>0) {
+    if (player.canFireNow() && player.ammo > 0) {
       var length = util.magnitude(vector);
       var normalizedVector = {x: vector.x/length, y: vector.y/length};
       var bullet = new obj.Bullet(
@@ -115,13 +90,11 @@ io.on('connection', function (socket) {
         socket.id,
         player.x + normalizedVector.x*30,
         player.y + normalizedVector.y*30,
-       // player.x + normalizedVector.x*40,
-        //player.y + normalizedVector.y*40,
         normalizedVector.x,
         normalizedVector.y
       )
       projectiles.set(bullet.id, bullet);
-      player.lastfire = Date.now();
+      player.refreshFireTimestamp();
       player.ammo--;
     }
   })
@@ -130,7 +103,7 @@ io.on('connection', function (socket) {
     if (!(vector && "x" in vector && "y" in vector)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.sniperAmmo>0) {
+    if (player.canFireNow() && player.sniperAmmo>0) {
       var length = util.magnitude(vector);
       var normalizedVector = {x: vector.x/length, y: vector.y/length};
       var sniperBullet = new obj.SniperBullet(
@@ -142,7 +115,7 @@ io.on('connection', function (socket) {
         normalizedVector.y
       )
       projectiles.set(sniperBullet.id, sniperBullet);
-      player.lastfire = Date.now();
+      player.refreshFireTimestamp();
       player.sniperAmmo--;
     }
   })
@@ -255,65 +228,70 @@ function generateObstacles(){
 }
 
 function collisionDetect(){
-  for (var [key1,player1] of players) {
-    for (var [key2,player2] of players) {
-      var dx = player1.x - player2.x;
-      var dy = player1.y - player2.y;
+  for (var key1 of players.keys()) {
+    for (var key2 of players.keys()) {
+      var dx = players.get(key1).x - players.get(key2).x;
+      var dy = players.get(key1).y - players.get(key2).y;
       var dist = util.magnitude({x:dx, y:dy});
 
       if (dist< 2*config.PLAYER_RADIUS && key1<key2) {
-        var v1_x = player1.velocity.x;
-        var v1_y = player1.velocity.y;
-        var v2_x = player2.velocity.x;
-        var v2_y = player2.velocity.y;
+        var v1_x = players.get(key1).velocity.x;
+        var v1_y = players.get(key1).velocity.y;
+        var v2_x = players.get(key2).velocity.x;
+        var v2_y = players.get(key2).velocity.y;
         var impulse = (dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
         if (Math.abs(impulse)<.05) {
           impulse = .05;
         }
-        player1.velocity.x = v1_x + impulse * dx;
-        player1.velocity.y = v1_y + impulse * dy;
-        player2.velocity.x = v2_x - impulse * dx;
-        player2.velocity.y = v2_y - impulse * dy;
-        var firstAlive = (player1.health>0);
-        var secondAlive = (player2.health>0);
+        players.get(key1).velocity.x = v1_x + impulse * dx;
+        players.get(key1).velocity.y = v1_y + impulse * dy;
+        players.get(key2).velocity.x = v2_x - impulse * dx;
+        players.get(key2).velocity.y = v2_y - impulse * dy;
+        var firstAlive = (players.get(key1).health>0);
+        var secondAlive = (players.get(key2).health>0);
         var timeNow = Date.now();
-        if(timeNow - player2.lastSpikePickup < config.SPIKE_DURATION_MILLIS){
-          player1.health -= config.SPIKE_COLLISION_DAMAGE;
+        if(players.get(key2).isSpiky()){
+          players.get(key1).health -= config.SPIKE_COLLISION_DAMAGE;
         }
         else{
-          player1.health -= config.BODY_COLLISION_DAMAGE;
+          players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
         }
-        if(timeNow - player1.lastSpikePickup < config.SPIKE_DURATION_MILLIS){
-          player2.health -= config.SPIKE_COLLISION_DAMAGE;
+        if(players.get(key1).isSpiky()){
+          players.get(key2).health -= config.SPIKE_COLLISION_DAMAGE;
         }
         else{
-          player2.health -= config.BODY_COLLISION_DAMAGE;
+          players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
         }
-        if(player1.health<=0 && firstAlive){
-          player2.kills++;
+        if(players.get(key1).health<=0 && firstAlive){
+          players.get(key2).kills++;
         }
-        if(player2.health<=0 && secondAlive){
-          player1.kills++;
+        if(players.get(key2).health<=0 && secondAlive){
+          players.get(key1).kills++;
         }
       }
     }
   }
-  for (var [key1, player] of players) {
-    for (var [key2, projectile] of projectiles) {
+  for (var key1 of players.keys()) {
+    for (var key2 of projectiles.keys()) {
+      var player = players.get(key1);
+      var projectile = projectiles.get(key2);
       if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
       }
     }
   }
-  for (var [key1, player] of players) {
-    for (var [key2, powerup] of powerups ){
+  for (var key1 of players.keys()) {
+    for (var key2 of powerups.keys()) {
+      var player = players.get(key1);
+      var powerup = powerups.get(key2);
       if (player && powerup && util.collided(player,powerup,config.EPS)) {
         registerPlayerPowerupHit(player,powerup);
       }
     }
   }
 
-  for(var [key,player] of players){
+  for(var key of players.keys()){
+      var player = players.get(key);
       var count = 0;
       for(var i=0; i<numObstacles; i++){
         if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
@@ -321,44 +299,6 @@ function collisionDetect(){
           count++;
         }
       }
-
-      //player.x += player.velocity.x;
-      //player.y += player.velocity.y;
-
-      
-  }
-
-
-
-
-  for (var [key1, player] of players) {
-    for (var [key2, projectile] of projectiles) {
-      if (player && projectile && util.collided(player,projectile,config.EPS)) {
-        registerPlayerProjectileHit(player,projectile);
-      }
-    }
-  }
-  for (var [key1, player] of players) {
-    for (var [key2, powerup] of powerups) {
-      if (player && powerup && util.collided(player,powerup,config.EPS)) {
-        registerPlayerPowerupHit(player,powerup);
-      }
-    }
-  }
-
-  for(var [key,player] of players){
-      var count = 0;
-      for(var i=0; i<numObstacles; i++){
-        if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
-          registerPlayerWallHit(player,obstacles[i]);
-          count++;
-        }
-      }
-
-      //player.x += player.velocity.x;
-      //player.y += player.velocity.y;
-
-
   }
 
 
@@ -367,6 +307,7 @@ function collisionDetect(){
 
 
 function registerPlayerWallHit(player, wall){
+
 
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
@@ -396,13 +337,6 @@ function registerPlayerWallHit(player, wall){
     player.velocity.y = newVelocity.y;
 
     }
-
-
-
-
-
-
-
   else{
     if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall) ){
       var newVelocity = reflect(player.velocity.x, player.velocity.y,
@@ -411,12 +345,7 @@ function registerPlayerWallHit(player, wall){
       player.velocity.y = newVelocity.y;
     }
   }
-
-
-
-
-  player.lastCollision = Date.now();
-
+  player.refreshLastCollision();
 }
 
 function registerPlayerProjectileHit(player, projectile){
@@ -456,7 +385,7 @@ function reflect(x1,y1,x2,y2) {
   return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
 }
 
-function spawnPlayer(player){
+function findSpawnLocation(){
   var numPlayers = players.size;
   var nextCoords;
   while(true){
@@ -471,11 +400,8 @@ function spawnPlayer(player){
     }
     if(!failed) break;
   }
-
-  player.x = nextCoords.x;
-  player.y = nextCoords.y;
-  player.target = nextCoords;
-  console.log("Player spawned at " + JSON.stringify(nextCoords));
+  console.log("Found player spawn location: " + JSON.stringify(nextCoords));
+  return nextCoords;
 }
 function spawnPowerup(){
   if (powerups.size >= config.MAX_POWERUPS) {return; }
@@ -516,19 +442,14 @@ function movePlayer(player){
     vy -= (vy/speedBeforeFricton)*config.FRICTION;
   }
   var speed = util.magnitude({x:vx, y:vy});
-  currentSpeedLimit = config.PLAYER_SPEED_LIMIT;
-  if(Date.now() - player.lastFastPickup < config.FAST_DURATION_MILLIS){
-    currentSpeedLimit*=3/2;
-  }
-  if (speed > currentSpeedLimit) {
-    vx *= currentSpeedLimit/speed;
-    vy *= currentSpeedLimit/speed;
+  var speedLimit = player.speedLimit();
+  if (speed > speedLimit) {
+    vx *= speedLimit/speed;
+    vy *= speedLimit/speed;
   }
 
   player.velocity.x = vx;
   player.velocity.y = vy;
-
-
 
   //Move to boundary if outside
   var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
@@ -589,11 +510,11 @@ function sendView(player) {
     if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
       var current = {
         name: otherPlayer.name,
-        x:relX,
+        x: relX,
         y: relY,
         health: otherPlayer.health,
         mouseCoords: otherPlayer.mouseCoords,
-        isSpiky : (Date.now() - otherPlayer.lastSpikePickup < config.SPIKE_DURATION_MILLIS)
+        isSpiky : otherPlayer.isSpiky()
       };
       allPlayers.push(current);
     }
@@ -640,7 +561,7 @@ function sendView(player) {
       nearbyObstacles: nearbyObstacles,
       nearbyProjectiles: nearbyProjectiles,
       globalLeaderboard : leaderboard,
-      yourStats: {name:player.name, score:player.kills,id:player.id},
+      yourStats: {name:player.name, score:player.kills, id:player.id},
       ammo: player.ammo,
       sniperAmmo: player.sniperAmmo
     }
@@ -650,7 +571,7 @@ function updateLeaderboard(){
   leaderboard = [];
   for(var key of players.keys()){
     player = players.get(key)
-    leaderboard.push({name:player.name,score:player.kills, id:player.id,});
+    leaderboard.push({name:player.name, score:player.kills, id:player.id,});
   }
   leaderboard.sort(function(a,b){return b.score-a.score});
   leaderboard = leaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,leaderboard.length));

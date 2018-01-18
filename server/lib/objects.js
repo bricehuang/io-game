@@ -160,7 +160,7 @@ exports.SpikePowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
     x,
     y,
     function(player) {
-      player.lastSpikePickup = Date.now();
+      player.refreshSpikeTimestamp();
     },
     heading,
     speed
@@ -176,7 +176,7 @@ exports.FastPowerUp = function(id, x, y, heading={x:1,y:0}, speed=0){
     x,
     y,
     function(player){
-      player.lastFastPickup = Date.now();
+      player.refreshFastTimestamp();
     },
     heading,
     speed
@@ -192,5 +192,75 @@ exports.makePowerUp = function(type, id, x, y, heading={x:1, y:0}, speed=0) {
     case "spike": return new exports.SpikePowerUp(id, x, y, heading, speed);
     case "fast": return new exports.FastPowerUp(id, x, y, heading, speed);
     default: console.assert('invalid powerup type');
+  }
+}
+
+exports.Player = function(socket, spawnPosition) {
+  this.id = socket.id;
+  this.socket = socket;
+
+  this.name = config.DEFAULT_NAME;
+  this.windowWidth = config.DEFAULT_WINDOW_WIDTH;
+  this.windowHeight = config.DEFAULT_WINDOW_HEIGHT;
+  this.mouseCoords = {x:1, y:0};
+
+  this.x = spawnPosition.x;
+  this.y = spawnPosition.y;
+  this.target = spawnPosition;
+  this.velocity = {x:0,y:0};
+  this.acceleration = {x:0, y:0};
+
+  this.radius = config.PLAYER_RADIUS;
+  this.health = config.PLAYER_START_HEALTH;
+  this.maxHealth = config.PLAYER_MAX_HEALTH;
+  this.kills = 0;
+  this.ammo = config.STARTING_AMMO;
+  this.sniperAmmo = 0;
+
+  this.lastCollision = 0;
+  this.lastfire = 0;
+  this.lastSpikePickup = 0;
+  this.lastFastPickup = 0;
+
+  this.setName = function(name){
+    this.name = name;
+  }
+  this.setWindowWidth = function(windowWidth) {
+    this.windowWidth = windowWidth;
+  }
+  this.setWindowHeight = function(windowHeight) {
+    this.windowHeight = windowHeight;
+  }
+  this.setMouseCoords = function(mouseCoords) {
+    this.mouseCoords = mouseCoords;
+  }
+  this.canFireNow = function() {
+    return (Date.now() - this.lastfire > config.FIRE_COOLDOWN_MILLIS);
+  }
+  this.refreshFireTimestamp = function() {
+    this.lastfire = Date.now();
+  }
+  this.refreshLastCollision = function() {
+    this.lastCollision = Date.now();
+  }
+
+  this.refreshFastTimestamp = function() {
+    return this.lastFastPickup = Date.now();
+  }
+  this.isFast = function() {
+    return (Date.now() - this.lastFastPickup < config.FAST_DURATION_MILLIS);
+  }
+  this.speedLimit = function() {
+    return this.isFast() ? 3/2 * config.PLAYER_SPEED_LIMIT : config.PLAYER_SPEED_LIMIT;
+  }
+  this.accelerationMagnitude = function() {
+    return this.isFast() ? 3/2 * config.ACCELERATION_MAGNITUDE : config.ACCELERATION_MAGNITUDE;
+  }
+
+  this.refreshSpikeTimestamp = function() {
+    return this.lastSpikePickup = Date.now();
+  }
+  this.isSpiky = function() {
+    return (Date.now() - this.lastSpikePickup < config.SPIKE_DURATION_MILLIS);
   }
 }
