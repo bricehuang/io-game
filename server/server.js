@@ -28,7 +28,9 @@ generateObstacles();
 
 app.use(express.static(__dirname + '/../client'));
 
+function broadcastAllPlayersFeed(message) {
 
+}
 
 
 io.on('connection', function (socket) {
@@ -49,6 +51,7 @@ io.on('connection', function (socket) {
     if (!player) return;
     player.setName(data.name);
     player.setWindowDimensions(data.windowDimensions);
+    io.emit('feed', data.name + " joined the game.");
   });
 
   socket.on('move', function(message){
@@ -87,7 +90,7 @@ io.on('connection', function (socket) {
       var position = util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST));
       var bullet = new obj.Bullet(
         nextProjectileID++,
-        socket.id,
+        player,
         position,
         heading
       )
@@ -112,7 +115,7 @@ io.on('connection', function (socket) {
       var heading = util.normalize(vector);
       var sniperBullet = new obj.SniperBullet(
         nextProjectileID++,
-        socket.id,
+        player,
         util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST)),
         heading
       )
@@ -258,9 +261,11 @@ function collisionDetect(){
         }
         if (player1.health <= 0 && player2.health > 0){
           player2.kills++;
+          io.emit('feed', player2.name + " roadkilled " + player1.name + "!");
         }
         if (player2.health <=0 && player1.health > 0){
           player1.kills++;
+          io.emit('feed', player1.name + " roadkilled " + player2.name + "!");
         }
       }
     }
@@ -364,10 +369,9 @@ function registerPlayerProjectileHit(player, projectile){
   }
   projectiles.delete(projectile.id);
   if (player.health <= 0 && wasAlive) {
-    var shooterPlayer = players.get(projectile.corrPlayerID);
-    if (shooterPlayer) { // make sure shooterPlayer isn't already dead
-      shooterPlayer.kills++;
-    }
+    var shooterPlayer = projectile.shooter;
+    shooterPlayer.kills++;
+    io.emit('feed', shooterPlayer.name + " killed " + player.name + "!");
   }
   return;
 }
@@ -569,7 +573,7 @@ function updateContinuousFire(){
         var position = util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST));
         var bullet = new obj.Bullet(
           nextProjectileID++,
-          player.socket.id,
+          player,
           position,
           heading
           )

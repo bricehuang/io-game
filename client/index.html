@@ -5,10 +5,37 @@
     <title>Sierra</title>
 
     <link rel="stylesheet" href="/css/main.css" />
+    <style>
+        #feedContainer {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 20%;
+            height: 30%;
+            border: 1px solid #004000;
+            opacity: 0.5;
+        }
+        #feed {
+            list-style-type: none;
+            margin:0;
+            padding: 0px 5px 0px 5px;
+            color: #004000;
+        }
+        #feed li{
+            font-family: sans-serif;
+            font-size: 16px;
+        }
+        .scrollable {
+            overflow: auto;
+        }
+    </style>
 </head>
 <body>
     <div id="gameAreaWrapper" style="display:none;">
         <canvas tabindex="1" id="cvs"></canvas>
+        <div class="scrollable" id="feedContainer">
+            <ul id="feed"></ul>
+        </div>
     </div>
     <div id="startMenuWrapper">
         <div id="startMenu">
@@ -20,6 +47,7 @@
         </div>
     </div>
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
      <script src="./js/browserGame.js"></script>
     <script src= "./js/bson.js"></script>

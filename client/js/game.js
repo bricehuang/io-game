@@ -19,8 +19,6 @@ var numOscillateSteps = 64;
 var bson = new BSON();
 var isSpiky = false;
 
-
-
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
@@ -44,10 +42,17 @@ Game.prototype.handleNetwork = function(socket) {
   socket.on('death', function(message){
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('startMenuWrapper').style.display = 'block';
+    $('#feed').empty();
+    while(feed.firstChild ){
+      feed.removeChild(feed.firstChild);
+    }
   })
   socket.on('pongcheck', function(){
     var timeNow = Date.now();
     console.log("Latency: " + (timeNow - startPingTime) + " ms.");
+  })
+  socket.on('feed', function(message){
+    $('#feed').append($('<li>').text(message));
   })
 }
 

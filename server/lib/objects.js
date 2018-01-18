@@ -4,7 +4,7 @@ var util  = require('./util.js');
 exports.Projectile = function(
   type,
   id,
-  corrPlayerID,
+  shooter,
   position,
   heading,
   speed,
@@ -13,7 +13,7 @@ exports.Projectile = function(
 ){
   this.type = type;
   this.id = id;
-  this.corrPlayerID = corrPlayerID;
+  this.shooter = shooter;
   this.position = position;
   this.heading = heading;
   this.speed = speed;
@@ -26,12 +26,12 @@ exports.Projectile.prototype.timeStep = function() {
   this.timeLeft -= 1;
 }
 
-exports.Bullet = function(id, corrPlayerID, position, heading) {
+exports.Bullet = function(id, shooter, position, heading) {
   exports.Projectile.call(
     this,
     "bullet",
     id,
-    corrPlayerID,
+    shooter,
     position,
     heading,
     config.BULLET_SPEED,
@@ -41,12 +41,12 @@ exports.Bullet = function(id, corrPlayerID, position, heading) {
 }
 exports.Bullet.prototype = new exports.Projectile();
 
-exports.SniperBullet = function(id, corrPlayerID, position, heading) {
+exports.SniperBullet = function(id, shooter, position, heading) {
    exports.Projectile.call(
     this,
     "sniperBullet",
     id,
-    corrPlayerID,
+    shooter,
     position,
     heading,
     config.SNIPER_BULLET_SPEED,
