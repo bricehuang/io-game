@@ -503,7 +503,7 @@ function expelDeadPlayer(player) {
 
 function sendView(player) {
   var allPlayers = [];
-  var buffer = config.PLAYER_RADIUS;
+  var buffer = 2*config.PLAYER_RADIUS;
   for (var key of players.keys()) {
     var otherPlayer = players.get(key);
     var relX = (otherPlayer.x - player.x)|0;
