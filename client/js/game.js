@@ -16,15 +16,17 @@ var sniperAmmo = 0;
 var oscillateStep = 0;
 var numOscillateSteps = 64;
 //oscillateStep and numOscillateSteps maybe shouldn't be random global variables
-
+var bson = new BSON();
 var isSpiky = false;
+
 
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
 
-  socket.on('gameState', function(message){
+  socket.on('gameState', function(data){
+    var message = bson.deserialize(Buffer.from(data));
     nearbyPlayers = message.nearbyPlayers;
     nearbyProjectiles = message.nearbyProjectiles;
     nearbyPowerups = message.nearbyPowerups;

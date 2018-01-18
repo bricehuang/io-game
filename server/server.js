@@ -1,4 +1,10 @@
+lobal.Buffer = global.Buffer || require("buffer").Buffer;
+
 var express = require('express');
+var BSON = require('bson');
+var Long = BSON.Binary;
+var bson = new BSON();
+
 var app     = express();
 var http    = require('http').Server(app);
 var io      = require('socket.io')(http);
@@ -319,10 +325,17 @@ function registerPlayerWallHit(player, wall){
 
     }
     else{
-      var newVelocity = util.reflect(
-        player.velocity,
-        {x: wall.point2.x - wall.point1.x, y: wall.point2.y - wall.point1.y}
-      );
+
+      if(util.intoWall(player.position, player.velocity, wall)){
+        var newVelocity = util.reflect(
+          player.velocity,
+          {x: wall.point2.x - wall.point1.x, y: wall.point2.y - wall.point1.y}
+        );
+      }
+      else{
+        var newVelocity = {x:player.velocity.x, y:player.velocity.y};
+      }
+
     }
 
     player.velocity.x = newVelocity.x;
@@ -525,7 +538,7 @@ function sendView(player) {
 
   player.socket.emit(
     'gameState',
-    {
+    bson.serialize({
       myAbsoluteCoord: player.position,
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
@@ -535,7 +548,7 @@ function sendView(player) {
       yourStats: {name:player.name, score:player.kills, id:player.id},
       ammo: player.ammo,
       sniperAmmo: player.sniperAmmo
-    }
+    }, Long)
   );
 }
 function updateLeaderboard(){
