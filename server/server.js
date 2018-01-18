@@ -32,7 +32,7 @@ io.on('connection', function (socket) {
   // nextId = players.size;
 
   var spawnPosition = findSpawnLocation();
-  currentPlayer = new obj.Player(socket, spawnPosition);
+  var currentPlayer = new obj.Player(socket, spawnPosition);
 
   players.set(socket.id, currentPlayer);
 
@@ -310,7 +310,7 @@ function registerPlayerWallHit(player, wall){
     if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) ||
       (hitType.dist<0.25*config.PLAYER_RADIUS && util.dotProduct(wallVector, player.velocity) > 0))
     {
-      var newVelocity = reflect(
+      var newVelocity = util.reflect(
         player.velocity,
         {x: wall.point2.y - wall.point1.y, y: wall.point1.x - wall.point2.x}
       );
@@ -319,7 +319,7 @@ function registerPlayerWallHit(player, wall){
 
     }
     else{
-      var newVelocity = reflect(
+      var newVelocity = util.reflect(
         player.velocity,
         {x: wall.point2.x - wall.point1.x, y: wall.point2.y - wall.point1.y}
       );
@@ -331,7 +331,7 @@ function registerPlayerWallHit(player, wall){
     }
   else{
     if(util.intoWall(player.position, player.velocity, wall) ){
-      var newVelocity = reflect(
+      var newVelocity = util.reflect(
         player.velocity,
         {x: wall.point2.x - wall.point1.x, y: wall.point2.y - wall.point1.y}
       );
@@ -364,20 +364,6 @@ function registerPlayerPowerupHit(player, powerup){
   spawnPowerup();
   return;
 }
-
-function sign(x){
-  return (x >= 0) ? 1 : -1;
-}
-
-//reflect vector vec1 about vector vec2
-function reflect(vec1,vec2) {
-  var angle1 = Math.atan2(vec1.y,vec1.x);
-  var angle2 = Math.atan2(vec2.y,vec2.x);
-  var reflectedAngle = 2*angle2-angle1;
-  var r = util.magnitude(vec1);
-  return {x:r*Math.cos(reflectedAngle), y:r*Math.sin(reflectedAngle)};
-}
-
 
 function findSpawnLocation(){
   var numPlayers = players.size;
@@ -447,7 +433,7 @@ function movePlayer(player){
       player.position,
       (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter
     )
-    player.velocity = reflect(
+    player.velocity = util.reflect(
       player.velocity, {x: -player.position.y, y: player.position.x}
     );
     player.position = util.add(player.position, player.velocity);

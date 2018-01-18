@@ -30,6 +30,15 @@ exports.distance = function(vec1, vec2){
   return exports.magnitude(exports.diff(vec1, vec2));
 };
 
+//reflect vector vec1 about vector vec2
+exports.reflect = function(vec1,vec2) {
+  var angle1 = Math.atan2(vec1.y,vec1.x);
+  var angle2 = Math.atan2(vec2.y,vec2.x);
+  var reflectedAngle = 2*angle2-angle1;
+  var r = util.magnitude(vec1);
+  return {x:r*Math.cos(reflectedAngle), y:r*Math.sin(reflectedAngle)};
+}
+
 exports.dotProduct = function(vector1, vector2){
   return vector1.x * vector2.x + vector1.y * vector2.y;
 };
