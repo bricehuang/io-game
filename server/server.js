@@ -311,6 +311,7 @@ function registerPlayerWallHit(player, wall){
 
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
+    console.log('bad');
     var wallVector;
     if(hitType.index ==1){
       wallVector = {x: wall.point2.x - wall.point1.x, y:wall.point2.y - wall.point1.y };
@@ -320,17 +321,23 @@ function registerPlayerWallHit(player, wall){
     }
 
     if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) ||
-      hitType.dist<0.25*config.PLAYER_RADIUS)
+      (hitType.dist<0.25*config.PLAYER_RADIUS && util.dotProduct(wallVector, player.velocity) > 0))
     {
+       console.log(util.dotProduct(player.velocity,wallVector));
        var newVelocity = reflect(player.velocity.x, player.velocity.y,
-        wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
+       wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
        newVelocity.x -= wallVector.x/util.magnitude(wallVector);
        newVelocity.y -= wallVector.y/util.magnitude(wallVector);
-
+       console.log(util.dotProduct(newVelocity,wallVector));
     }
     else{
+      if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall)){
       var newVelocity = reflect(player.velocity.x, player.velocity.y,
         wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
+      }
+      else{
+        var newVelocity = {x:player.velocity.x, y:player.velocity.y};
+      }
     }
 
     player.velocity.x = newVelocity.x;
@@ -339,6 +346,7 @@ function registerPlayerWallHit(player, wall){
     }
   else{
     if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall) ){
+      console.log('good');
       var newVelocity = reflect(player.velocity.x, player.velocity.y,
         wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
       player.velocity.x = newVelocity.x;
