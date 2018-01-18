@@ -91,6 +91,12 @@ io.on('connection', function (socket) {
     }
   })
 
+  socket.on('continuousFire', function(tryFire){
+    player = players.get(socket.id);
+    if(!player) return;
+    player.tryingContinuousFire = tryFire;
+    return;
+  })
   socket.on('fireSniper', function(vector){
     if (!(vector && "x" in vector && "y" in vector)) { return; }
     if (vector.x == 0 && vector.y == 0) { return; }
@@ -122,6 +128,8 @@ io.on('connection', function (socket) {
     }
   })
 });
+
+
 
 function newObstacle(){
   check = false
@@ -547,17 +555,39 @@ function sendView(player) {
 }
 function updateLeaderboard(){
   leaderboard = [];
-  for(var key of players.keys()){
-    player = players.get(key)
+  for(var [key,player] of players){
     leaderboard.push({name:player.name, score:player.kills, id:player.id,});
   }
   leaderboard.sort(function(a,b){return b.score-a.score});
   leaderboard = leaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,leaderboard.length));
 }
+function updateContinuousFire(){
+  for(var [key,player] of players){
+    if(!player) return;
+    if(player.tryingContinuousFire){
+      if(player.canFireNow() && player.ammo>0){
+        var vector = player.mouseCoords;
+        var heading = util.normalize(vector);
+        var position = util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST));
+        var bullet = new obj.Bullet(
+          nextProjectileID++,
+          player.socket.id,
+          position,
+          heading
+          )
+        projectiles.set(bullet.id,bullet);
+        player.refreshFireTimestamp();
+        player.ammo--;
+      }
+      //same code as single bullet, refactor this
+    }
+  }
+}
 function moveLoops(){
   moveAllProjectiles();
   moveAllPowerups();
   collisionDetect();
+  updateContinuousFire();
   updateLeaderboard();
   for (var key of players.keys()) {
     movePlayer(players.get(key));

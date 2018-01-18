@@ -157,6 +157,8 @@ function updateContinuousFire(){
 
 }
 
+setInterval(updateContinuousFire, 1000/updateRate);
+
 function resize() {
   if (!socket) return;
   screenWidth = window.innerWidth;
