@@ -74,8 +74,8 @@ io.on('connection', function (socket) {
     if (!(dimensions && "windowWidth" in dimensions && "windowHeight" in dimensions)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    player.setWindowWidth(windowWidth);
-    player.setWindowHeight(windowHeight);
+    player.setWindowWidth(dimensions.windowWidth);
+    player.setWindowHeight(dimensions.windowHeight);
   })
 
   socket.on('fire', function(vector){
