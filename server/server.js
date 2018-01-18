@@ -51,8 +51,8 @@ io.on('connection', function (socket) {
     ammo: config.STARTING_AMMO,
     sniperAmmo: 0,
     mouseCoords: {x:1, y:0},
-    isSpiky: false,
-    isFast: false
+    lastSpikePickup: 0,
+    lastFastPickup: 0
   }
 
   spawnPlayer(currentPlayer);
@@ -82,7 +82,9 @@ io.on('connection', function (socket) {
     if (message[3]) {acceleration.y += 1};
     var magnitude = util.magnitude(acceleration);
     var currentAccelerationMagnitude = config.ACCELERATION_MAGNITUDE;
-    if(player.isFast) currentAccelerationMagnitude*=3/2;
+    if(Date.now() - player.lastFastPickup < config.FAST_DURATION_MILLIS) {
+      currentAccelerationMagnitude*=3/2;
+    }
     if (magnitude > 0) {
       acceleration.x *= currentAccelerationMagnitude/magnitude;
       acceleration.y *= currentAccelerationMagnitude/magnitude;
@@ -275,13 +277,14 @@ function collisionDetect(){
         players.get(key2).velocity.y = v2_y - impulse * dy;
         var firstAlive = (players.get(key1).health>0);
         var secondAlive = (players.get(key2).health>0);
-        if(players.get(key2).isSpiky){
+        var timeNow = Date.now();
+        if(timeNow - players.get(key2).lastSpikePickup < config.SPIKE_DURATION_MILLIS){
           players.get(key1).health -= config.SPIKE_COLLISION_DAMAGE;
         }
         else{
           players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
         }
-        if(players.get(key1).isSpiky){
+        if(timeNow - players.get(key1).lastSpikePickup < config.SPIKE_DURATION_MILLIS){
           players.get(key2).health -= config.SPIKE_COLLISION_DAMAGE;
         }
         else{
@@ -490,7 +493,7 @@ function movePlayer(player){
   }
   var speed = util.magnitude({x:vx, y:vy});
   currentSpeedLimit = config.PLAYER_SPEED_LIMIT;
-  if(player.isFast){
+  if(Date.now() - player.lastFastPickup < config.FAST_DURATION_MILLIS){
     currentSpeedLimit*=3/2;
   }
   if (speed > currentSpeedLimit) {
@@ -566,7 +569,7 @@ function sendView(player) {
         y: relY,
         health: otherPlayer.health,
         mouseCoords: otherPlayer.mouseCoords,
-        isSpiky : otherPlayer.isSpiky
+        isSpiky : (Date.now() - otherPlayer.lastSpikePickup < config.SPIKE_DURATION_MILLIS)
       };
       allPlayers.push(current);
     }
@@ -615,8 +618,7 @@ function sendView(player) {
       globalLeaderboard : leaderboard,
       yourStats: {name:player.name, score:player.kills,id:player.id},
       ammo: player.ammo,
-      sniperAmmo: player.sniperAmmo,
-      isSpiky: player.isSpiky
+      sniperAmmo: player.sniperAmmo
     }
   );
 }

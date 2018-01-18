@@ -189,11 +189,6 @@ exports.hash = function(input, mod){
     input = (a*input+b)%mod;
   }
 }
-}
-exports.gcd = function(a,b){
-
-}
-
 
 exports.intoWall = function(point, vector, segment){
 	var slope = (segment.point2.y - segment.point1.y)/(segment.point2.x - segment.point1.x);
@@ -205,7 +200,5 @@ exports.intoWall = function(point, vector, segment){
 		return(vector.y/vector.x<slope);
 	else
 		return(vector.y/vector.x>slope);
-	
-}
 
->>>>>>> 466459494c1c5b2aa9c64773ab4cda5ec9706792
+}
