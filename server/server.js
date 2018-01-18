@@ -49,7 +49,8 @@ io.on('connection', function (socket) {
     lastCollision: -1,
     ammo: config.STARTING_AMMO,
     sniperAmmo: 0,
-    mouseCoords: {x:1, y:0}
+    mouseCoords: {x:1, y:0},
+    isSpiky: false
   }
   
   spawnPlayer(currentPlayer);
@@ -116,9 +117,6 @@ io.on('connection', function (socket) {
   socket.on('fireSniper', function(vector){
 
     player = players.get(socket.id);
-    if(player.name=='michael'){
-      player.sniperAmmo+=5;
-    }
     if (!player) return;
     if (Date.now() - player.lastfire > config.FIRE_COOLDOWN_MILLIS && player.sniperAmmo>0) {
       var length = util.magnitude(vector);
@@ -266,8 +264,18 @@ function collisionDetect(){
         players.get(key2).velocity.y = v2_y - impulse * dy;
         var firstAlive = (players.get(key1).health>0);
         var secondAlive = (players.get(key2).health>0);
-        players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
-        players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
+        if(players.get(key2).isSpiky){
+          players.get(key1).health -= config.SPIKE_COLLISION_DAMAGE;
+        }
+        else{
+          players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
+        }
+        if(players.get(key1).isSpiky){
+          players.get(key2).health -= config.SPIKE_COLLISION_DAMAGE;
+        }
+        else{
+          players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
+        }
         if(players.get(key1).health<=0 && firstAlive){
           players.get(key2).kills++;
         }
@@ -396,6 +404,8 @@ function registerPlayerPowerupHit(player, powerup){
     player.sniperAmmo = Math.min(
       player.sniperAmmo + config.SNIPER_AMMO_POWERUP_BULLETS, config.MAX_SNIPER_AMMO
     );
+  } else if (powerup.type == "spike"){
+    player.isSpiky = true;
   }
   powerups.delete(powerup.id);
   return;
@@ -532,7 +542,8 @@ function sendView(player) {
         x:relX,
         y: relY,
         health: otherPlayer.health,
-        mouseCoords: otherPlayer.mouseCoords
+        mouseCoords: otherPlayer.mouseCoords,
+        isSpiky : otherPlayer.isSpiky
       };
       allPlayers.push(current);
     }
@@ -581,7 +592,8 @@ function sendView(player) {
       globalLeaderboard : leaderboard,
       yourStats: {name:player.name, score:player.kills,id:player.id},
       ammo: player.ammo,
-      sniperAmmo: player.sniperAmmo
+      sniperAmmo: player.sniperAmmo,
+      isSpiky: player.isSpiky
     }
   );
 }
