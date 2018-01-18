@@ -307,7 +307,7 @@ function collisionDetect(){
     }
   }
   for (var [key1, player] of players) {
-    for (var [key2, powerup] of powerups {
+    for (var [key2, powerup] of powerups ){
       if (player && powerup && util.collided(player,powerup,config.EPS)) {
         registerPlayerPowerupHit(player,powerup);
       }
@@ -332,8 +332,8 @@ function collisionDetect(){
 
 
 
-}
-for (var [key1, player] of players) {
+
+  for (var [key1, player] of players) {
     for (var [key2, projectile] of projectiles) {
       if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
@@ -370,7 +370,6 @@ for (var [key1, player] of players) {
 
 
 function registerPlayerWallHit(player, wall){
-
 
   var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
   if(hitType.endpoint){
