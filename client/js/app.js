@@ -33,8 +33,10 @@ function startGame() {
   SetupSocket(socket);
   socket.emit('playerInformation',{
     name: playerName,
-    windowWidth: screenWidth,
-    windowHeight: screenHeight
+    windowDimensions: {
+      width: screenWidth,
+      height: screenHeight
+    }
   });
   animloop();
 }
@@ -146,7 +148,7 @@ function resize() {
   screenWidth = window.innerWidth;
   screenHeight = window.innerHeight;
 
-  var newDimensions = {windowWidth: screenWidth, windowHeight: screenHeight};
+  var newDimensions = {width: screenWidth, height: screenHeight};
   socket.emit('windowResized', newDimensions);
 }
 window.addEventListener('resize', resize);

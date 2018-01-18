@@ -180,8 +180,10 @@ exports.Player = function(socket, spawnPosition) {
   this.socket = socket;
 
   this.name = config.DEFAULT_NAME;
-  this.windowWidth = config.DEFAULT_WINDOW_WIDTH;
-  this.windowHeight = config.DEFAULT_WINDOW_HEIGHT;
+  this.windowDimensions = {
+    width: config.DEFAULT_WINDOW_WIDTH,
+    height: config.DEFAULT_WINDOW_HEIGHT
+  };
   this.mouseCoords = {x:1, y:0};
 
   this.position = spawnPosition;
@@ -203,11 +205,8 @@ exports.Player = function(socket, spawnPosition) {
   this.setName = function(name){
     this.name = name;
   }
-  this.setWindowWidth = function(windowWidth) {
-    this.windowWidth = windowWidth;
-  }
-  this.setWindowHeight = function(windowHeight) {
-    this.windowHeight = windowHeight;
+  this.setWindowDimensions = function(windowDimensions) {
+    this.windowDimensions = windowDimensions;
   }
   this.setMouseCoords = function(mouseCoords) {
     this.mouseCoords = mouseCoords;
@@ -244,8 +243,8 @@ exports.Player = function(socket, spawnPosition) {
 
   this.isVectorOnScreen = function(vector) {
     return (
-      Math.abs(vector.x) <= this.windowWidth/2 &&
-      Math.abs(vector.y) <= this.windowHeight/2
+      Math.abs(vector.x) <= this.windowDimensions.width/2 &&
+      Math.abs(vector.y) <= this.windowDimensions.height/2
     );
   }
 }

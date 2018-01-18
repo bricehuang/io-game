@@ -37,12 +37,12 @@ io.on('connection', function (socket) {
   players.set(socket.id, currentPlayer);
 
   socket.on('playerInformation', function(data){
-    if (!(data && "name" in data && "windowWidth" in data && "windowHeight" in data)) { return; }
+    if (!(data && "name" in data && "windowDimensions" in data)) { return; }
+    if (!("width" in data.windowDimensions && "height" in data.windowDimensions)) { return; }
     player = players.get(socket.id);
     if (!player) return;
     player.setName(data.name);
-    player.setWindowWidth(data.windowWidth);
-    player.setWindowHeight(data.windowHeight);
+    player.setWindowDimensions(data.windowDimensions);
   });
 
   socket.on('move', function(message){
@@ -65,11 +65,10 @@ io.on('connection', function (socket) {
   })
 
   socket.on('windowResized', function(dimensions){
-    if (!(dimensions && "windowWidth" in dimensions && "windowHeight" in dimensions)) { return; }
+    if (!(dimensions && "width" in dimensions && "height" in dimensions)) { return; }
     player = players.get(socket.id);
     if (!player) return;
-    player.setWindowWidth(dimensions.windowWidth);
-    player.setWindowHeight(dimensions.windowHeight);
+    player.setWindowDimensions(dimensions);
   })
 
   socket.on('fire', function(vector){
@@ -249,7 +248,6 @@ function collisionDetect(){
     for (var key2 of projectiles.keys()) {
       var player = players.get(key1);
       var projectile = projectiles.get(key2);
-      // TODO this is hacky
       if (player && projectile && util.collided(player,projectile,config.EPS)) {
         registerPlayerProjectileHit(player,projectile);
       }
