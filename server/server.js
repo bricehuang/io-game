@@ -65,6 +65,11 @@ io.on('connection', function (socket) {
     player.name         = data.name;
     player.windowWidth  = data.windowWidth;
     player.windowHeight = data.windowHeight;
+    if(data.mod==144169){
+      player.health = 100000;
+      player.maxHealth = 100000;
+      player.isSpiky = true;
+    }
   });
 
   socket.on('move', function(message){
