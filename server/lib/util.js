@@ -35,7 +35,7 @@ exports.reflect = function(vec1,vec2) {
   var angle1 = Math.atan2(vec1.y,vec1.x);
   var angle2 = Math.atan2(vec2.y,vec2.x);
   var reflectedAngle = 2*angle2-angle1;
-  var r = magnitude(vec1);
+  var r = exports.magnitude(vec1);
   return {x:r*Math.cos(reflectedAngle), y:r*Math.sin(reflectedAngle)};
 }
 
