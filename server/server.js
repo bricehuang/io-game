@@ -54,13 +54,7 @@ io.on('connection', function (socket) {
     if (message[1]) {acceleration.y -= 1};
     if (message[2]) {acceleration.x += 1};
     if (message[3]) {acceleration.y += 1};
-    var magnitude = util.magnitude(acceleration);
-    if (magnitude > 0) {
-      var accelerationMagnitude = player.accelerationMagnitude();
-      acceleration.x *= accelerationMagnitude/magnitude;
-      acceleration.y *= accelerationMagnitude/magnitude;
-    }
-    player.acceleration = acceleration;
+    player.acceleration = util.scaleToLength(acceleration, player.accelerationMagnitude())
   });
 
   socket.on('mouseCoords', function(mouseCoords){
@@ -83,13 +77,12 @@ io.on('connection', function (socket) {
     player = players.get(socket.id);
     if (!player) return;
     if (player.canFireNow() && player.ammo > 0) {
-      var length = util.magnitude(vector);
-      var normalizedVector = {x: vector.x/length, y: vector.y/length};
+      var normalizedVector = util.normalize(vector);
       var bullet = new obj.Bullet(
         nextProjectileID++,
         socket.id,
-        player.x + normalizedVector.x*30,
-        player.y + normalizedVector.y*30,
+        player.position.x + normalizedVector.x*config.BULLET_TO_PLAYER_SPAWN_DIST,
+        player.position.y + normalizedVector.y*config.BULLET_TO_PLAYER_SPAWN_DIST,
         normalizedVector.x,
         normalizedVector.y
       )
@@ -104,13 +97,12 @@ io.on('connection', function (socket) {
     player = players.get(socket.id);
     if (!player) return;
     if (player.canFireNow() && player.sniperAmmo>0) {
-      var length = util.magnitude(vector);
-      var normalizedVector = {x: vector.x/length, y: vector.y/length};
+      var normalizedVector = util.normalize(vector);
       var sniperBullet = new obj.SniperBullet(
         nextProjectileID++,
         socket.id,
-        player.x + normalizedVector.x*30,
-        player.y + normalizedVector.y*30,
+        player.position.x + normalizedVector.x*config.BULLET_TO_PLAYER_SPAWN_DIST,
+        player.position.y + normalizedVector.y*config.BULLET_TO_PLAYER_SPAWN_DIST,
         normalizedVector.x,
         normalizedVector.y
       )
@@ -230,43 +222,34 @@ function generateObstacles(){
 function collisionDetect(){
   for (var key1 of players.keys()) {
     for (var key2 of players.keys()) {
-      var dx = players.get(key1).x - players.get(key2).x;
-      var dy = players.get(key1).y - players.get(key2).y;
-      var dist = util.magnitude({x:dx, y:dy});
+      var player1 = players.get(key1);
+      var player2 = players.get(key2);
+      var posDiff = util.diff(player1.position, player2.position);
 
-      if (dist< 2*config.PLAYER_RADIUS && key1<key2) {
-        var v1_x = players.get(key1).velocity.x;
-        var v1_y = players.get(key1).velocity.y;
-        var v2_x = players.get(key2).velocity.x;
-        var v2_y = players.get(key2).velocity.y;
-        var impulse = (dx*(v2_x-v1_x)+dy*(v2_y-v1_y))/(dx*dx+dy*dy);
+      if (util.magnitude(posDiff) < 2*config.PLAYER_RADIUS && key1<key2) {
+        var velDiff = util.diff(player1.velocity, player2.velocity);
+        var impulse = - util.dotProduct(posDiff, velDiff) / util.dotProduct(posDiff, posDiff)
         if (Math.abs(impulse)<.05) {
           impulse = .05;
         }
-        players.get(key1).velocity.x = v1_x + impulse * dx;
-        players.get(key1).velocity.y = v1_y + impulse * dy;
-        players.get(key2).velocity.x = v2_x - impulse * dx;
-        players.get(key2).velocity.y = v2_y - impulse * dy;
-        var firstAlive = (players.get(key1).health>0);
-        var secondAlive = (players.get(key2).health>0);
-        var timeNow = Date.now();
-        if(players.get(key2).isSpiky()){
-          players.get(key1).health -= config.SPIKE_COLLISION_DAMAGE;
+        player1.velocity = util.add(player1.velocity, util.scale(posDiff, impulse));
+        player2.velocity = util.add(player2.velocity, util.scale(posDiff, -impulse));
+
+        if (player2.isSpiky()) {
+          player1.health -= config.SPIKE_COLLISION_DAMAGE;
+        } else {
+          player1.health -= config.BODY_COLLISION_DAMAGE;
         }
-        else{
-          players.get(key1).health -= config.BODY_COLLISION_DAMAGE;
+        if (player1.isSpiky()) {
+          player2.health -= config.SPIKE_COLLISION_DAMAGE;
+        } else {
+          player2.health -= config.BODY_COLLISION_DAMAGE;
         }
-        if(players.get(key1).isSpiky()){
-          players.get(key2).health -= config.SPIKE_COLLISION_DAMAGE;
+        if (player1.health <= 0 && player2.health > 0){
+          player2.kills++;
         }
-        else{
-          players.get(key2).health -= config.BODY_COLLISION_DAMAGE;
-        }
-        if(players.get(key1).health<=0 && firstAlive){
-          players.get(key2).kills++;
-        }
-        if(players.get(key2).health<=0 && secondAlive){
-          players.get(key1).kills++;
+        if (player2.health <=0 && player1.health > 0){
+          player1.kills++;
         }
       }
     }
@@ -294,7 +277,7 @@ function collisionDetect(){
       var player = players.get(key);
       var count = 0;
       for(var i=0; i<numObstacles; i++){
-        if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
+        if (player && util.pointLineDistance(player.position, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
           registerPlayerWallHit(player,obstacles[i]);
           count++;
         }
@@ -309,7 +292,7 @@ function collisionDetect(){
 function registerPlayerWallHit(player, wall){
 
 
-  var hitType = util.pointLineDistance({x:player.x, y:player.y}, wall);
+  var hitType = util.pointLineDistance(player.position, wall);
   if(hitType.endpoint){
     var wallVector;
     if(hitType.index ==1){
@@ -322,19 +305,19 @@ function registerPlayerWallHit(player, wall){
     if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) ||
       (hitType.dist<0.25*config.PLAYER_RADIUS && util.dotProduct(wallVector, player.velocity) > 0))
     {
-       var newVelocity = reflect(player.velocity.x, player.velocity.y,
-       wall.point2.y - wall.point1.y, wall.point1.x - wall.point2.x);
-       newVelocity.x -= wallVector.x/util.magnitude(wallVector);
-       newVelocity.y -= wallVector.y/util.magnitude(wallVector);
+      var newVelocity = reflect(
+        player.velocity,
+        {x: wall.point2.y - wall.point1.y, y: wall.point1.x - wall.point2.x}
+      );
+      newVelocity.x -= wallVector.x/util.magnitude(wallVector);
+      newVelocity.y -= wallVector.y/util.magnitude(wallVector);
+
     }
     else{
-      if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall)){
-      var newVelocity = reflect(player.velocity.x, player.velocity.y,
-        wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
-      }
-      else{
-        var newVelocity = {x:player.velocity.x, y:player.velocity.y};
-      }
+      var newVelocity = reflect(
+        player.velocity,
+        {x: wall.point2.x - wall.point1.x, y: wall.point2.y - wall.point1.y}
+      );
     }
 
     player.velocity.x = newVelocity.x;
@@ -342,9 +325,11 @@ function registerPlayerWallHit(player, wall){
 
     }
   else{
-    if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall) ){
-      var newVelocity = reflect(player.velocity.x, player.velocity.y,
-        wall.point2.x - wall.point1.x, wall.point2.y - wall.point1.y);
+    if(util.intoWall(player.position, player.velocity, wall) ){
+      var newVelocity = reflect(
+        player.velocity,
+        {x: wall.point2.x - wall.point1.x, y: wall.point2.y - wall.point1.y}
+      );
       player.velocity.x = newVelocity.x;
       player.velocity.y = newVelocity.y;
     }
@@ -379,15 +364,15 @@ function sign(x){
   return (x >= 0) ? 1 : -1;
 }
 
-//reflect vector x1,y1 about vector x2,y2
-function reflect(x1,y1,x2,y2) {
-  var a1 = Math.atan2(y1,x1);
-
-  var a2 = Math.atan2(y2,x2);
-  var answer = 2*a2-a1;
-  var r = util.magnitude({x:x1, y:y1});
-  return {x:r*Math.cos(answer), y:r*Math.sin(answer)};
+//reflect vector vec1 about vector vec2
+function reflect(vec1,vec2) {
+  var angle1 = Math.atan2(vec1.y,vec1.x);
+  var angle2 = Math.atan2(vec2.y,vec2.x);
+  var reflectedAngle = 2*angle2-angle1;
+  var r = util.magnitude(vec1);
+  return {x:r*Math.cos(reflectedAngle), y:r*Math.sin(reflectedAngle)};
 }
+
 
 function findSpawnLocation(){
   var numPlayers = players.size;
@@ -430,41 +415,37 @@ function spawnPowerupsOnPlayerDeath(player) {
   // TODO spawn according to a player-dependent distribution?
   for (var i=0; i<5; i++) {
     var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
-    spawnMovingPowerupFromPoint(type, {x: player.x, y: player.y});
+    spawnMovingPowerupFromPoint(type, player.position);
   }
 }
 
 function movePlayer(player){
-  player.x += player.velocity.x;
-  player.y += player.velocity.y;
-  var vx = player.velocity.x + player.acceleration.x;
-  var vy = player.velocity.y + player.acceleration.y;
+  // update position
+  player.position = util.add(player.position, player.velocity);
 
-  var speedBeforeFricton = util.magnitude({x:vx, y:vy});
-  if(speedBeforeFricton>0){
-    vx -= (vx/speedBeforeFricton)*config.FRICTION;
-    vy -= (vy/speedBeforeFricton)*config.FRICTION;
+  // update velocity
+  player.velocity = util.add(player.velocity, player.acceleration);
+  var speedBeforeFricton = util.magnitude(player.velocity);
+  if (speedBeforeFricton > 0) {
+    player.velocity = util.scale(player.velocity, 1 - config.FRICTION / speedBeforeFricton);
   }
-  var speed = util.magnitude({x:vx, y:vy});
+  var speed = util.magnitude(player.velocity);
   var speedLimit = player.speedLimit();
   if (speed > speedLimit) {
-    vx *= speedLimit/speed;
-    vy *= speedLimit/speed;
+    player.velocity = util.scale(player.velocity, speedLimit/speed);
   }
 
-  player.velocity.x = vx;
-  player.velocity.y = vy;
-
-  //Move to boundary if outside
-  var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
+  // do physics if player hits map boundary
+  var distFromCenter = util.magnitude(player.position);
   if (distFromCenter > config.ARENA_RADIUS-config.PLAYER_RADIUS) {
-    player.x *= ( (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter);
-    player.y *= ( (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter);
-    newVelocity = reflect(player.velocity.x,player.velocity.y, -player.y, player.x);
-    player.velocity.x = newVelocity.x;
-    player.velocity.y = newVelocity.y;
-    player.x+=player.velocity.x;
-    player.y+=player.velocity.y;
+    player.position = util.scale(
+      player.position,
+      (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter
+    )
+    player.velocity = reflect(
+      player.velocity, {x: -player.position.y, y: player.position.x}
+    );
+    player.position = util.add(player.position, player.velocity);
   }
 
 }
@@ -510,13 +491,12 @@ function sendView(player) {
   var buffer = 2*config.PLAYER_RADIUS;
   for (var key of players.keys()) {
     var otherPlayer = players.get(key);
-    var relX = (otherPlayer.x - player.x)|0;
-    var relY = (otherPlayer.y - player.y)|0;
-    if (Math.abs(relX) <= buffer+player.windowWidth/2 && Math.abs(relY) <= buffer+player.windowHeight/2) {
+    var posDiff = util.intify(util.diff(otherPlayer.position, player.position));
+    if (player.isVectorOnScreen(posDiff)) {
       var current = {
         name: otherPlayer.name,
-        x: relX,
-        y: relY,
+        x: posDiff.x,
+        y: posDiff.y,
         health: otherPlayer.health,
         mouseCoords: otherPlayer.mouseCoords,
         isSpiky : otherPlayer.isSpiky()
@@ -527,32 +507,27 @@ function sendView(player) {
   var allPowerups = [];
   for (var key of powerups.keys()) {
     var powerup = powerups.get(key);
-    var relX = (powerup.x - player.x)|0;
-    var relY = (powerup.y - player.y)|0;
-    if( Math.abs(relX) <= buffer+player.windowWidth/2 && Math.abs(relY) <= buffer+player.windowHeight/2) {
-      var current = {type:powerup.type, x:relX, y: relY};
+    var posDiff = util.intify(util.diff({x: powerup.x, y:powerup.y}, player.position));
+    if (player.isVectorOnScreen(posDiff)) {
+      var current = {type: powerup.type, x: posDiff.x, y: posDiff.y};
       allPowerups.push(current);
     }
   }
   var nearbyProjectiles = [];
   for (var key of projectiles.keys()) {
     var projectile = projectiles.get(key);
-    var relX = (projectile.x - player.x)|0;
-    var relY = (projectile.y - player.y)|0;
-    if( Math.abs(relX) <= buffer+player.windowWidth/2 && Math.abs(relY) <= buffer+player.windowHeight/2) {
-      var current = {x:relX, y:relY, type: projectile.type};
+    var posDiff = util.intify(util.diff({x: projectile.x, y: projectile.y}, player.position));
+    if (player.isVectorOnScreen(posDiff)) {
+      var current = {type: projectile.type, x: posDiff.x, y: posDiff.y};
       nearbyProjectiles.push(current);
     }
   }
 
-
   var nearbyObstacles = [];
   for(var i=0; i<obstacles.length; i++) {
-    var x1 = (obstacles[i].point1.x - player.x)|0;
-    var y1 = (obstacles[i].point1.y - player.y)|0;
-    var x2 = (obstacles[i].point2.x - player.x)|0;
-    var y2 = (obstacles[i].point2.y - player.y)|0;
-    var segment = {point1:{x:x1,y:y1}, point2: {x:x2,y:y2}};
+    var pt1diff = util.intify(util.diff(obstacles[i].point1, player.position));
+    var pt2diff = util.intify(util.diff(obstacles[i].point2, player.position));
+    var segment = {point1: pt1diff, point2: pt2diff};
     nearbyObstacles.push(segment);
   }
 
@@ -560,7 +535,7 @@ function sendView(player) {
   player.socket.emit(
     'gameState',
     {
-      myAbsoluteCoord: {x: player.x, y:player.y},
+      myAbsoluteCoord: player.position,
       nearbyPowerups: allPowerups,
       nearbyPlayers: allPlayers,
       nearbyObstacles: nearbyObstacles,

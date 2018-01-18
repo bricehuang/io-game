@@ -2,8 +2,32 @@ exports.magnitude = function(point) {
   return Math.sqrt(point.x * point.x + point.y * point.y);
 };
 
-exports.distance = function(firstPoint, secondPoint){
-  return exports.magnitude({x: firstPoint.x - secondPoint.x, y: firstPoint.y - secondPoint.y});
+exports.diff = function(vec1, vec2) {
+  return {x: vec1.x-vec2.x, y: vec1.y-vec2.y};
+}
+exports.add = function(vec1, vec2) {
+  return {x: vec1.x+vec2.x, y: vec1.y+vec2.y};
+}
+exports.scale = function(vector, scalar) {
+  return {x: vector.x*scalar, y: vector.y*scalar};
+}
+exports.normalize = function(vector) {
+  var magnitude = exports.magnitude(vector);
+  if (magnitude > 0) {
+    return exports.scale(vector, 1/magnitude);
+  } else {
+    return vector;
+  }
+}
+exports.scaleToLength = function(vector, length) {
+  return exports.scale(exports.normalize(vector), length);
+}
+exports.intify = function(vector) {
+  return {x: vector.x|0, y: vector.y|0};
+}
+
+exports.distance = function(vec1, vec2){
+  return exports.magnitude(exports.diff(vec1, vec2));
 };
 
 exports.dotProduct = function(vector1, vector2){
@@ -81,7 +105,7 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
 };
 
 exports.collided = function(firstObject, secondObject, epsilon) {
-  var dist = exports.distance(firstObject, secondObject);
+  var dist = exports.distance(firstObject.position, secondObject);
   return dist <= (1 + epsilon) * (firstObject.radius + secondObject.radius);
 };
 
@@ -179,3 +203,4 @@ exports.intoWall = function(point, vector, segment){
 		return vector.y / vector.x > slope;
   }
 };
+

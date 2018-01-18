@@ -204,8 +204,7 @@ exports.Player = function(socket, spawnPosition) {
   this.windowHeight = config.DEFAULT_WINDOW_HEIGHT;
   this.mouseCoords = {x:1, y:0};
 
-  this.x = spawnPosition.x;
-  this.y = spawnPosition.y;
+  this.position = spawnPosition;
   this.target = spawnPosition;
   this.velocity = {x:0,y:0};
   this.acceleration = {x:0, y:0};
@@ -262,5 +261,12 @@ exports.Player = function(socket, spawnPosition) {
   }
   this.isSpiky = function() {
     return (Date.now() - this.lastSpikePickup < config.SPIKE_DURATION_MILLIS);
+  }
+
+  this.isVectorOnScreen = function(vector) {
+    return (
+      Math.abs(vector.x) <= this.windowWidth/2 &&
+      Math.abs(vector.y) <= this.windowHeight/2
+    );
   }
 }
