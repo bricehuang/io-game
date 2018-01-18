@@ -200,5 +200,16 @@ exports.intoWall = function(point, vector, segment){
 		return(vector.y/vector.x<slope);
 	else
 		return(vector.y/vector.x>slope);
+}
+
+
+exports.isPrime = function(number){
+	var isPrime = true;
+	for(var i=2; i< Math.sqrt(number); i++){
+		if(number%i==0){
+			isPrime = false;
+		}
+	}
+	return isPrime;
 
 }
