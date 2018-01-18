@@ -124,20 +124,27 @@ io.on('connection', function (socket) {
 });
 
 function newObstacle(){
-  var segment;
-  do {
+  check = false
+  while(!check)
+  {
+
     var angle1 = 2*Math.PI*Math.random();
-    var angle2 = 2*Math.PI/5*Math.random() + angle1;
     var r1 = 0.9*config.ARENA_RADIUS*Math.sqrt(Math.random());
+    var angle2 = 2*Math.PI/5*Math.random() + angle1;
     var r2 = 0.9*config.ARENA_RADIUS*Math.sqrt(Math.random());
-    var point1 = {x: r1 * Math.cos(angle1), y: r1 * Math.sin(angle1)};
-    var point2 = {x: r2 * Math.cos(angle2), y: r2 * Math.sin(angle2)};
-    var dist = util.distance(point1, point2);
-    segment = {point1: point1, point2: point2};
+    var x1 = r1*Math.cos(angle1);
+    var y1 = r1*Math.sin(angle1);
+    var x2 = r2 * Math.cos(angle2);
+    var y2 = r2 * Math.sin(angle2);
+    var segment = {point1:{x:x1, y: y1}, point2: {x:x2,y:y2}};
+    if(util.distance(segment.point1,segment.point2)<config.ARENA_RADIUS && util.distance(segment.point1,segment.point2)>10*config.PLAYER_RADIUS)
+            check = true;
+
   }
-  while (dist < config.ARENA_RADIUS && dist > 10*config.PLAYER_RADIUS);
-  return segment;
+
+    return segment;
 }
+
 
 function generateObstacles(){
   var counter = 0;
