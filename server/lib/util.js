@@ -180,15 +180,15 @@ exports.multinomialSelect = function(choices, weights){
     return choices[Math.floor(alpha*choices.length)];
   }
 }
-/*
+
 exports.hash = function(input, mod){
   var a = 33;
-  for(var i = 0;)
+  var b = 47;
+  input = input%mod;
+  for(var i = 0;i<50;i++){
+    input = (a*input+b)%mod;
+  }
 }
-exports.gcd = function(a,b){
-
-}*/
-
 
 exports.intoWall = function(point, vector, segment){
 	var slope = (segment.point2.y - segment.point1.y)/(segment.point2.x - segment.point1.x);
@@ -200,8 +200,8 @@ exports.intoWall = function(point, vector, segment){
 		return(vector.y/vector.x<slope);
 	else
 		return(vector.y/vector.x>slope);
-	
 }
+
 
 exports.isPrime = function(number){
 	var isPrime = true;
@@ -211,4 +211,5 @@ exports.isPrime = function(number){
 		}
 	}
 	return isPrime;
+
 }

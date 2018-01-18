@@ -160,7 +160,7 @@ exports.SpikePowerUp = function(id, x, y, heading={x:1, y:0}, speed=0) {
     x,
     y,
     function(player) {
-      player.isSpiky = true;
+      player.lastSpikePickup = Date.now();
     },
     heading,
     speed
@@ -176,7 +176,7 @@ exports.FastPowerUp = function(id, x, y, heading={x:1,y:0}, speed=0){
     x,
     y,
     function(player){
-      player.isFast = true;
+      player.lastFastPickup = Date.now();
     },
     heading,
     speed
