@@ -503,11 +503,12 @@ function expelDeadPlayer(player) {
 
 function sendView(player) {
   var allPlayers = [];
+  var buffer = config.PLAYER_RADIUS;
   for (var key of players.keys()) {
     var otherPlayer = players.get(key);
     var relX = (otherPlayer.x - player.x)|0;
     var relY = (otherPlayer.y - player.y)|0;
-    if (Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
+    if (Math.abs(relX) <= buffer+player.windowWidth/2 && Math.abs(relY) <= buffer+player.windowHeight/2) {
       var current = {
         name: otherPlayer.name,
         x: relX,
@@ -524,7 +525,7 @@ function sendView(player) {
     var powerup = powerups.get(key);
     var relX = (powerup.x - player.x)|0;
     var relY = (powerup.y - player.y)|0;
-    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
+    if( Math.abs(relX) <= buffer+player.windowWidth/2 && Math.abs(relY) <= buffer+player.windowHeight/2) {
       var current = {type:powerup.type, x:relX, y: relY};
       allPowerups.push(current);
     }
@@ -534,7 +535,7 @@ function sendView(player) {
     var projectile = projectiles.get(key);
     var relX = (projectile.x - player.x)|0;
     var relY = (projectile.y - player.y)|0;
-    if( Math.abs(relX) <= player.windowWidth/2 && Math.abs(relY) <= player.windowHeight/2) {
+    if( Math.abs(relX) <= buffer+player.windowWidth/2 && Math.abs(relY) <= buffer+player.windowHeight/2) {
       var current = {x:relX, y:relY, type: projectile.type};
       nearbyProjectiles.push(current);
     }
