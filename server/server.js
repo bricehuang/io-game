@@ -72,8 +72,9 @@ io.on('connection', function (socket) {
   });
 
   socket.on('move', function(message){
+    if (!(Array.isArray(message) && message.length == 4)) { return; }
     player = players.get(socket.id);
-    if (!player) return;
+    if (!player) { return; }
     var acceleration = {x:0, y:0};
     if (message[0]) {acceleration.x -= 1};
     if (message[1]) {acceleration.y -= 1};
@@ -331,7 +332,7 @@ function collisionDetect(){
       //player.x += player.velocity.x;
       //player.y += player.velocity.y;
 
-      
+
   }
 
 
@@ -352,7 +353,7 @@ function registerPlayerWallHit(player, wall){
         wallVector = {x: wall.point1.x - wall.point2.x, y:wall.point1.y - wall.point2.y };
     }
 
-    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) || 
+    if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) ||
       hitType.dist<0.25*config.PLAYER_RADIUS)
     {
        var newVelocity = reflect(player.velocity.x, player.velocity.y,
@@ -368,14 +369,14 @@ function registerPlayerWallHit(player, wall){
 
     player.velocity.x = newVelocity.x;
     player.velocity.y = newVelocity.y;
-    
+
     }
 
 
-  
 
-   
-  
+
+
+
 
   else{
     if(util.intoWall({x:player.x,y:player.y}, player.velocity, wall) ){
@@ -385,10 +386,10 @@ function registerPlayerWallHit(player, wall){
       player.velocity.y = newVelocity.y;
     }
   }
-  
-  
-  
-  
+
+
+
+
   player.lastCollision = Date.now();
 
 }
@@ -503,7 +504,7 @@ function movePlayer(player){
   player.velocity.x = vx;
   player.velocity.y = vy;
 
-  
+
 
   //Move to boundary if outside
   var distFromCenter = util.distance({x: player.x, y:player.y}, {x:0, y:0});
