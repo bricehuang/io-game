@@ -55,7 +55,7 @@ Game.prototype.handleLogic = function() {
 }
 
 function drawBackgroundGrid(gfx) {
-  /*
+  
   gfx.strokeStyle = '#003300';
   var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
   if (smallestXLine < 0){
@@ -74,13 +74,15 @@ function drawBackgroundGrid(gfx) {
     gfx.lineTo(screenWidth, y);
   }
   gfx.stroke();
-  */
+  
+  /*
   var gradient = gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,0,
                                           -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,ARENA_RADIUS);
   gradient.addColorStop(0,"white");
   gradient.addColorStop(1,'rgba(218,112,214,0.5)');
   gfx.fillStyle = gradient;
   gfx.fillRect(0,0,screenWidth,screenHeight);
+  */
 }
 
 function drawObjects(gfx) {

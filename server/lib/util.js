@@ -179,11 +179,12 @@ exports.multinomialSelect = function(choices, weights){
     return choices[Math.floor(alpha*choices.length)];
   }
 }
-/*
+
 exports.hash = function(input, mod){
   var a = 33;
-  for(var i = 0;)
+  var b = 47;
+  input = input%mod;
+  for(var i = 0;i<50;i++){
+    input = (a*input+b)%mod;
+  }
 }
-exports.gcd = function(a,b){
-
-}*/
