@@ -316,7 +316,6 @@ function collisionDetect(){
   for(var [key,player] of players){
       var count = 0;
       for(var i=0; i<numObstacles; i++){
-        var tempV = {x:player.previousVelocity.x, y: player.previousVelocity.y};
         if (player && util.pointLineDistance({x:player.x, y:player.y}, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
           registerPlayerWallHit(player,obstacles[i]);
           count++;
