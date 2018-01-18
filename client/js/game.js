@@ -53,6 +53,11 @@ Game.prototype.handleNetwork = function(socket) {
   })
   socket.on('feed', function(message){
     $('#feed').append($('<li>').text(message));
+    var feedWindow = $('#feedContainer');
+    if (feedWindow.scrollTop() + feedWindow.height() + 20 >= feedWindow[0].scrollHeight) {
+        feedWindow.scrollTop(feedWindow[0].scrollHeight);
+    }
+
   })
 }
 
