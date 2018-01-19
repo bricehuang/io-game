@@ -27,7 +27,7 @@ exports.Room = function(id) {
   }
 
   this.emitToRoom = function(keyword, message) {
-    for (var key in this.players.keys()) {
+    for (var key of this.players.keys()) {
       var player = this.players.get(key);
       player.socket.emit(keyword, message);
     }
@@ -390,6 +390,24 @@ exports.Room = function(id) {
         //same code as single bullet, refactor this
       }
     }
+  }
+
+  this.expelDeadPlayers = function() {
+    var deadPlayers = [];
+    for (var key of this.players.keys()) {
+      var player = this.players.get(key);
+      if (player.health <= 0) {
+        deadPlayers.push(player);
+        this.spawnPowerupsOnPlayerDeath(player);
+        player.socket.emit('death');
+        player.socket.disconnect();
+      }
+    }
+    for (var i=0; i<deadPlayers.length; i++) {
+      var player = deadPlayers[i];
+      this.players.delete(player.id);
+    }
+    return deadPlayers;
   }
 
   this.sendView = function(player) {

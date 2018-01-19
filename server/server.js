@@ -138,24 +138,13 @@ function moveLoops(){
   for (var key of rooms.keys()) {
     var room = rooms.get(key);
     room.moveLoop();
-  }
-  var keysOfPlayersToExpel = [];
-  for (var key of players.keys()) {
-    var player = players.get(key);
-    if (player.health <= 0) {
-      keysOfPlayersToExpel.push(key);
-      var room = rooms.get(player.roomID);
-      if (room) {
-        room.spawnPowerupsOnPlayerDeath(player);
+    var deadPlayers = room.expelDeadPlayers();
+    for (var i=0; i<deadPlayers.length; i++) {
+      var player = deadPlayers[i];
+      if (players.has(player.id)){
+        players.delete(player.id)
       }
     }
-  }
-  if (keysOfPlayersToExpel.length > 0){
-    console.log("expelling dead players: " + keysOfPlayersToExpel);
-  }
-  for (var i=0; i<keysOfPlayersToExpel.length; i++) {
-    var player = players.get(keysOfPlayersToExpel[i]);
-    expelDeadPlayer(player);
   }
 }
 
