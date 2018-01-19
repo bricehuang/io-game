@@ -29,7 +29,7 @@ io.on('connection', function (socket) {
   socket.on('playerInformation', function(data){
     if (!(data && "name" in data && "windowDimensions" in data)) { return; }
     if (!("width" in data.windowDimensions && "height" in data.windowDimensions)) { return; }
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if (!player) return;
     player.setName(data.name);
     player.setWindowDimensions(data.windowDimensions);
@@ -38,7 +38,7 @@ io.on('connection', function (socket) {
 
   socket.on('move', function(message){
     if (!(Array.isArray(message) && message.length == 4)) { return; }
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if (!player) { return; }
     var acceleration = {x:0, y:0};
     if (message[0]) {acceleration.x -= 1};
@@ -50,14 +50,14 @@ io.on('connection', function (socket) {
 
   socket.on('mouseCoords', function(mouseCoords){
     if (!(mouseCoords && "x" in mouseCoords && "y" in mouseCoords)) { return; }
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if (!player) return;
     player.setMouseCoords(mouseCoords);
   })
 
   socket.on('windowResized', function(dimensions){
     if (!(dimensions && "width" in dimensions && "height" in dimensions)) { return; }
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if (!player) return;
     player.setWindowDimensions(dimensions);
   })
@@ -65,27 +65,13 @@ io.on('connection', function (socket) {
   socket.on('fire', function(vector){
     if (!(vector && "x" in vector && "y" in vector)) { return; }
     if (vector.x == 0 && vector.y == 0) { return; }
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if (!player) return;
-    if (player.canFireNow() && player.ammo > 0) {
-      var heading = util.normalize(vector);
-      var position = util.add(player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2));
-      // TODO move to room.js
-      var room = rooms.get(player.roomID);
-      var bullet = new obj.Bullet(
-        room.nextProjectileID++,
-        player,
-        position,
-        heading
-      )
-      room.projectiles.set(bullet.id, bullet);
-      player.refreshFireTimestamp();
-      player.ammo--;
-    }
+    player.attemptFire(vector);
   })
 
   socket.on('continuousFire', function(tryFire){
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if(!player) return;
     player.tryingContinuousFire = tryFire;
     return;
@@ -93,22 +79,9 @@ io.on('connection', function (socket) {
   socket.on('fireSniper', function(vector){
     if (!(vector && "x" in vector && "y" in vector)) { return; }
     if (vector.x == 0 && vector.y == 0) { return; }
-    player = players.get(socket.id);
+    var player = players.get(socket.id);
     if (!player) return;
-    if (player.canFireNow() && player.sniperAmmo>0) {
-      var heading = util.normalize(vector);
-      // TODO move to room.js
-      var room = rooms.get(player.roomID);
-      var sniperBullet = new obj.SniperBullet(
-        room.nextProjectileID++,
-        player,
-        util.add(player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2)),
-        heading
-      )
-      room.projectiles.set(sniperBullet.id, sniperBullet);
-      player.refreshFireTimestamp();
-      player.sniperAmmo--;
-    }
+    player.attemptSniperFire(vector);
   })
 
   socket.on('pingcheck', function() {
@@ -125,11 +98,8 @@ io.on('connection', function (socket) {
 });
 
 function expelDeadPlayer(player) {
-  players.delete(player.socket.id);
-  var room = rooms.get(player.roomID);
-  if (room) {
-    room.players.delete(player.socket.id);
-  }
+  players.delete(player.id);
+  player.room.players.delete(player.id);
   player.socket.emit('death');
   player.socket.disconnect();
 }

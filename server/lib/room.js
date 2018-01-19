@@ -21,9 +21,24 @@ exports.Room = function(id) {
       this.spawnPowerup();
     }
     var spawnPosition = this.findSpawnLocation();
-    var currentPlayer = new obj.Player(socket, spawnPosition, this.id);
+    var currentPlayer = new obj.Player(socket, spawnPosition, this);
     this.players.set(socket.id, currentPlayer);
     return currentPlayer;
+  }
+
+  this.addFiredProjectile = function(type, player, mouseVector) {
+    var heading = util.normalize(mouseVector);
+    var position = util.add(
+      player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2)
+    );
+    var projectile = obj.makeProjectile(
+      type,
+      this.nextProjectileID++,
+      player,
+      position,
+      heading
+    )
+    this.projectiles.set(projectile.id, projectile);
   }
 
   this.emitToRoom = function(keyword, message) {
@@ -231,7 +246,6 @@ exports.Room = function(id) {
         player.velocity.y = newVelocity.y;
       }
     }
-    player.refreshLastCollision();
   }
   this.collisionDetect = function(){
     for (var key1 of this.players.keys()) {
@@ -336,7 +350,7 @@ exports.Room = function(id) {
     }
   }
   this.updateLeaderboard = function(){
-    newLeaderboard = [];
+    var newLeaderboard = [];
     for(var [key,player] of this.players){
       newLeaderboard.push({name:player.name, score:player.kills, id:player.id,});
     }
@@ -346,23 +360,8 @@ exports.Room = function(id) {
 
   this.updateContinuousFire = function(){
     for(var [key,player] of this.players){
-      if(!player) return;
-      if(player.tryingContinuousFire){
-        if(player.canFireNow() && player.ammo>0){
-          var vector = player.mouseCoords;
-          var heading = util.normalize(vector);
-          var position = util.add(player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2));
-          var bullet = new obj.Bullet(
-            this.nextProjectileID++,
-            player,
-            position,
-            heading
-          )
-          this.projectiles.set(bullet.id,bullet);
-          player.refreshFireTimestamp();
-          player.ammo--;
-        }
-        //same code as single bullet, refactor this
+      if (player.tryingContinuousFire) {
+        player.attemptFire(player.mouseCoords);
       }
     }
   }

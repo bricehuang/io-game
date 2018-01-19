@@ -22,7 +22,6 @@ exports.Projectile = function(
 }
 
 exports.Projectile.prototype.timeStep = function() {
-
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
   this.timeLeft -= 1;
 }
@@ -56,6 +55,14 @@ exports.SniperBullet = function(id, shooter, position, heading) {
   )
 }
 exports.SniperBullet.prototype = new exports.Projectile();
+
+exports.makeProjectile = function(type, id, shooter, position, heading) {
+  switch (type){
+    case "bullet": return new exports.Bullet(id, shooter, position, heading);
+    case "sniperBullet": return new exports.SniperBullet(id, shooter, position, heading);
+    default: console.assert(false, 'invalid projectile type');
+  }
+}
 
 exports.Powerup = function(
   id,
@@ -188,14 +195,14 @@ exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) 
     case "spike": return new exports.SpikePowerUp(id, position, heading, speed);
     case "fast": return new exports.FastPowerUp(id, position, heading, speed);
     case "heart": return new exports.HeartPowerUp(id, position, heading, speed);
-    default: console.assert('invalid powerup type');
+    default: console.assert(false, 'invalid powerup type');
   }
 }
 
-exports.Player = function(socket, spawnPosition, roomID) {
+exports.Player = function(socket, spawnPosition, room) {
   this.id = socket.id;
   this.socket = socket;
-  this.roomID = roomID;
+  this.room = room;
 
   this.name = config.DEFAULT_NAME;
   this.windowDimensions = {
@@ -215,7 +222,6 @@ exports.Player = function(socket, spawnPosition, roomID) {
   this.ammo = config.STARTING_AMMO;
   this.sniperAmmo = 0;
 
-  this.lastCollision = 0;
   this.lastfire = 0;
   this.lastSpikePickup = 0;
   this.lastFastPickup = 0;
@@ -262,8 +268,19 @@ exports.Player = function(socket, spawnPosition, roomID) {
   this.refreshFireTimestamp = function() {
     this.lastfire = Date.now();
   }
-  this.refreshLastCollision = function() {
-    this.lastCollision = Date.now();
+  this.attemptFire = function(vector) {
+    if (this.canFireNow() && this.ammo > 0) {
+      this.room.addFiredProjectile("bullet", this, vector);
+      this.refreshFireTimestamp();
+      this.ammo--;
+    }
+  }
+  this.attemptSniperFire = function(vector) {
+    if (this.canFireNow() && this.sniperAmmo>0) {
+      this.room.addFiredProjectile("sniperBullet", this, vector);
+      this.refreshFireTimestamp();
+      this.sniperAmmo--;
+    }
   }
 
   this.refreshFastTimestamp = function() {
