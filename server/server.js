@@ -509,7 +509,7 @@ function sendView(player) {
         pos: relPosition,
         health: otherPlayer.health,
         mCd: otherPlayer.mouseCoords,
-        Spk : otherPlayer.isSpiky()
+        Spk : otherPlayer.isSpiky(),
         tier: otherPlayer.tier
       };
       allPlayers.push(current);
@@ -521,7 +521,7 @@ function sendView(player) {
     var relPosition = util.intify(util.diff(powerup.position, player.position));
     var buffer = powerup.radius;
     if (player.isVectorOnScreen(relPosition,buffer)) {
-      var current = {type: powerup.type, position: relPosition};
+      var current = {type: powerup.type, pos: relPosition};
       allPowerups.push(current);
     }
   }
@@ -531,7 +531,7 @@ function sendView(player) {
     var relPosition = util.intify(util.diff(projectile.position, player.position));
     var buffer = projectile.radius;
     if (player.isVectorOnScreen(relPosition,buffer)) {
-      var current = {type: projectile.type, position: relPosition};
+      var current = {type: projectile.type, pos: relPosition};
       nearbyProjectiles.push(current);
     }
   }

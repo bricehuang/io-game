@@ -10,6 +10,7 @@
   "author": "Your Name",
   "dependencies": {
     "browserify": "^15.2.0",
+    "bson": "^1.0.4",
     "buffer": "^5.0.8",
     "bufferutil": "^3.0.3",
     "compression": "^1.7.1",
