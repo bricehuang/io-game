@@ -15,7 +15,7 @@
   "FRICTION" : 0.20,
   "PLAYER_START_HEALTH" : 100,
   "PLAYER_MAX_HEALTH" : 100,
-  "FIRE_COOLDOWN_MILLIS": 100,
+  "FIRE_COOLDOWN_MILLIS": 250,
   "POWERUP_SPAWN_PER_SECOND": 1,
   "MAX_POWERUPS": 50,
   "POWERUP_TYPES": ["ammo", "sniperAmmo", "healthpack", "spike","fast", "heart"],
