@@ -309,7 +309,9 @@ function drawAmmo(gfx) {
   gfx.fillStyle = "#000000";
   gfx.font = "16px Verdana";
 
+
   gfx.lineWidth =1;
+
 
   gfx.beginPath();
   gfx.rect(screenWidth - 120, screenHeight - 40, 25, 25);
