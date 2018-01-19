@@ -126,11 +126,19 @@ function drawPlayers(gfx){
     );
     var dir = {x: player.mCd.x/mag, y: player.mCd.y/mag};
     gfx.beginPath();
-    gfx.moveTo(centerX+radius/2*dir.x, centerY+radius/2*dir.y);
+    gfx.moveTo(centerX+radius/1.2*dir.x, centerY+radius/1.2*dir.y);
     gfx.lineTo(centerX, centerY);
     gfx.stroke();
     gfx.closePath();
 
+    gfx.beginPath();
+    gfx.lineWidth = 10;
+    gfx.moveTo(centerX+radius/2.2*dir.x, centerY+radius/2.2*dir.y);
+    gfx.lineTo(centerX, centerY);gfx.stroke();
+    gfx.closePath();
+
+
+    gfx.lineWidth = 5;
     gfx.beginPath();
     gfx.arc(centerX, centerY, 5, 0, 2*Math.PI, false);
     gfx.stroke();
@@ -316,7 +324,7 @@ Game.prototype.handleGraphics = function(gfx,mouse) {
   
 
     var grd=gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,0,
-      -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,ARENA_RADIUS);
+      -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,2*ARENA_RADIUS);
     grd.addColorStop(1,"#B8B8B8");
     grd.addColorStop(0,"#FFFFFF");
 
