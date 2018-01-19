@@ -177,15 +177,23 @@ function sendClick(mouse) {
 }
 c.addEventListener('click', sendClick, false);
 
-function shootSniper() {
+function fireSpecial() {
   if (!socket) return;
-  socket.emit('fireSniper');
+  socket.emit('fireSpecial');
+}
+function dropSpecial() {
+  if (!socket) return;
+  socket.emit('dropSpecial');
 }
 window.addEventListener('keypress', function(event){
   if (event.keyCode == 69 || event.keyCode == 101){ // e or E
-    shootSniper();
+    fireSpecial();
+  }
+  if (event.keyCode == 81 || event.keyCode == 113){ // e or E
+    dropSpecial();
   }
 }, false);
+
 
 function checkLatency() {
   startPingTime = Date.now();

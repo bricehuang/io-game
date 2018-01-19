@@ -293,7 +293,14 @@ exports.Player = function(socket, spawnPosition, room) {
       this.room.addFiredProjectile(this.specialWeapon, this, vector);
       this.refreshSpecialFireTimestamp();
       this.specialAmmo--;
+      if (this.specialAmmo == 0) {
+        this.specialWeapon = "";
+      }
     }
+  }
+  this.dropSpecialWeapon = function() {
+    this.specialAmmo = 0;
+    this.specialWeapon = "";
   }
 
   this.refreshFastTimestamp = function() {

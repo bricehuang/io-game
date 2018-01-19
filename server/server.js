@@ -74,10 +74,15 @@ io.on('connection', function (socket) {
     player.tryingContinuousFire = tryFire;
     return;
   })
-  socket.on('fireSniper', function(){
+  socket.on('fireSpecial', function(){
     var player = players.get(socket.id);
     if (!player) return;
     player.attemptSpecialFire(player.mouseCoords);
+  })
+  socket.on('dropSpecial', function(){
+    var player = players.get(socket.id);
+    if (!player) return;
+    player.dropSpecialWeapon();
   })
 
   socket.on('pingcheck', function() {
