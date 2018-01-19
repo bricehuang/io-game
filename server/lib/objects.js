@@ -192,9 +192,10 @@ exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) 
   }
 }
 
-exports.Player = function(socket, spawnPosition) {
+exports.Player = function(socket, spawnPosition, roomID) {
   this.id = socket.id;
   this.socket = socket;
+  this.roomID = roomID;
 
   this.name = config.DEFAULT_NAME;
   this.windowDimensions = {
