@@ -62,12 +62,10 @@ io.on('connection', function (socket) {
     player.setWindowDimensions(dimensions);
   })
 
-  socket.on('fire', function(vector){
-    if (!(vector && "x" in vector && "y" in vector)) { return; }
-    if (vector.x == 0 && vector.y == 0) { return; }
+  socket.on('fire', function(){
     var player = players.get(socket.id);
     if (!player) return;
-    player.attemptFire(vector);
+    player.attemptFire(player.mouseCoords);
   })
 
   socket.on('continuousFire', function(tryFire){
@@ -76,12 +74,10 @@ io.on('connection', function (socket) {
     player.tryingContinuousFire = tryFire;
     return;
   })
-  socket.on('fireSniper', function(vector){
-    if (!(vector && "x" in vector && "y" in vector)) { return; }
-    if (vector.x == 0 && vector.y == 0) { return; }
+  socket.on('fireSniper', function(){
     var player = players.get(socket.id);
     if (!player) return;
-    player.attemptSniperFire(vector);
+    player.attemptSniperFire(player.mouseCoords);
   })
 
   socket.on('pingcheck', function() {

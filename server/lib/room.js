@@ -27,6 +27,7 @@ exports.Room = function(id) {
   }
 
   this.addFiredProjectile = function(type, player, mouseVector) {
+    if (mouseVector.x == 0 && mouseVector.y == 0) { return; }
     var heading = util.normalize(mouseVector);
     var position = util.add(
       player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2)

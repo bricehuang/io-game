@@ -1,5 +1,4 @@
-
-var mouseCoords={x:0,y:0};
+var mouseCoords;
 
 var playerName;
 var playerNameInput = document.getElementById('playerNameInput');
@@ -174,16 +173,15 @@ window.addEventListener('resize', resize);
 
 function sendClick(mouse) {
   if (!socket) return;
-  var mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
-  socket.emit('fire', mouseCoords);
+  socket.emit('fire');
 }
 c.addEventListener('click', sendClick, false);
 
 function shootSniper() {
   if (!socket) return;
-  socket.emit('fireSniper', mouseCoords);
+  socket.emit('fireSniper');
 }
-c.addEventListener('keypress', function(event){
+window.addEventListener('keypress', function(event){
   if (event.keyCode == 69 || event.keyCode == 101){ // e or E
     shootSniper();
   }
