@@ -313,6 +313,6 @@ exports.Player = function(socket, spawnPosition, room) {
     this.tier=this.tier+1;
     this.maxHealth =config.PLAYER_MAX_HEALTH+this.tier*config.TIER_HEALTH_BONUS;
     this.radius = config.PLAYER_RADIUS+this.tier*config.TIER_RADIUS_BONUS;
-    this.health = Math.min(config.PLAYER_MAX_HEALTH,this.health + config.TIER_HEALTH_BONUS);
+    this.health = Math.min(this.maxHealth,this.health + config.TIER_HEALTH_BONUS);
   }
 }

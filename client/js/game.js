@@ -69,59 +69,19 @@ Game.prototype.handleLogic = function() {
 
 
 function drawObjects(gfx) {
+  drawProjectiles(gfx);
+  drawPowerups(gfx);
+  drawPlayers(gfx);
+  drawObstacles(gfx);
+}
 
-
-
-  gfx.lineWidth = 1;
-  // projectiles
-  for (var i=0; i<nearbyProjectiles.length; i++) {
-    var projectile = nearbyProjectiles[i];
-    var centerX = screenWidth/2 + projectile.pos.x;
-    var centerY = screenHeight/2 + projectile.pos.y;
-    if (projectile.type == "bullet") {
-      var radius = 5;
-      gfx.beginPath();
-      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-      gfx.stroke();
-      gfx.closePath();
-    } else if (projectile.type == "sniperBullet") {
-      var radius = 5;
-      gfx.beginPath();
-      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-      gfx.fillStyle = "#003300";
-      gfx.fill();
-      gfx.closePath();
-    }
-  }
-
-  // powerups
-  for (var i=0; i<nearbyPowerups.length; i++) {
-    var powerup = nearbyPowerups[i];
-    var centerX = screenWidth/2 + powerup.pos.x;
-    var centerY = screenHeight/2 + powerup.pos.y;
-    var radius = 20;
-    radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
-    gfx.beginPath();
-    //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    //gfx.stroke();
-
-    var powerupImg = getPowerupIcon(powerup.type);
-    gfx.beginPath();
-    gfx.arc(centerX, centerY, 1.4*radius, 0, 2*Math.PI, false);
-    
-    gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
-    gfx.closePath();
-  }
-
-
-
-  // players
+function drawPlayers(gfx){
   gfx.lineWidth=5;
   for (var i=0; i<nearbyPlayers.length; i++) {
     var player = nearbyPlayers[i];
     var centerX = screenWidth/2 + player.pos.x;
     var centerY = screenHeight/2 + player.pos.y;
-    var radius = 30+player.tier*15;
+    var radius = 30+player.tier*3;
     if(player.Spk){
       gfx.beginPath();
       for(var j = 0; j<=36;j++){
@@ -137,8 +97,8 @@ function drawObjects(gfx) {
     gfx.strokeStyle = '#003300';
     gfx.font = 'bold 24px Verdana';
     gfx.textAlign = 'center';
-    gfx.fillText(player.name, centerX, centerY-radius*1.5);
-    gfx.fillText(player.health,centerX, centerY+radius*1.5);
+    gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.9 : radius*1.3));
+    gfx.fillText(player.health,centerX, centerY+(player.Spk ? radius*2.3 : radius*1.7));
     var color = '#00ff00';
     var h = player.health;
 
@@ -181,27 +141,70 @@ function drawObjects(gfx) {
     gfx.fillStyle = "#00ff00";
   }
 
+}
+
+function drawPowerups(gfx){
+  // powerups
+  for (var i=0; i<nearbyPowerups.length; i++) {
+    var powerup = nearbyPowerups[i];
+    var centerX = screenWidth/2 + powerup.pos.x;
+    var centerY = screenHeight/2 + powerup.pos.y;
+    var radius = 20;
+    radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
+    gfx.beginPath();
+    //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+    //gfx.stroke();
+
+    var powerupImg = getPowerupIcon(powerup.type);
+    gfx.beginPath();
+    gfx.arc(centerX, centerY, 1.4*radius, 0, 2*Math.PI, false);
+    
+    gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
+    gfx.closePath();
+  }
+}
+function drawProjectiles(gfx){
+  gfx.lineWidth = 1;
+  gfx.strokeStyle = '#003300';
+  for (var i=0; i<nearbyProjectiles.length; i++) {
+    var projectile = nearbyProjectiles[i];
+    var centerX = screenWidth/2 + projectile.pos.x;
+    var centerY = screenHeight/2 + projectile.pos.y;
+    if (projectile.type == "bullet") {
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.stroke();
+      gfx.closePath();
+    } else if (projectile.type == "sniperBullet") {
+      var radius = 5;
+      gfx.beginPath();
+      gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+      gfx.fillStyle = "#003300";
+      gfx.fill();
+      gfx.closePath();
+    }
+  }
 
 
-
-  for(var i=0; i<nearbyObstacles.length; i++) {
+}
+function drawObstacles(gfx){
+  gfx.strokeStyle = "#003300";
+  gfx.lineWidth=5;
+   for(var i=0; i<nearbyObstacles.length; i++) {
     var segment = nearbyObstacles[i];
     var x1 = segment.pt1.x + screenWidth/2;
     var y1 = segment.pt1.y + screenHeight/2;
     var x2 = segment.pt2.x + screenWidth/2;
     var y2 = segment.pt2.y + screenHeight/2;
-    gfx.lineWidth=5;
     gfx.beginPath();
     gfx.moveTo(x1,y1);
     gfx.lineTo(x2,y2);
     gfx.stroke();
     gfx.closePath();
-    
-
-
   }
-}
 
+}
 function getPowerupIcon(type) {
   switch(type) {
     case "ammo": return bulletImg;
@@ -296,7 +299,7 @@ function drawAmmo(gfx) {
   gfx.closePath();
 
   gfx.stroke();
-  gfx.asdf
+  //gfx.asdf
 }
 
 function updateOscillate(){
