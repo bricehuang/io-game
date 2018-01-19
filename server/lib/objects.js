@@ -221,6 +221,32 @@ exports.Player = function(socket, spawnPosition, roomID) {
   this.lastFastPickup = 0;
   this.tier = 0;
 
+  this.timeStep = function() {
+    // update position
+    this.position = util.add(this.position, this.velocity);
+
+    // update velocity
+    this.velocity = util.add(this.velocity, this.acceleration);
+    var speedBeforeFricton = util.magnitude(this.velocity);
+    if (speedBeforeFricton > 0) {
+      this.velocity = util.scale(this.velocity, 1 - config.FRICTION / speedBeforeFricton);
+    }
+    var speed = util.magnitude(this.velocity);
+    var speedLimit = this.speedLimit();
+    if (speed > speedLimit) {
+      this.velocity = util.scale(this.velocity, speedLimit/speed);
+    }
+
+    // do physics if player hits map boundary
+    var distFromCenter = util.magnitude(this.position);
+    var eff_arena_radius = config.ARENA_RADIUS - this.radius;
+    if (distFromCenter > eff_arena_radius) {
+      this.position = util.scale(this.position, eff_arena_radius/distFromCenter)
+      this.velocity = util.reflect(this.velocity, {x: -this.position.y, y: this.position.x});
+      this.position = util.add(this.position, this.velocity);
+    }
+  }
+
   this.setName = function(name){
     this.name = name;
   }

@@ -300,33 +300,9 @@ exports.Room = function(id) {
     }
   }
 
-  this.movePlayer = function(player){
-    // update position
-    player.position = util.add(player.position, player.velocity);
-
-    // update velocity
-    player.velocity = util.add(player.velocity, player.acceleration);
-    var speedBeforeFricton = util.magnitude(player.velocity);
-    if (speedBeforeFricton > 0) {
-      player.velocity = util.scale(player.velocity, 1 - config.FRICTION / speedBeforeFricton);
-    }
-    var speed = util.magnitude(player.velocity);
-    var speedLimit = player.speedLimit();
-    if (speed > speedLimit) {
-      player.velocity = util.scale(player.velocity, speedLimit/speed);
-    }
-
-    // do physics if player hits map boundary
-    var distFromCenter = util.magnitude(player.position);
-    if (distFromCenter > config.ARENA_RADIUS-player.radius) {
-      player.position = util.scale(
-        player.position,
-        (config.ARENA_RADIUS-player.radius)/distFromCenter
-      )
-      player.velocity = util.reflect(
-        player.velocity, {x: -player.position.y, y: player.position.x}
-      );
-      player.position = util.add(player.position, player.velocity);
+  this.moveAllPlayers = function(){
+    for (var key of this.players.keys()) {
+      this.players.get(key).timeStep();
     }
   }
   this.moveProjectile = function(projectile){
@@ -348,7 +324,7 @@ exports.Room = function(id) {
 
   this.moveAllProjectiles = function() {
     for(var key of this.projectiles.keys()){
-      projectile = this.projectiles.get(key);
+      var projectile = this.projectiles.get(key);
       if(!this.moveProjectile(projectile)){
         this.projectiles.delete(key);
       }
@@ -356,8 +332,7 @@ exports.Room = function(id) {
   }
   this.moveAllPowerups = function() {
     for (var key of this.powerups.keys()) {
-      powerup = this.powerups.get(key);
-      powerup.timeStep();
+      this.powerups.get(key).timeStep();
     }
   }
   this.updateLeaderboard = function(){
@@ -471,6 +446,11 @@ exports.Room = function(id) {
       }, Long)
     );
   }
+  this.sendAllViews = function() {
+    for (var key of this.players.keys()) {
+      this.sendView(this.players.get(key));
+    }
+  }
 
   this.moveLoop = function() {
     this.moveAllProjectiles();
@@ -478,10 +458,8 @@ exports.Room = function(id) {
     this.collisionDetect();
     this.updateContinuousFire();
     this.updateLeaderboard();
-    for (var key of this.players.keys()) {
-      this.movePlayer(this.players.get(key));
-      this.sendView(this.players.get(key));
-    }
+    this.moveAllPlayers();
+    this.sendAllViews();
   }
 
   this.obstacles = this.generateObstacles();
