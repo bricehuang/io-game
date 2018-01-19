@@ -66,36 +66,7 @@ Game.prototype.handleLogic = function() {
   // This is where you update your game logic
 }
 
-function drawBackgroundGrid(gfx) {
 
-  gfx.strokeStyle = '#003300';
-  var smallestXLine = (screenWidth/2 - myAbsoluteCoord.x) % GRID_OFFSET;
-  if (smallestXLine < 0){
-    smallestXLine += GRID_OFFSET;
-  }
-  for (var x = smallestXLine; x<screenWidth; x+=GRID_OFFSET) {
-    gfx.moveTo(x, 0);
-    gfx.lineTo(x, screenHeight);
-  }
-  var smallestYLine = (screenHeight/2 - myAbsoluteCoord.y) % GRID_OFFSET;
-  if (smallestYLine < 0){
-    smallestYLine += GRID_OFFSET;
-  }
-  for (var y = smallestYLine; y<screenHeight; y+=GRID_OFFSET) {
-    gfx.moveTo(0, y);
-    gfx.lineTo(screenWidth, y);
-  }
-  gfx.stroke();
-
-  /*
-  var gradient = gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,0,
-                                          -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2 ,ARENA_RADIUS);
-  gradient.addColorStop(0,"white");
-  gradient.addColorStop(1,'rgba(218,112,214,0.5)');
-  gfx.fillStyle = gradient;
-  gfx.fillRect(0,0,screenWidth,screenHeight);
-  */
-}
 
 function drawObjects(gfx) {
 
@@ -135,6 +106,9 @@ function drawObjects(gfx) {
     //gfx.stroke();
 
     var powerupImg = getPowerupIcon(powerup.type);
+    gfx.beginPath();
+    gfx.arc(centerX, centerY, 1.4*radius, 0, 2*Math.PI, false);
+    
     gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
     gfx.closePath();
   }
@@ -192,7 +166,7 @@ function drawObjects(gfx) {
     );
     var dir = {x: player.mCd.x/mag, y: player.mCd.y/mag};
     gfx.beginPath();
-    gfx.moveTo(centerX+15*dir.x, centerY+15*dir.y);
+    gfx.moveTo(centerX+radius/2*dir.x, centerY+radius/2*dir.y);
     gfx.lineTo(centerX, centerY);
     gfx.stroke();
     gfx.closePath();
@@ -216,13 +190,13 @@ function drawObjects(gfx) {
     var y1 = segment.pt1.y + screenHeight/2;
     var x2 = segment.pt2.x + screenWidth/2;
     var y2 = segment.pt2.y + screenHeight/2;
-    gfx.lineWidth=10;
+    gfx.lineWidth=5;
     gfx.beginPath();
     gfx.moveTo(x1,y1);
     gfx.lineTo(x2,y2);
     gfx.stroke();
     gfx.closePath();
-    gfx.lineWidth=1;
+    
 
 
   }
@@ -255,6 +229,7 @@ function drawBoundary(gfx) {
     );
     gfx.stroke();
     gfx.closePath();
+    gfx.lineWidth = 1;
   }
 }
 function drawForeground(gfx){
@@ -334,10 +309,20 @@ setInterval(updateOscillate, cycleLength*1000/numOscillateSteps);
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
-  gfx.fillStyle = '#fbfcfc';
-  gfx.fillRect(0, 0, screenWidth, screenHeight);
+  
+  
 
-  drawBackgroundGrid(gfx);
+    var grd=gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,0,
+      -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,ARENA_RADIUS);
+    grd.addColorStop(1,"#B8B8B8");
+    grd.addColorStop(0,"#FFFFFF");
+
+    // Fill with gradient
+    gfx.fillStyle=grd;
+   gfx.fillRect(0, 0, screenWidth, screenHeight);
+  
+
+  
   drawObjects(gfx);
   drawBoundary(gfx);
   drawForeground(gfx);
