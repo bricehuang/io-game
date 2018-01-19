@@ -8,8 +8,12 @@ exports.Projectile = function(
   position,
   heading,
   speed,
+  acceleration,
   timeLeft,
-  radius
+  radius,
+  isLive,
+  onPlayerHit,
+  onWallHit
 ){
   this.type = type;
   this.id = id;
@@ -17,15 +21,18 @@ exports.Projectile = function(
   this.position = position;
   this.heading = heading;
   this.speed = speed;
+  this.acceleration = acceleration
   this.timeLeft = timeLeft;
   this.radius = radius;
   this.isLive = true;
+  this.onPlayerHit = onPlayerHit;
+  this.onWallHit = onWallHit;
 }
 
 exports.Projectile.prototype.timeStep = function() {
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
   this.timeLeft -= 1;
-  if (this.timeLeft == 0 || util.magnitude(this.position) > config.ARENA_RADIUS) {
+  if ((this.timeLeft == 0 || util.magnitude(this.position) > config.ARENA_RADIUS) && this.type!="rocket") {
     this.isLive = false;
   }
 }
@@ -39,8 +46,13 @@ exports.Bullet = function(id, shooter, position, heading) {
     position,
     heading,
     config.BULLET_SPEED,
+    config.BULLET_ACCELERATION,
     config.BULLET_AGE,
-    config.BULLET_RADIUS
+    config.BULLET_RADIUS,
+    true,
+    function(player){
+
+    }
   )
 }
 exports.Bullet.prototype = new exports.Projectile();
@@ -54,16 +66,39 @@ exports.SniperBullet = function(id, shooter, position, heading) {
     position,
     heading,
     config.SNIPER_BULLET_SPEED,
+    config.SNIPER_BULLET_ACCELERATION,
     config.SNIPER_BULLET_AGE,
-    config.BULLET_RADIUS
+    config.BULLET_RADIUS,
+    true,
+    function(player){
+
+    }
   )
 }
 exports.SniperBullet.prototype = new exports.Projectile();
+exports.Rocket = function(id, shooter, position, heading){
+  this,
+  "rocket",
+  id,
+  shooter,
+  position,
+  heading,
+  config.ROCKET_SPEED,
+  config.ROCKET_ACCELERATION,
+  config.ROCKET_AGE,
+  config.ROCKET_RADIUS,
+  true,
+  function(player){
 
+  }
+
+}
+exports.Rocket.prototype = new exports.Projectile();
 exports.makeProjectile = function(type, id, shooter, position, heading) {
   switch (type){
     case "bullet": return new exports.Bullet(id, shooter, position, heading);
     case "sniperBullet": return new exports.SniperBullet(id, shooter, position, heading);
+    case "rocket": return new exports.Rocket(id,shooter,position,heading);
     default: console.assert(false, 'invalid projectile type');
   }
 }
