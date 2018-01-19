@@ -154,7 +154,22 @@ exports.Room = function(id) {
   this.spawnPowerup = function(){
     if (this.powerups.size >= config.MAX_POWERUPS) {return; }
     var r = config.ARENA_RADIUS;
-    var pos = util.randomSpawn(r);
+    var pos;
+    while(true){
+      nextCoords = util.randomSpawn(r);
+      var failed = false;
+      for(var i = 0;i<this.numObstacles;i++){
+        if(util.pointLineDistance(nextCoords, this.obstacles[i]).trueDist<1.5*config.POWERUP_RADIUS){
+          failed = true;
+          break;
+        }
+      }
+      if(!failed){
+        pos =nextCoords;
+        break;
+      }
+
+    }
     var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
 
     var nextPowerup = obj.makePowerUp(type, this.nextPowerupID++, pos)
