@@ -77,7 +77,7 @@ io.on('connection', function (socket) {
   socket.on('fireSniper', function(){
     var player = players.get(socket.id);
     if (!player) return;
-    player.attemptSniperFire(player.mouseCoords);
+    player.attemptSpecialFire(player.mouseCoords);
   })
 
   socket.on('pingcheck', function() {

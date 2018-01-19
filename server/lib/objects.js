@@ -131,8 +131,10 @@ exports.SniperAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) 
     "sniperAmmo",
     position,
     function(player) {
-      player.sniperAmmo = Math.min(
-        player.sniperAmmo + config.SNIPER_AMMO_POWERUP_BULLETS,
+      if (player.specialWeapon != "sniperBullet" && player.specialAmmo > 0) { return; }
+      player.specialWeapon = "sniperBullet";
+      player.specialAmmo = Math.min(
+        player.specialAmmo + config.SNIPER_AMMO_POWERUP_BULLETS,
         config.MAX_SNIPER_AMMO
       );
     },
@@ -220,9 +222,14 @@ exports.Player = function(socket, spawnPosition, room) {
   this.maxHealth = config.PLAYER_MAX_HEALTH;
   this.kills = 0;
   this.ammo = config.STARTING_AMMO;
-  this.sniperAmmo = 0;
+  this.specialAmmo = 0;
 
   this.lastfire = 0;
+
+  this.specialWeapon = "";
+  this.lastSpecialFire = 0;
+  this.specialFireCooldown = 0;
+
   this.lastSpikePickup = 0;
   this.lastFastPickup = 0;
   this.tier = 0;
@@ -263,23 +270,29 @@ exports.Player = function(socket, spawnPosition, room) {
     this.mouseCoords = mouseCoords;
   }
   this.canFireNow = function() {
-    return (Date.now() - this.lastfire > config.FIRE_COOLDOWN_MILLIS);
+    return (Date.now() - this.lastfire > config.FIRE_COOLDOWN_MILLIS && this.ammo > 0);
   }
   this.refreshFireTimestamp = function() {
     this.lastfire = Date.now();
   }
+  this.canFireSpecialNow = function() {
+    return (Date.now() - this.lastSpecialFire > this.specialFireCooldown && this.specialAmmo > 0);
+  }
+  this.refreshSpecialFireTimestamp = function() {
+    this.lastSpecialFire = Date.now();
+  }
   this.attemptFire = function(vector) {
-    if (this.canFireNow() && this.ammo > 0) {
+    if (this.canFireNow()) {
       this.room.addFiredProjectile("bullet", this, vector);
       this.refreshFireTimestamp();
       this.ammo--;
     }
   }
-  this.attemptSniperFire = function(vector) {
-    if (this.canFireNow() && this.sniperAmmo>0) {
-      this.room.addFiredProjectile("sniperBullet", this, vector);
-      this.refreshFireTimestamp();
-      this.sniperAmmo--;
+  this.attemptSpecialFire = function(vector) {
+    if (this.canFireSpecialNow()) {
+      this.room.addFiredProjectile(this.specialWeapon, this, vector);
+      this.refreshSpecialFireTimestamp();
+      this.specialAmmo--;
     }
   }
 

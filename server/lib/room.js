@@ -442,7 +442,7 @@ exports.Room = function(id) {
         Ldb : this.leaderboard,
         stats: {name:player.name, score:player.kills, id:player.id},
         am: player.ammo,
-        snA: player.sniperAmmo
+        snA: player.specialAmmo
       }, Long)
     );
   }
