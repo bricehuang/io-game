@@ -95,6 +95,11 @@ io.on('connection', function (socket) {
     if (players.has(socket.id)) {
       players.delete(socket.id);
     }
+    for (var [key, room] of rooms) {
+      if (room.players.has(socket.id)) {
+        room.players.delete(socket.id);
+      }
+    }
   })
 });
 
