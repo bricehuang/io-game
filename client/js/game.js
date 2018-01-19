@@ -25,19 +25,19 @@ Game.prototype.handleNetwork = function(socket) {
 
   socket.on('gameState', function(data){
     var message = bson.deserialize(Buffer.from(data));
-    nearbyPlayers = message.nearbyPlayers;
-    nearbyProjectiles = message.nearbyProjectiles;
-    nearbyPowerups = message.nearbyPowerups;
-    myAbsoluteCoord = message.myAbsoluteCoord;
+    nearbyPlayers = message.nPl;
+    nearbyProjectiles = message.nPj;
+    nearbyPowerups = message.nPu;
+    myAbsoluteCoord = message.AbCd;
 
-    nearbyObstacles = message.nearbyObstacles;
-    numKills = message.myScore;
+    nearbyObstacles = message.nOb;
+    
 
-    leaderboard = message.globalLeaderboard;
-    myStats = message.yourStats;
-    ammo = message.ammo;
-    sniperAmmo = message.sniperAmmo;
-    isSpiky = message.isSpiky;
+    leaderboard = message.Ldb;
+    myStats = message.stats;
+    ammo = message.am;
+    sniperAmmo = message.snA;
+    
   })
   socket.on('death', function(message){
     document.getElementById('gameAreaWrapper').style.display = 'none';
@@ -105,8 +105,8 @@ function drawObjects(gfx) {
   // projectiles
   for (var i=0; i<nearbyProjectiles.length; i++) {
     var projectile = nearbyProjectiles[i];
-    var centerX = screenWidth/2 + projectile.position.x;
-    var centerY = screenHeight/2 + projectile.position.y;
+    var centerX = screenWidth/2 + projectile.pos.x;
+    var centerY = screenHeight/2 + projectile.pos.y;
     if (projectile.type == "bullet") {
       var radius = 5;
       gfx.beginPath();
@@ -126,8 +126,8 @@ function drawObjects(gfx) {
   // powerups
   for (var i=0; i<nearbyPowerups.length; i++) {
     var powerup = nearbyPowerups[i];
-    var centerX = screenWidth/2 + powerup.position.x;
-    var centerY = screenHeight/2 + powerup.position.y;
+    var centerX = screenWidth/2 + powerup.pos.x;
+    var centerY = screenHeight/2 + powerup.pos.y;
     var radius = 20;
     radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
     gfx.beginPath();
@@ -145,10 +145,10 @@ function drawObjects(gfx) {
   gfx.lineWidth=5;
   for (var i=0; i<nearbyPlayers.length; i++) {
     var player = nearbyPlayers[i];
-    var centerX = screenWidth/2 + player.position.x;
-    var centerY = screenHeight/2 + player.position.y;
+    var centerX = screenWidth/2 + player.pos.x;
+    var centerY = screenHeight/2 + player.pos.y;
     var radius = 30;
-    if(player.isSpiky){
+    if(player.Spk){
       gfx.beginPath();
       for(var j = 0; j<=36;j++){
         var angle = j*2*Math.PI/36-Math.PI/2;
@@ -187,10 +187,10 @@ function drawObjects(gfx) {
 
     //rotate gun
     var mag = Math.sqrt(
-      player.mouseCoords.x * player.mouseCoords.x +
-      player.mouseCoords.y * player.mouseCoords.y
+      player.mCd.x * player.mCd.x +
+      player.mCd.y * player.mCd.y
     );
-    var dir = {x: player.mouseCoords.x/mag, y: player.mouseCoords.y/mag};
+    var dir = {x: player.mCd.x/mag, y: player.mCd.y/mag};
     gfx.beginPath();
     gfx.moveTo(centerX+15*dir.x, centerY+15*dir.y);
     gfx.lineTo(centerX, centerY);
@@ -214,10 +214,10 @@ function drawObjects(gfx) {
 
   for(var i=0; i<nearbyObstacles.length; i++) {
     var segment = nearbyObstacles[i];
-    var x1 = segment.point1.x + screenWidth/2;
-    var y1 = segment.point1.y + screenHeight/2;
-    var x2 = segment.point2.x + screenWidth/2;
-    var y2 = segment.point2.y + screenHeight/2;
+    var x1 = segment.pt1.x + screenWidth/2;
+    var y1 = segment.pt1.y + screenHeight/2;
+    var x2 = segment.pt2.x + screenWidth/2;
+    var y2 = segment.pt2.y + screenHeight/2;
     gfx.lineWidth=10;
     gfx.beginPath();
     gfx.moveTo(x1,y1);
@@ -297,7 +297,7 @@ function drawForeground(gfx){
   if(!onLeaderboard && myStats){
     gfx.fillStyle = 'red';
     gfx.textAlign = 'left';
-    console.log(JSON.stringify(myStats));
+    //console.log(JSON.stringify(myStats));
     gfx.fillText(myStats.name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
     gfx.textAlign = 'right';
     gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);

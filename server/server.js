@@ -504,10 +504,10 @@ function sendView(player) {
     if (player.isVectorOnScreen(relPosition)) {
       var current = {
         name: otherPlayer.name,
-        position: relPosition,
+        pos: relPosition,
         health: otherPlayer.health,
-        mouseCoords: otherPlayer.mouseCoords,
-        isSpiky : otherPlayer.isSpiky()
+        mCd: otherPlayer.mouseCoords,
+        Spk : otherPlayer.isSpiky()
       };
       allPlayers.push(current);
     }
@@ -517,7 +517,7 @@ function sendView(player) {
     var powerup = powerups.get(key);
     var relPosition = util.intify(util.diff(powerup.position, player.position));
     if (player.isVectorOnScreen(relPosition)) {
-      var current = {type: powerup.type, position: relPosition};
+      var current = {type: powerup.type, pos: relPosition};
       allPowerups.push(current);
     }
   }
@@ -526,7 +526,7 @@ function sendView(player) {
     var projectile = projectiles.get(key);
     var relPosition = util.intify(util.diff(projectile.position, player.position));
     if (player.isVectorOnScreen(relPosition)) {
-      var current = {type: projectile.type, position: relPosition};
+      var current = {type: projectile.type, pos: relPosition};
       nearbyProjectiles.push(current);
     }
   }
@@ -535,7 +535,7 @@ function sendView(player) {
   for(var i=0; i<obstacles.length; i++) {
     var pt1diff = util.intify(util.diff(obstacles[i].point1, player.position));
     var pt2diff = util.intify(util.diff(obstacles[i].point2, player.position));
-    var segment = {point1: pt1diff, point2: pt2diff};
+    var segment = {pt1: pt1diff, pt2: pt2diff};
     nearbyObstacles.push(segment);
   }
 
@@ -543,15 +543,15 @@ function sendView(player) {
   player.socket.emit(
     'gameState',
     bson.serialize({
-      myAbsoluteCoord: player.position,
-      nearbyPowerups: allPowerups,
-      nearbyPlayers: allPlayers,
-      nearbyObstacles: nearbyObstacles,
-      nearbyProjectiles: nearbyProjectiles,
-      globalLeaderboard : leaderboard,
-      yourStats: {name:player.name, score:player.kills, id:player.id},
-      ammo: player.ammo,
-      sniperAmmo: player.sniperAmmo
+      AbCd: player.position,
+      nPu: allPowerups,
+      nPl: allPlayers,
+      nOb: nearbyObstacles,
+      nPj: nearbyProjectiles,
+      Ldb : leaderboard,
+      stats: {name:player.name, score:player.kills, id:player.id},
+      am: player.ammo,
+      snA: player.sniperAmmo
     }, Long)
   );
 }
