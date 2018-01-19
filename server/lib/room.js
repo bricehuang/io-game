@@ -194,19 +194,20 @@ exports.Room = function(id) {
   }
 
   this.registerPlayerProjectileHit = function(player, projectile){
+    if (!projectile.isLive) {return;}
     var wasAlive = (player.health>0);
     if (projectile.type == "bullet"){
       player.health -= config.BULLET_COLLISION_DAMAGE;
     } else if (projectile.type == "sniperBullet") {
       player.health -= config.SNIPER_BULLET_DAMAGE;
     }
-    this.projectiles.delete(projectile.id);
+    // this.projectiles.delete(projectile.id);
+    projectile.isLive = false;
     if (player.health <= 0 && wasAlive) {
       var shooterPlayer = projectile.shooter;
       shooterPlayer.kills++;
       this.emitToRoom('feed', shooterPlayer.name + " killed " + player.name + "!");
     }
-    return;
   }
 
   this.registerPlayerPowerupHit = function(player, powerup){
@@ -335,29 +336,19 @@ exports.Room = function(id) {
       this.players.get(key).timeStep();
     }
   }
-  this.moveProjectile = function(projectile){
-    // moves a projectile, and returns whether the projectile is still alive
-    // (i.e. has not run out of time or escaped the arena)
-    var isAlive = (
-      projectile.timeLeft > 0 && util.magnitude(projectile.position) <= config.ARENA_RADIUS
-    );
-    for (var i=0; i<this.numObstacles; i++) {
-      if(util.pointLineDistance(projectile.position, this.obstacles[i]).trueDist < 2*config.BULLET_RADIUS){
-        isAlive = false;
-      }
-    }
-    if (isAlive) {
-      projectile.timeStep();
-    }
-    return isAlive;
-  }
 
-  this.moveAllProjectiles = function() {
-    for(var key of this.projectiles.keys()){
-      var projectile = this.projectiles.get(key);
-      if(!this.moveProjectile(projectile)){
-        this.projectiles.delete(key);
+  this.checkProjectileWallCollisions = function() {
+    for(var [key, projectile] of this.projectiles){
+      for (var obstacle of this.obstacles) {
+        if (util.pointLineDistance(projectile.position, obstacle).trueDist< 2*config.BULLET_RADIUS){
+          projectile.isLive = false;
+        }
       }
+    }
+  }
+  this.moveAllProjectiles = function() {
+    for(var [key, projectile] of this.projectiles){
+      projectile.timeStep();
     }
   }
   this.moveAllPowerups = function() {
@@ -398,6 +389,18 @@ exports.Room = function(id) {
       this.players.delete(player.id);
     }
     return deadPlayers;
+  }
+
+  this.purgeDeadProjecties = function() {
+    var deadProjectiles = [];
+    for (var [key, projectile] of this.projectiles) {
+      if (!projectile.isLive) {
+        deadProjectiles.push(projectile);
+      }
+    }
+    for (var projectile of deadProjectiles) {
+      this.projectiles.delete(projectile.id);
+    }
   }
 
   this.sendView = function(player) {
@@ -468,12 +471,14 @@ exports.Room = function(id) {
   }
 
   this.moveLoop = function() {
+    this.checkProjectileWallCollisions();
+    this.moveAllPlayers();
     this.moveAllProjectiles();
     this.moveAllPowerups();
     this.collisionDetect();
     this.updateContinuousFire();
     this.updateLeaderboard();
-    this.moveAllPlayers();
+    this.purgeDeadProjecties();
     this.sendAllViews();
   }
 

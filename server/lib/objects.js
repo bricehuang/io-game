@@ -19,11 +19,15 @@ exports.Projectile = function(
   this.speed = speed;
   this.timeLeft = timeLeft;
   this.radius = radius;
+  this.isLive = true;
 }
 
 exports.Projectile.prototype.timeStep = function() {
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
   this.timeLeft -= 1;
+  if (this.timeLeft == 0 || util.magnitude(this.position) > config.ARENA_RADIUS) {
+    this.isLive = false;
+  }
 }
 
 exports.Bullet = function(id, shooter, position, heading) {
