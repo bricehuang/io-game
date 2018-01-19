@@ -93,28 +93,44 @@ function drawPlayers(gfx){
       gfx.fill();
       gfx.closePath();
     }
-    gfx.fillStyle = '#009933';
-    gfx.strokeStyle = '#003300';
-    gfx.font = 'bold 24px Verdana';
-    gfx.textAlign = 'center';
-    gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.9 : radius*1.3));
-    gfx.fillText(player.health,centerX, centerY+(player.Spk ? radius*2.3 : radius*1.7));
-    var color = '#00ff00';
-    var h = player.health;
 
-    var red = Math.round((Math.min(200-2*h,100)*255/100)).toString(16);
+    //Eliminate some of the hardCoded numbers when we add client-side config
+    var fraction = player.health/(25*player.tier + 100);
+    var color = '#00ff00';
+    var red = Math.round(Math.max(0,(1-3*fraction)*255)).toString(16);
     if(red.length==1)
       red = '0'+red;
-    var green = Math.round((Math.min(2*h,100)*255/100)).toString(16);
+    var green = Math.round(fraction*200).toString(16);
     if(green.length==1)
       green = '0'+green;
     var blue = '00';
     color = '#'+red+green+blue;
+
+
+    gfx.fillStyle = color;
+    
+    gfx.font = '20px Verdana';
+    gfx.textAlign = 'center';
+    gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
+    gfx.font = '12px Verdana';
+    gfx.fillText(player.health, centerX +  1.1*radius, centerY+(player.Spk ? radius*1.8 : radius*1.4));
+    
+    gfx.lineWidth = 10;
+    gfx.strokeStyle = color;
+    gfx.beginPath();
+    gfx.moveTo(centerX- radius ,centerY + (player.Spk ? radius*1.7 : radius*1.3) );
+    gfx.lineTo(centerX + 0.8*radius*(2*fraction-1) - 0.2*radius,centerY + (player.Spk ? radius*1.7 : radius*1.3) );
+    gfx.stroke();
+    gfx.closePath();
+
+
+    gfx.lineWidth = 5;
+    gfx.strokeStyle = '#003300';
+    
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
 
-    gfx.fillStyle = color;
     gfx.fill();
     gfx.closePath();
     //gfx.fillStyle = '#2ecc71';
@@ -292,7 +308,9 @@ function drawAmmo(gfx) {
   gfx.strokeStyle = "#000000";
   gfx.fillStyle = "#000000";
   gfx.font = "16px Verdana";
+
   gfx.lineWidth =1;
+
   gfx.beginPath();
   gfx.rect(screenWidth - 120, screenHeight - 40, 25, 25);
   gfx.drawImage(bulletImg, screenWidth - 120 , screenHeight - 40, 25, 25);
