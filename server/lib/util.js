@@ -69,12 +69,12 @@ exports.metropolisHastings = function(pdf){
   return {x: curX, y: curY};
 };
 
-exports.quad = function(x,y) {
+exports.spawnProbabilityDistribution = function(x,y) {
   return x * x + y * y <= 0.1 ? 8 : 4;
 };
 
-exports.gaussianCircleGenerate = function(radius, flattenFactor, epsilon){
-  smallGen = exports.metropolisHastings(exports.quad);
+exports.randomSpawn = function(radius){
+  smallGen = exports.metropolisHastings(exports.spawnProbabilityDistribution);
   return {x: radius * smallGen.x, y: radius * smallGen.y};
 };
 
@@ -113,7 +113,7 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
   return {x: genX, y: genY};
 };
 
-exports.collided = function(firstObject, secondObject, epsilon) {
+exports.collided = function(firstObject, secondObject, epsilon) {;  
   var dist = exports.distance(firstObject.position, secondObject.position);
   return dist <= (1 + epsilon) * (firstObject.radius + secondObject.radius);
 };

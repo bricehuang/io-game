@@ -14,12 +14,12 @@
   "ACCELERATION_MAGNITUDE": 0.80,
   "FRICTION" : 0.20,
   "PLAYER_START_HEALTH" : 100,
-  "PLAYER_MAX_HEALTH" : 200,
+  "PLAYER_MAX_HEALTH" : 100,
   "FIRE_COOLDOWN_MILLIS": 100,
   "POWERUP_SPAWN_PER_SECOND": 1,
   "MAX_POWERUPS": 50,
-  "POWERUP_TYPES": ["ammo", "sniperAmmo", "healthpack", "spike","fast"],
-  "POWERUP_WEIGHTS": [0.5, 0.1, 0.3 ,0.05,0.05],
+  "POWERUP_TYPES": ["ammo", "sniperAmmo", "healthpack", "spike","fast", "heart"],
+  "POWERUP_WEIGHTS": [0.5, 0.1, 0.3 ,0.05,0.05, 0.0],
   "BULLET_AGE": 60,
   "BULLET_SPEED" : 20,
   "BULLET_COLLISION_DAMAGE": 8,
@@ -39,5 +39,7 @@
   "STARTING_POWERUPS": 20,
   "POWERUPS_PER_PLAYER": 1,
   "BULLET_TO_PLAYER_SPAWN_DIST": 30,
-  "BUFFER": 60
+  "BUFFER": 60,
+  "TIER_HEALTH_BONUS": 50,
+  "TIER_RADIUS_BONUS": 15
 }

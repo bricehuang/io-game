@@ -25,6 +25,8 @@ var spikeImg = new Image();
 spikeImg.src = 'js/images/spike.png';
 var fastImg = new Image();
 fastImg.src = 'js/images/fast.png';
+var heartImg = new Image();
+heartImg.src = 'js/images/heart.png'
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');

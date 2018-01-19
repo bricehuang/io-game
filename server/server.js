@@ -87,7 +87,7 @@ io.on('connection', function (socket) {
     if (!player) return;
     if (player.canFireNow() && player.ammo > 0) {
       var heading = util.normalize(vector);
-      var position = util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST));
+      var position = util.add(player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2));
       var bullet = new obj.Bullet(
         nextProjectileID++,
         player,
@@ -116,7 +116,7 @@ io.on('connection', function (socket) {
       var sniperBullet = new obj.SniperBullet(
         nextProjectileID++,
         player,
-        util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST)),
+        util.add(player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2)),
         heading
       )
       projectiles.set(sniperBullet.id, sniperBullet);
@@ -239,8 +239,8 @@ function collisionDetect(){
       var player1 = players.get(key1);
       var player2 = players.get(key2);
       var posDiff = util.diff(player1.position, player2.position);
-
-      if (util.magnitude(posDiff) < 2*config.PLAYER_RADIUS && key1<key2) {
+      //if(key1<key2) console.log(util.collided(player1,player2, config.EPS));
+      if (key1<key2 && util.collided(player1,player2, config.EPS) ) {
         var velDiff = util.diff(player1.velocity, player2.velocity);
         var impulse = - util.dotProduct(posDiff, velDiff) / util.dotProduct(posDiff, posDiff)
         if (Math.abs(impulse)<.05) {
@@ -293,7 +293,7 @@ function collisionDetect(){
       var player = players.get(key);
       var count = 0;
       for(var i=0; i<numObstacles; i++){
-        if (player && util.pointLineDistance(player.position, obstacles[i]).trueDist < config.PLAYER_RADIUS + 2){
+        if (player && util.pointLineDistance(player.position, obstacles[i]).trueDist < player.radius + 2){
           registerPlayerWallHit(player,obstacles[i]);
           count++;
         }
@@ -319,7 +319,7 @@ function registerPlayerWallHit(player, wall){
     }
 
     if(util.dotProduct(wallVector, player.velocity) > 0.25*util.magnitude(wallVector)*util.magnitude(player.velocity) ||
-      (hitType.dist<0.25*config.PLAYER_RADIUS && util.dotProduct(wallVector, player.velocity) > 0))
+      (hitType.dist<0.25*player.radius && util.dotProduct(wallVector, player.velocity) > 0))
     {
       var newVelocity = util.reflect(
         player.velocity,
@@ -403,7 +403,7 @@ function findSpawnLocation(){
 function spawnPowerup(){
   if (powerups.size >= config.MAX_POWERUPS) {return; }
   var r = config.ARENA_RADIUS;
-  var pos = util.gaussianCircleGenerate(r,0.1,0.00001);
+  var pos = util.randomSpawn(r);
   var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
 
   var nextPowerup = obj.makePowerUp(type, nextPowerupID++, pos)
@@ -421,10 +421,12 @@ function spawnMovingPowerupFromPoint(type, position) {
 function spawnPowerupsOnPlayerDeath(player) {
   // currently just spawns five random powerups.
   // TODO spawn according to a player-dependent distribution?
-  for (var i=0; i<5; i++) {
+  var pos = player.position;
+  for (var i=0; i<4; i++) {
     var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
     spawnMovingPowerupFromPoint(type, player.position);
   }
+  spawnMovingPowerupFromPoint("heart",player.position);
 }
 
 function movePlayer(player){
@@ -445,10 +447,10 @@ function movePlayer(player){
 
   // do physics if player hits map boundary
   var distFromCenter = util.magnitude(player.position);
-  if (distFromCenter > config.ARENA_RADIUS-config.PLAYER_RADIUS) {
+  if (distFromCenter > config.ARENA_RADIUS-player.radius) {
     player.position = util.scale(
       player.position,
-      (config.ARENA_RADIUS-config.PLAYER_RADIUS)/distFromCenter
+      (config.ARENA_RADIUS-player.radius)/distFromCenter
     )
     player.velocity = util.reflect(
       player.velocity, {x: -player.position.y, y: player.position.x}
@@ -498,16 +500,17 @@ function expelDeadPlayer(player) {
 
 function sendView(player) {
   var allPlayers = [];
-  for (var key of players.keys()) {
-    var otherPlayer = players.get(key);
+  for (var [key,otherPlayer] of players) {
     var relPosition = util.intify(util.diff(otherPlayer.position, player.position));
-    if (player.isVectorOnScreen(relPosition)) {
+    var buffer = otherPlayer.radius;
+    if (player.isVectorOnScreen(relPosition,buffer)) {
       var current = {
         name: otherPlayer.name,
         pos: relPosition,
         health: otherPlayer.health,
         mCd: otherPlayer.mouseCoords,
         Spk : otherPlayer.isSpiky()
+        tier: otherPlayer.tier
       };
       allPlayers.push(current);
     }
@@ -516,8 +519,9 @@ function sendView(player) {
   for (var key of powerups.keys()) {
     var powerup = powerups.get(key);
     var relPosition = util.intify(util.diff(powerup.position, player.position));
-    if (player.isVectorOnScreen(relPosition)) {
-      var current = {type: powerup.type, pos: relPosition};
+    var buffer = powerup.radius;
+    if (player.isVectorOnScreen(relPosition,buffer)) {
+      var current = {type: powerup.type, position: relPosition};
       allPowerups.push(current);
     }
   }
@@ -525,8 +529,9 @@ function sendView(player) {
   for (var key of projectiles.keys()) {
     var projectile = projectiles.get(key);
     var relPosition = util.intify(util.diff(projectile.position, player.position));
-    if (player.isVectorOnScreen(relPosition)) {
-      var current = {type: projectile.type, pos: relPosition};
+    var buffer = projectile.radius;
+    if (player.isVectorOnScreen(relPosition,buffer)) {
+      var current = {type: projectile.type, position: relPosition};
       nearbyProjectiles.push(current);
     }
   }
@@ -570,7 +575,7 @@ function updateContinuousFire(){
       if(player.canFireNow() && player.ammo>0){
         var vector = player.mouseCoords;
         var heading = util.normalize(vector);
-        var position = util.add(player.position, util.scale(heading, config.BULLET_TO_PLAYER_SPAWN_DIST));
+        var position = util.add(player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2));
         var bullet = new obj.Bullet(
           nextProjectileID++,
           player,

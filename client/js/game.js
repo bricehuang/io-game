@@ -147,7 +147,7 @@ function drawObjects(gfx) {
     var player = nearbyPlayers[i];
     var centerX = screenWidth/2 + player.pos.x;
     var centerY = screenHeight/2 + player.pos.y;
-    var radius = 30;
+    var radius = 30+player.tier*15;
     if(player.Spk){
       gfx.beginPath();
       for(var j = 0; j<=36;j++){
@@ -163,8 +163,8 @@ function drawObjects(gfx) {
     gfx.strokeStyle = '#003300';
     gfx.font = 'bold 24px Verdana';
     gfx.textAlign = 'center';
-    gfx.fillText(player.name, centerX, centerY-43);
-    gfx.fillText(player.health,centerX, centerY+55);
+    gfx.fillText(player.name, centerX, centerY-radius*1.5);
+    gfx.fillText(player.health,centerX, centerY+radius*1.5);
     var color = '#00ff00';
     var h = player.health;
 
@@ -210,8 +210,6 @@ function drawObjects(gfx) {
 
 
 
-
-
   for(var i=0; i<nearbyObstacles.length; i++) {
     var segment = nearbyObstacles[i];
     var x1 = segment.pt1.x + screenWidth/2;
@@ -237,6 +235,7 @@ function getPowerupIcon(type) {
     case "healthpack": return healthpackImg;
     case "spike": return spikeImg;
     case "fast": return fastImg;
+    case "heart": return heartImg;
     default: return new Image();
   }
 }
@@ -297,7 +296,6 @@ function drawForeground(gfx){
   if(!onLeaderboard && myStats){
     gfx.fillStyle = 'red';
     gfx.textAlign = 'left';
-    //console.log(JSON.stringify(myStats));
     gfx.fillText(myStats.name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
     gfx.textAlign = 'right';
     gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);

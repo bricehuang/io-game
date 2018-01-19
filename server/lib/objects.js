@@ -22,6 +22,7 @@ exports.Projectile = function(
 }
 
 exports.Projectile.prototype.timeStep = function() {
+
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
   this.timeLeft -= 1;
 }
@@ -164,6 +165,21 @@ exports.FastPowerUp = function(id, position, heading={x:1,y:0}, speed=0){
 }
 exports.FastPowerUp.prototype = new exports.Powerup();
 
+exports.HeartPowerUp = function(id, position, heading={x:1,y:0},speed=0){
+  exports.Powerup.call(
+    this,
+    id,
+    "heart",
+    position,
+    function(player){
+      player.incrementTier();
+    },
+    heading,
+    speed
+    )
+}
+exports.HeartPowerUp.prototype = new exports.Powerup();
+
 exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) {
   switch (type) {
     case "healthpack": return new exports.HealthPackPowerUp(id, position, heading, speed);
@@ -171,6 +187,7 @@ exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) 
     case "sniperAmmo": return new exports.SniperAmmoPowerUp(id, position, heading, speed);
     case "spike": return new exports.SpikePowerUp(id, position, heading, speed);
     case "fast": return new exports.FastPowerUp(id, position, heading, speed);
+    case "heart": return new exports.HeartPowerUp(id, position, heading, speed);
     default: console.assert('invalid powerup type');
   }
 }
@@ -201,6 +218,7 @@ exports.Player = function(socket, spawnPosition) {
   this.lastfire = 0;
   this.lastSpikePickup = 0;
   this.lastFastPickup = 0;
+  this.tier = 0;
 
   this.setName = function(name){
     this.name = name;
@@ -246,5 +264,11 @@ exports.Player = function(socket, spawnPosition) {
       Math.abs(vector.x) <= buffer+this.windowDimensions.width/2 &&
       Math.abs(vector.y) <= buffer+this.windowDimensions.height/2
     );
+  }
+  this.incrementTier = function(){
+    this.tier=this.tier+1;
+    this.maxHealth =config.PLAYER_MAX_HEALTH+this.tier*config.TIER_HEALTH_BONUS;
+    this.radius = config.PLAYER_RADIUS+this.tier*config.TIER_RADIUS_BONUS;
+    this.health = Math.min(config.PLAYER_MAX_HEALTH,this.health + config.TIER_HEALTH_BONUS);
   }
 }
