@@ -214,14 +214,12 @@ function drawPowerups(gfx){
     var centerY = screenHeight/2 + powerup.pos.y;
     var radius = 20;
     radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
-    gfx.beginPath();
+    
     //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     //gfx.stroke();
 
     var powerupImg = getPowerupIcon(powerup.type);
     gfx.beginPath();
-    gfx.arc(centerX, centerY, 1.4*radius, 0, 2*Math.PI, false);
-
     gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
     gfx.closePath();
   }

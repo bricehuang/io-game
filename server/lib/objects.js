@@ -292,6 +292,7 @@ exports.HeartPowerUp = function(id, position, heading={x:1,y:0},speed=0){
     function(player){
       player.incrementTier();
     },
+    false,
     heading,
     speed
     )
