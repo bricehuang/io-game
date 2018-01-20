@@ -162,19 +162,26 @@ function drawPlayers(gfx){
     //treads
     var speed = Math.sqrt(player.v.x*player.v.x + player.v.y*player.v.y);
     var mvDir = {x:1,y:0};
-    if(speed>0)
+    if(speed>0.3)
         mvDir = {x:player.v.x/speed, y:player.v.y/speed};
-    
+
     gfx.beginPath();
-    gfx.lineCap = "round";
-    gfx.moveTo(centerX+radius*.9*mvDir.y - radius*.8*mvDir.x, centerY- radius*.9*mvDir.x - radius*.8*mvDir.y);
-    gfx.lineTo(centerX+radius*.9*mvDir.y + radius*.8*mvDir.x, centerY- radius*.9*mvDir.x + radius*.8*mvDir.y);
-    gfx.stroke();
-    gfx.moveTo(centerX-radius*.9*mvDir.y - radius*.8*mvDir.x, centerY+ radius*.9*mvDir.x - radius*.8*mvDir.y);
-    gfx.lineTo(centerX-radius*.9*mvDir.y + radius*.8*mvDir.x, centerY+ radius*.9*mvDir.x + radius*.8*mvDir.y);
+    gfx.lineCap='round';
+    gfx.moveTo(centerX-radius*.9*mvDir.x - radius*.4*mvDir.y, centerY -radius*.9*mvDir.y + radius*.4*mvDir.x);
+    gfx.lineTo(centerX-radius*.9*mvDir.x + radius*.4*mvDir.y, centerY- radius*.9*mvDir.y - radius*.4*mvDir.x);
+    gfx.moveTo(centerX-radius*mvDir.x - radius*.5*mvDir.y, centerY -radius*mvDir.y + radius*.5*mvDir.x);
+    gfx.lineTo(centerX-radius*mvDir.x + radius*.5*mvDir.y, centerY- radius*mvDir.y - radius*.5*mvDir.x);
     gfx.stroke();
     gfx.closePath();
-   
+    /*
+    gfx.beginPath();
+    gfx.moveTo(centerX+radius*1.1*mvDir.x, centerY +radius*1.1*mvDir.y );
+    gfx.lineTo(centerX+radius*1.1*mvDir.x - radius*.5*(mvDir.y + mvDir.x), centerY + 1.1*radius*mvDir.y - radius*.5*(mvDir.y - mvDir.x));
+    gfx.moveTo(centerX+radius*1.1*mvDir.x, centerY + radius*1.1*mvDir.y);
+    gfx.lineTo(centerX+radius*1.1*mvDir.x - radius*.5*(-mvDir.y + mvDir.x), centerY + 1.1*radius*mvDir.y - radius*.5*(mvDir.y + mvDir.x));
+    gfx.stroke();
+    gfx.closePath();
+   */
 
 
 
