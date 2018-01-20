@@ -144,27 +144,32 @@ exports.Room = function(id) {
     return nextCoords;
   }
 
+  this.attemptFindPowerupSpawnLocation = function() {
+    /*
+    Generate and return a powerup spawn location, or null spawn is on a wall.
+    */
+    var location = util.randomSpawn(config.ARENA_RADIUS);
+    for(var obstacle of this.obstacles){
+      if (util.pointLineDistance(location, obstacle).trueDist<1.5*config.POWERUP_RADIUS){
+        return null;
+      }
+    }
+    return location;
+  }
+  this.findPowerupSpawnLocation = function() {
+    /*
+    Generate and return a powerup spawn location.  Retries until gets a spawn not on a wall.
+    */
+    var location = this.attemptFindPowerupSpawnLocation();
+    while (location == null) {
+      location = this.attemptFindPowerupSpawnLocation();
+    }
+    return location;
+  }
   this.spawnPowerup = function(){
     if (this.powerups.size >= config.MAX_POWERUPS) {return; }
-    var r = config.ARENA_RADIUS;
-    var pos;
-    while(true){
-      nextCoords = util.randomSpawn(r);
-      var failed = false;
-      for(var i = 0;i<this.numObstacles;i++){
-        if(util.pointLineDistance(nextCoords, this.obstacles[i]).trueDist<1.5*config.POWERUP_RADIUS){
-          failed = true;
-          break;
-        }
-      }
-      if(!failed){
-        pos =nextCoords;
-        break;
-      }
-
-    }
+    var pos = this.findPowerupSpawnLocation();
     var type = util.multinomialSelect(config.POWERUP_TYPES,config.POWERUP_WEIGHTS);
-
     var nextPowerup = obj.makePowerUp(type, this.nextPowerupID++, pos)
     this.powerups.set(nextPowerup.id, nextPowerup);
   }
@@ -188,33 +193,31 @@ exports.Room = function(id) {
 
   this.registerPlayerPlayerHit = function(player1, player2) {
     var posDiff = util.diff(player1.position, player2.position);
-    if (util.collided(player1,player2, config.EPS) ) {
-      var velDiff = util.diff(player1.velocity, player2.velocity);
-      var impulse = - util.dotProduct(posDiff, velDiff) / util.dotProduct(posDiff, posDiff)
-      if (Math.abs(impulse)<.05) {
-        impulse = .05;
-      }
-      player1.velocity = util.add(player1.velocity, util.scale(posDiff, impulse));
-      player2.velocity = util.add(player2.velocity, util.scale(posDiff, -impulse));
+    var velDiff = util.diff(player1.velocity, player2.velocity);
+    var impulse = - util.dotProduct(posDiff, velDiff) / util.dotProduct(posDiff, posDiff)
+    if (Math.abs(impulse)<.05) {
+      impulse = .05;
+    }
+    player1.velocity = util.add(player1.velocity, util.scale(posDiff, impulse));
+    player2.velocity = util.add(player2.velocity, util.scale(posDiff, -impulse));
 
-      if (player2.isSpiky()) {
-        player1.health -= config.SPIKE_COLLISION_DAMAGE;
-      } else {
-        player1.health -= config.BODY_COLLISION_DAMAGE;
-      }
-      if (player1.isSpiky()) {
-        player2.health -= config.SPIKE_COLLISION_DAMAGE;
-      } else {
-        player2.health -= config.BODY_COLLISION_DAMAGE;
-      }
-      if (player1.health <= 0 && player2.health > 0){
-        player2.kills++;
-        this.emitToRoom('feed', player2.name + " roadkilled " + player1.name + "!");
-      }
-      if (player2.health <=0 && player1.health > 0){
-        player1.kills++;
-        this.emitToRoom('feed', player1.name + " roadkilled " + player2.name + "!");
-      }
+    if (player2.isSpiky()) {
+      player1.health -= config.SPIKE_COLLISION_DAMAGE;
+    } else {
+      player1.health -= config.BODY_COLLISION_DAMAGE;
+    }
+    if (player1.isSpiky()) {
+      player2.health -= config.SPIKE_COLLISION_DAMAGE;
+    } else {
+      player2.health -= config.BODY_COLLISION_DAMAGE;
+    }
+    if (player1.health <= 0 && player2.health > 0){
+      player2.kills++;
+      this.emitToRoom('feed', player2.name + " roadkilled " + player1.name + "!");
+    }
+    if (player2.health <=0 && player1.health > 0){
+      player1.kills++;
+      this.emitToRoom('feed', player1.name + " roadkilled " + player2.name + "!");
     }
   }
   this.registerPlayerProjectileHit = function(player, projectile){
@@ -288,7 +291,7 @@ exports.Room = function(id) {
       for (var key2 of this.players.keys()) {
         var player1 = this.players.get(key1);
         var player2 = this.players.get(key2);
-        if (key1 < key2) {
+        if (key1 < key2 && util.collided(player1,player2, config.EPS)) {
           this.registerPlayerPlayerHit(player1, player2)
         }
       }
@@ -313,11 +316,9 @@ exports.Room = function(id) {
     }
     for(var key of this.players.keys()){
       var player = this.players.get(key);
-      var count = 0;
       for(var i=0; i<this.numObstacles; i++){
         if (player && util.pointLineDistance(player.position, this.obstacles[i]).trueDist < player.radius + 2){
           this.registerPlayerWallHit(player, this.obstacles[i]);
-          count++;
         }
       }
     }
