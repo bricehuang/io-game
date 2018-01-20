@@ -213,11 +213,11 @@ exports.Room = function(id) {
     }
     if (player1.health <= 0 && player2.health > 0){
       player2.kills++;
-      this.emitToRoom('feed', player2.name + " roadkilled " + player1.name + "!");
+      this.emitToRoom('feed', player1.name + " was roadkilled by " + player2.name + "!");
     }
     if (player2.health <=0 && player1.health > 0){
       player1.kills++;
-      this.emitToRoom('feed', player1.name + " roadkilled " + player2.name + "!");
+      this.emitToRoom('feed', player2.name + " was roadkilled by " + player1.name + "!");
     }
   }
   this.registerPlayerProjectileHit = function(player, projectile){
@@ -228,7 +228,11 @@ exports.Room = function(id) {
     if (player.health <= 0 && wasAlive) {
       var shooterPlayer = projectile.shooter;
       shooterPlayer.kills++;
-      this.emitToRoom('feed', shooterPlayer.name + " killed " + player.name + "!");
+      if (player.id == shooterPlayer.id) {
+        this.emitToRoom('feed', player.name + " killed himself!");
+      } else {
+        this.emitToRoom('feed', player.name + " was killed by " + shooterPlayer.name + "!");
+      }
     }
   }
 
