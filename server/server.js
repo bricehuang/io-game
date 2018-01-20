@@ -61,7 +61,6 @@ io.on('connection', function (socket) {
 
     var data = authenticateAndExtractData(pendingPlayer, dataAndSecurity);
     if (data == null) {return; }
-    console.log('Authentication passed!');
     if (!(data && "name" in data && "windowDimensions" in data)) { return; }
     if (!("width" in data.windowDimensions && "height" in data.windowDimensions)) { return; }
 
@@ -165,7 +164,6 @@ io.on('connection', function (socket) {
     var data = authenticateAndExtractData(player, dataAndSecurity);
     if (data == null) {return; }
 
-    console.log('I was pinged!');
     socket.emit('pongcheck');
   })
 

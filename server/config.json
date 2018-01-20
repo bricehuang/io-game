@@ -1,8 +1,5 @@
 {
   "port": 3000,
-  "DEFAULT_NAME": "Allen Liu",
-  "DEFAULT_WINDOW_WIDTH": 500,
-  "DEFAULT_WINDOW_HEIGHT": 500,
   "FRAME_RATE": 30,
   "EPS": 0.0001,
   "PLAYER_RADIUS": 30,

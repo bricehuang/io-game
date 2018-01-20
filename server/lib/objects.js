@@ -170,7 +170,6 @@ exports.Powerup.prototype.timeStep = function() {
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
   var gravityVector = {x:0,y:0};
   for(var gravitySource of this.gravitySources){
-    console.log("gravity source " + gravitySource);
     gravityVector = util.add(util.normalize(gravityVector),util.scaleToLength(util.diff(gravitySource,this.position),config.GRAVITY_ACCELERATION));
     this.updateSpeedFromGravity(gravityVector);
   }
@@ -188,18 +187,15 @@ exports.Powerup.prototype.measureGravity = function(player){
   }
   if(util.distance(player.position,this.position)<this.radius+player.radius*config.GRAVITY_SCALE){
     this.gravitySources.add(player.position);
-    console.log("added " + player.name);
   }
 }
 exports.Powerup.prototype.updateSpeedFromGravity = function(vector){
   var velocityVector = util.scale(this.heading,this.speed);
   var newVelocityVector = util.add(velocityVector, vector);
   this.speed =util.magnitude(newVelocityVector);
-  console.log("new speed " + this.speed);
   if(this.speed>=config.EPS){
     this.heading= util.normalize(newVelocityVector);
   }
-  console.log("new direction " + JSON.stringify(this.heading));
 
 }
 
