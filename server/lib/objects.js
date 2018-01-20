@@ -191,7 +191,7 @@ exports.AmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
   exports.Powerup.call(
     this,
     id,
-    "ammo",
+    "bullet",
     position,
     function(player) {
       player.ammo = Math.min(
@@ -209,7 +209,7 @@ exports.SniperAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) 
   exports.Powerup.call(
     this,
     id,
-    "sniperAmmo",
+    "sniperBullet",
     position,
     function(player) {
       if (player.specialWeapon != "sniperBullet" && player.specialAmmo > 0) { return; }
@@ -293,8 +293,8 @@ exports.HeartPowerUp.prototype = new exports.Powerup();
 exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) {
   switch (type) {
     case "healthpack": return new exports.HealthPackPowerUp(id, position, heading, speed);
-    case "ammo": return new exports.AmmoPowerUp(id, position, heading, speed);
-    case "sniperAmmo": return new exports.SniperAmmoPowerUp(id, position, heading, speed);
+    case "bullet": return new exports.AmmoPowerUp(id, position, heading, speed);
+    case "sniperBullet": return new exports.SniperAmmoPowerUp(id, position, heading, speed);
     case "rocket": return new exports.RocketAmmoPowerUp(id, position, heading, speed);
     case "spike": return new exports.SpikePowerUp(id, position, heading, speed);
     case "fast": return new exports.FastPowerUp(id, position, heading, speed);

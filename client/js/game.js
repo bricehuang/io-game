@@ -12,7 +12,9 @@ var startPingTime;
 var leaderboard =[];
 var myStats;
 var ammo = 30;
-var sniperAmmo = 0;
+var specialAmmo = 0;
+var specialWeapon = "";
+
 var oscillateStep = 0;
 var numOscillateSteps = 64;
 //oscillateStep and numOscillateSteps maybe shouldn't be random global variables
@@ -36,8 +38,8 @@ Game.prototype.handleNetwork = function(socket) {
     leaderboard = message.Ldb;
     myStats = message.stats;
     ammo = message.am;
-    sniperAmmo = message.snA;
-
+    specialAmmo = message.spA;
+    specialWeapon = message.spW;
   })
   socket.on('death', function(message){
     document.getElementById('gameAreaWrapper').style.display = 'none';
@@ -210,7 +212,7 @@ function drawProjectiles(gfx){
     } else if (projectile.type == "rocket"){
       var radius;
       if (projectile.isExploded) {
-        radius = 60;
+        radius = 120;
         gfx.fillStyle = "#FF0000";
       } else {
         radius = 20;
@@ -244,8 +246,8 @@ function drawObstacles(gfx){
 }
 function getPowerupIcon(type) {
   switch(type) {
-    case "ammo": return bulletImg;
-    case "sniperAmmo": return sniperImg;
+    case "bullet": return bulletImg;
+    case "sniperBullet": return sniperImg;
     case "rocket": return rocketImg;
     case "healthpack": return healthpackImg;
     case "spike": return spikeImg;
@@ -336,8 +338,9 @@ function drawAmmo(gfx) {
   } // this makes the ammo count appear next to the icon.  TODO is there a better way?
   gfx.fillText(ammo, screenWidth-72-offset, screenHeight-15);
   gfx.rect(screenWidth - 60, screenHeight - 40, 25, 25);
-  gfx.drawImage(bulletImg, screenWidth - 60 , screenHeight - 40, 25, 25);
-  gfx.fillText(sniperAmmo, screenWidth - 22, screenHeight - 15);
+  var specialWeaponImg = getPowerupIcon(specialWeapon);
+  gfx.drawImage(specialWeaponImg, screenWidth - 60 , screenHeight - 40, 25, 25);
+  gfx.fillText(specialAmmo, screenWidth - 22, screenHeight - 15);
   gfx.closePath();
 
   gfx.stroke();
@@ -354,17 +357,20 @@ setInterval(updateOscillate, cycleLength*1000/numOscillateSteps);
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
+  var grd=gfx.createRadialGradient(
+    -myAbsoluteCoord.x+screenWidth/2,
+    -myAbsoluteCoord.y+screenHeight/2,
+    0,
+    -myAbsoluteCoord.x+screenWidth/2,
+    -myAbsoluteCoord.y+screenHeight/2,
+    2*ARENA_RADIUS
+  );
+  grd.addColorStop(1,"#B8B8B8");
+  grd.addColorStop(0,"#FFFFFF");
 
-
-
-    var grd=gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,0,
-      -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,2*ARENA_RADIUS);
-    grd.addColorStop(1,"#B8B8B8");
-    grd.addColorStop(0,"#FFFFFF");
-
-    // Fill with gradient
-    gfx.fillStyle=grd;
-   gfx.fillRect(0, 0, screenWidth, screenHeight);
+  // Fill with gradient
+  gfx.fillStyle=grd;
+  gfx.fillRect(0, 0, screenWidth, screenHeight);
 
 
 
