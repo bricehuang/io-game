@@ -131,15 +131,17 @@ function drawPlayers(gfx){
     gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
     
   
+    gfx.strokeStyle = '#000000';
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
+    gfx.stroke();
     gfx.fill();
     gfx.closePath();
     //gfx.fillStyle = '#2ecc71';
 
 
     gfx.lineWidth = 5;
-    gfx.strokeStyle = '#003300';
+    
     //rotate gun
     var mag = Math.sqrt(
       player.mCd.x * player.mCd.x +
@@ -165,6 +167,7 @@ function drawPlayers(gfx){
     if(speed>0.3)
         mvDir = {x:player.v.x/speed, y:player.v.y/speed};
 
+    /*
     gfx.beginPath();
     gfx.lineCap='round';
     gfx.moveTo(centerX-radius*.9*mvDir.x - radius*.4*mvDir.y, centerY -radius*.9*mvDir.y + radius*.4*mvDir.x);
@@ -173,7 +176,7 @@ function drawPlayers(gfx){
     gfx.lineTo(centerX-radius*mvDir.x + radius*.5*mvDir.y, centerY- radius*mvDir.y - radius*.5*mvDir.x);
     gfx.stroke();
     gfx.closePath();
-    /*
+    
     gfx.beginPath();
     gfx.moveTo(centerX+radius*1.1*mvDir.x, centerY +radius*1.1*mvDir.y );
     gfx.lineTo(centerX+radius*1.1*mvDir.x - radius*.5*(mvDir.y + mvDir.x), centerY + 1.1*radius*mvDir.y - radius*.5*(mvDir.y - mvDir.x));
