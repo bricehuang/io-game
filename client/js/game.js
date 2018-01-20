@@ -21,6 +21,9 @@ var numOscillateSteps = 64;
 var bson = new BSON();
 var isSpiky = false;
 
+var defaultWidth = 5;
+var defaultColor = "#000000";
+
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
   console.log(socket);
@@ -78,7 +81,7 @@ function drawObjects(gfx) {
 }
 
 function drawPlayers(gfx){
-  gfx.lineWidth=5;
+  gfx.lineWidth= 5;
   for (var i=0; i<nearbyPlayers.length; i++) {
     var player = nearbyPlayers[i];
     var centerX = screenWidth/2 + player.pos.x;
@@ -91,7 +94,7 @@ function drawPlayers(gfx){
         var rad = (j%2==0) ? radius*3/2 : radius;
         gfx.lineTo(centerX + rad*Math.cos(angle),centerY + rad*Math.sin(angle));
       }
-      gfx.fillStyle= '#000000';
+      gfx.fillStyle= "#000000";
       gfx.fill();
       gfx.closePath();
     }
@@ -111,7 +114,6 @@ function drawPlayers(gfx){
 
     gfx.fillStyle = color;
 
-    
     gfx.textAlign = 'center';
     //Health total & Bar
     gfx.font = '12px Verdana';
@@ -140,8 +142,7 @@ function drawPlayers(gfx){
     //gfx.fillStyle = '#2ecc71';
 
 
-    gfx.lineWidth = 5;
-    
+    gfx.lineWidth = 5
     //rotate gun
     var mag = Math.sqrt(
       player.mCd.x * player.mCd.x +
@@ -161,33 +162,6 @@ function drawPlayers(gfx){
     gfx.closePath();
 
 
-    //treads
-    var speed = Math.sqrt(player.v.x*player.v.x + player.v.y*player.v.y);
-    var mvDir = {x:1,y:0};
-    if(speed>0.3)
-        mvDir = {x:player.v.x/speed, y:player.v.y/speed};
-
-    /*
-    gfx.beginPath();
-    gfx.lineCap='round';
-    gfx.moveTo(centerX-radius*.9*mvDir.x - radius*.4*mvDir.y, centerY -radius*.9*mvDir.y + radius*.4*mvDir.x);
-    gfx.lineTo(centerX-radius*.9*mvDir.x + radius*.4*mvDir.y, centerY- radius*.9*mvDir.y - radius*.4*mvDir.x);
-    gfx.moveTo(centerX-radius*mvDir.x - radius*.5*mvDir.y, centerY -radius*mvDir.y + radius*.5*mvDir.x);
-    gfx.lineTo(centerX-radius*mvDir.x + radius*.5*mvDir.y, centerY- radius*mvDir.y - radius*.5*mvDir.x);
-    gfx.stroke();
-    gfx.closePath();
-    
-    gfx.beginPath();
-    gfx.moveTo(centerX+radius*1.1*mvDir.x, centerY +radius*1.1*mvDir.y );
-    gfx.lineTo(centerX+radius*1.1*mvDir.x - radius*.5*(mvDir.y + mvDir.x), centerY + 1.1*radius*mvDir.y - radius*.5*(mvDir.y - mvDir.x));
-    gfx.moveTo(centerX+radius*1.1*mvDir.x, centerY + radius*1.1*mvDir.y);
-    gfx.lineTo(centerX+radius*1.1*mvDir.x - radius*.5*(-mvDir.y + mvDir.x), centerY + 1.1*radius*mvDir.y - radius*.5*(mvDir.y + mvDir.x));
-    gfx.stroke();
-    gfx.closePath();
-   */
-
-
-
     gfx.lineWidth = 7;
     gfx.beginPath();
     gfx.arc(centerX, centerY, 5, 0, 2*Math.PI, false);
@@ -197,12 +171,11 @@ function drawPlayers(gfx){
     gfx.closePath();
 
     
-   
     //reset to default
-    gfx.lineWidth = 5;
-    gfx.fillStyle = "#00ff00";
-    gfx.lineCap = "square";
   }
+  gfx.lineWidth = defaultWidth;
+  gfx.fillStyle = defaultColor;
+  gfx.lineCap = "square";
 
 }
 
@@ -258,7 +231,11 @@ function drawProjectiles(gfx){
       gfx.fill();
       gfx.closePath();
     }
+
+    
   }
+  gfx.lineWidth = defaultWidth;
+  gfx.fillStyle = defaultColor;
 
 
 }
@@ -277,6 +254,9 @@ function drawObstacles(gfx){
     gfx.stroke();
     gfx.closePath();
   }
+
+  gfx.lineWidth = defaultWidth;
+  gfx.fillStyle = defaultColor;
 
 }
 function getPowerupIcon(type) {
