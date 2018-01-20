@@ -111,7 +111,7 @@ function drawPlayers(gfx){
 
     gfx.fillStyle = color;
 
-    gfx.font = '20px Verdana';
+    
     gfx.textAlign = 'center';
     //Health total & Bar
     gfx.font = '12px Verdana';
@@ -126,6 +126,7 @@ function drawPlayers(gfx){
     gfx.closePath();
 
     //name
+    gfx.font = '20px Verdana';
     gfx.fillStyle = "#888888";
     gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
     
