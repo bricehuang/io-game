@@ -417,7 +417,8 @@ exports.Room = function(id) {
           health: otherPlayer.health,
           mCd: otherPlayer.mouseCoords,
           Spk : otherPlayer.isSpiky(),
-          tier: otherPlayer.tier
+          tier: otherPlayer.tier,
+          v: otherPlayer.velocity
         };
         allPlayers.push(current);
       }

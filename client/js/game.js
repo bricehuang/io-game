@@ -113,7 +113,7 @@ function drawPlayers(gfx){
 
     gfx.font = '20px Verdana';
     gfx.textAlign = 'center';
-    gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
+    //Health total & Bar
     gfx.font = '12px Verdana';
     gfx.fillText(player.health, centerX +  1.1*radius, centerY+(player.Spk ? radius*1.8 : radius*1.4));
 
@@ -125,18 +125,20 @@ function drawPlayers(gfx){
     gfx.stroke();
     gfx.closePath();
 
-
-    gfx.lineWidth = 5;
-    gfx.strokeStyle = '#003300';
-
+    //name
+    gfx.fillStyle = "#888888";
+    gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
+    
+  
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-    gfx.stroke();
-
     gfx.fill();
     gfx.closePath();
     //gfx.fillStyle = '#2ecc71';
 
+
+    gfx.lineWidth = 5;
+    gfx.strokeStyle = '#003300';
     //rotate gun
     var mag = Math.sqrt(
       player.mCd.x * player.mCd.x +
@@ -144,19 +146,38 @@ function drawPlayers(gfx){
     );
     var dir = {x: player.mCd.x/mag, y: player.mCd.y/mag};
     gfx.beginPath();
-    gfx.moveTo(centerX+radius/1.2*dir.x, centerY+radius/1.2*dir.y);
+    gfx.moveTo(centerX+radius/0.8*dir.x, centerY+radius/0.8*dir.y);
     gfx.lineTo(centerX, centerY);
     gfx.stroke();
     gfx.closePath();
 
     gfx.beginPath();
-    gfx.lineWidth = 10;
-    gfx.moveTo(centerX+radius/2.2*dir.x, centerY+radius/2.2*dir.y);
+    gfx.lineWidth = 11;
+    gfx.moveTo(centerX+radius/1.5*dir.x, centerY+radius/1.5*dir.y);
     gfx.lineTo(centerX, centerY);gfx.stroke();
     gfx.closePath();
 
 
-    gfx.lineWidth = 5;
+    //treads
+    var speed = Math.sqrt(player.v.x*player.v.x + player.v.y*player.v.y);
+    var mvDir = {x:1,y:0};
+    if(speed>0)
+        mvDir = {x:player.v.x/speed, y:player.v.y/speed};
+    
+    gfx.beginPath();
+    gfx.lineCap = "round";
+    gfx.moveTo(centerX+radius*.9*mvDir.y - radius*.8*mvDir.x, centerY- radius*.9*mvDir.x - radius*.8*mvDir.y);
+    gfx.lineTo(centerX+radius*.9*mvDir.y + radius*.8*mvDir.x, centerY- radius*.9*mvDir.x + radius*.8*mvDir.y);
+    gfx.stroke();
+    gfx.moveTo(centerX-radius*.9*mvDir.y - radius*.8*mvDir.x, centerY+ radius*.9*mvDir.x - radius*.8*mvDir.y);
+    gfx.lineTo(centerX-radius*.9*mvDir.y + radius*.8*mvDir.x, centerY+ radius*.9*mvDir.x + radius*.8*mvDir.y);
+    gfx.stroke();
+    gfx.closePath();
+   
+
+
+
+    gfx.lineWidth = 7;
     gfx.beginPath();
     gfx.arc(centerX, centerY, 5, 0, 2*Math.PI, false);
     gfx.stroke();
@@ -164,7 +185,12 @@ function drawPlayers(gfx){
     gfx.fill();
     gfx.closePath();
 
+    
+   
+    //reset to default
+    gfx.lineWidth = 5;
     gfx.fillStyle = "#00ff00";
+    gfx.lineCap = "square";
   }
 
 }
