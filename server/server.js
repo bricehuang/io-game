@@ -29,6 +29,11 @@ function makeSecurityKey() {
   return text;
 }
 
+function validName(name) {
+  var regex = /^\w*$/;
+  return (0 < name.length && name.length <= 16 && regex.exec(name) !== null);
+}
+
 function authenticateAndExtractData(player, dataAndSecurity) {
   /*
   If data is not formatted as {securityKey: __, data: __}, return null.  Otherwise, extract data
@@ -64,10 +69,15 @@ io.on('connection', function (socket) {
     if (!(data && "name" in data && "windowDimensions" in data)) { return; }
     if (!("width" in data.windowDimensions && "height" in data.windowDimensions)) { return; }
 
+    // reject if client sends invalid name
+    var playerName = data.name.replace(/(<([^>]+)>)/ig, '');
+    if (!validName(playerName)) {return;}
+
+
     var currentRoom = rooms.get(nextRoomID);
     if(currentRoom){
       var newPlayer = currentRoom.addPlayer(
-        socket, data.name, data.windowDimensions, dataAndSecurity.securityKey
+        socket, playerName, data.windowDimensions, dataAndSecurity.securityKey
       );
       players.set(socket.id, newPlayer);
       pendingPlayers.delete(socket.id);
@@ -79,13 +89,13 @@ io.on('connection', function (socket) {
       rooms.set(nextRoomID, new room.Room(nextRoomID));
       currentRoom = rooms.get(nextRoomID);
       var newPlayer = currentRoom.addPlayer(
-        socket, data.name, data.windowDimensions, dataAndSecurity.securityKey
+        socket, playerName, data.windowDimensions, dataAndSecurity.securityKey
       );
       players.set(socket.id, newPlayer);
       pendingPlayers.delete(socket.id);
     }
 
-    currentRoom.emitToRoom('feed', data.name + " joined the game.");
+    currentRoom.emitToRoom('feed', playerName + " joined the game.");
   });
 
   socket.on('move', function(dataAndSecurity){
