@@ -29,12 +29,47 @@ fastImg.src = 'js/images/fast.png';
 var heartImg = new Image();
 heartImg.src = 'js/images/heart.png'
 
+var starting = false;
+var queueSize = 0;
+
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
-  document.getElementById('gameAreaWrapper').style.display = 'block';
-  document.getElementById('startMenuWrapper').style.display = 'none';
   socket = io();
   SetupSocket(socket);
+
+  socket.emit('playerInformation',{
+    name: playerName,
+    windowDimensions: {
+      width: screenWidth,
+      height: screenHeight
+    }
+  });
+  document.getElementById('startMenuWrapper').style.display = 'none';
+  checkStart();
+  //animloop();
+}
+
+
+function checkStart() {
+
+    if(starting == false) {
+        document.getElementById('waitingScreen').style.display = 'block';
+        document.getElementById('queue').innerHTML = queueSize;
+        socket.on('waiting', function(message){
+          queueSize = message.numPlayers;
+        })
+        socket.on('gameStart',function(){
+          starting = true;
+        })
+       window.setTimeout(checkStart, 100); /* this checks the flag every 100 milliseconds*/
+    }else {
+      document.getElementById('waitingScreen').style.display = 'none';
+      document.getElementById('gameAreaWrapper').style.display = 'block';
+      console.log('starting');
+      animloop();
+      starting = false;
+      queueSize = 0;
+    }
 }
 
 // check if nick is valid alphanumeric characters (and underscores)

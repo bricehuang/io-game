@@ -16,6 +16,8 @@ exports.Room = function(id) {
   this.numObstacles = 10;
   this.obstacles = [];
   this.startTime = Date.now();
+  this.play = false;
+  this.playersQueue = new Map();
 
   this.addPlayer = function(socket, name, windowDimensions, securityKey) {
     for(var i = 0;i<config.POWERUPS_PER_PLAYER;i++) {
@@ -25,7 +27,7 @@ exports.Room = function(id) {
     var currentPlayer = new obj.Player(
       socket, spawnPosition, this, name, windowDimensions, securityKey
     );
-    this.players.set(socket.id, currentPlayer);
+    this.playersQueue.set(socket.id, currentPlayer);
     return currentPlayer;
   }
 
@@ -48,6 +50,13 @@ exports.Room = function(id) {
   this.emitToRoom = function(keyword, message) {
     for (var key of this.players.keys()) {
       var player = this.players.get(key);
+      player.socket.emit(keyword, message);
+    }
+  }
+
+  this.emitToQueue = function(keyword, message) {
+    for (var key of this.playersQueue.keys()) {
+      var player = this.playersQueue.get(key);
       player.socket.emit(keyword, message);
     }
   }
@@ -511,16 +520,32 @@ exports.Room = function(id) {
   }
 
   this.moveLoop = function() {
-    this.moveAllPlayers();
-    this.moveAllProjectiles();
-    this.moveAllPowerups();
-    this.checkProjectileWallCollisions();
-    this.collisionDetect();
-    this.updateContinuousFire();
-    this.updateLeaderboard();
-    this.purgeDeadProjecties();
-    this.respawns();
-    this.sendAllViews();
+    if(this.play){
+      this.moveAllPlayers();
+      this.moveAllProjectiles();
+      this.moveAllPowerups();
+      this.checkProjectileWallCollisions();
+      this.collisionDetect();
+      this.updateContinuousFire();
+      this.updateLeaderboard();
+      this.purgeDeadProjecties();
+      this.respawns();
+      this.sendAllViews();
+    }
+    else{
+      if(this.playersQueue.size >= config.MIN_PLAYERS){
+        this.play = true; 
+        for(var [key,player] of this.playersQueue){
+          this.players.set(key,player);
+          this.playersQueue.delete(key,player);
+        }
+        this.emitToRoom('gameStart',{});
+      } else{
+        this.emitToQueue('waiting',{numPlayers:this.playersQueue.size});
+      }
+      this.startTime = Date.now();
+    }
+    
   }
 
   this.obstacles = this.generateObstacles();

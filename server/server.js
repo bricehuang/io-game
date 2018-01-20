@@ -53,6 +53,7 @@ app.use(express.static(__dirname + '/../client'));
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
 
+
   var securityKey = makeSecurityKey();
 
   var pendingPlayer = {securityKey: securityKey};
@@ -76,24 +77,23 @@ io.on('connection', function (socket) {
 
     var currentRoom = rooms.get(nextRoomID);
     if(currentRoom){
-      var newPlayer = currentRoom.addPlayer(
-        socket, playerName, data.windowDimensions, dataAndSecurity.securityKey
-      );
-      players.set(socket.id, newPlayer);
-      pendingPlayers.delete(socket.id);
-      if(currentRoom.players.size >= config.MAX_PLAYERS){
-        nextRoomID++;
-        rooms.set(nextRoomID, new room.Room(nextRoomID));
+        if(currentRoom.play){
+          nextRoomID++;
+          rooms.set(nextRoomID, new room.Room(nextRoomID));
+          var currentRoom = rooms.get(nextRoomID);
       }
-    } else{
+    }
+    else{
       rooms.set(nextRoomID, new room.Room(nextRoomID));
       currentRoom = rooms.get(nextRoomID);
-      var newPlayer = currentRoom.addPlayer(
-        socket, playerName, data.windowDimensions, dataAndSecurity.securityKey
-      );
-      players.set(socket.id, newPlayer);
-      pendingPlayers.delete(socket.id);
+      
     }
+    var newPlayer = currentRoom.addPlayer(
+      socket, playerName, data.windowDimensions, dataAndSecurity.securityKey
+    );
+    players.set(socket.id, newPlayer);
+    pendingPlayers.delete(socket.id);
+
 
     currentRoom.emitToRoom('feed', playerName + " joined the game.");
   });
@@ -185,6 +185,9 @@ io.on('connection', function (socket) {
     for (var [key, room] of rooms) {
       if (room.players.has(socket.id)) {
         room.players.delete(socket.id);
+      }
+      if(room.playersQueue.has(socket.id)) {
+        room.playersQueue.delete(socket.id);
       }
     }
   })
