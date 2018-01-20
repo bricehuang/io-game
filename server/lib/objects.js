@@ -112,7 +112,7 @@ exports.Rocket = function(id, shooter, position, heading){
     function(player){
       if (this.isExploded) {
         player.health -= config.EXPLODED_ROCKET_DAMAGE;
-        // TODO knockback
+        player.velocity = util.add(player.velocity,util.scaleToLength(util.diff(player.position,this.position),config.ROCKET_KNOCKBACK));
       } else {
         this.explode();
       }
