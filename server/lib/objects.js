@@ -58,7 +58,9 @@ exports.Bullet = function(id, shooter, position, heading) {
       player.health -= config.BULLET_COLLISION_DAMAGE;
       this.isLive = false;
     },
-    function() {
+    function(intersection) {
+      this.position = intersection;
+      this.speed = 0;
       this.isLive = false;
     }
   )
@@ -82,7 +84,9 @@ exports.SniperBullet = function(id, shooter, position, heading) {
       player.health -= config.SNIPER_BULLET_DAMAGE;
       this.isLive = false;
     },
-    function() {
+    function(intersection) {
+      this.position = intersection;
+      this.speed = 0;
       this.isLive = false;
     }
   )
@@ -117,8 +121,9 @@ exports.Rocket = function(id, shooter, position, heading){
         this.explode();
       }
     },
-    function(){
+    function(intersection){
       if (!this.isExploded) {
+        this.position = intersection;
         this.explode();
       }
     }

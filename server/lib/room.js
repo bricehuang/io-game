@@ -332,12 +332,25 @@ exports.Room = function(id) {
 
   this.checkProjectileWallCollisions = function() {
     for(var [key, projectile] of this.projectiles){
+      var velocity = util.scale(projectile.heading, projectile.speed);
+      var previousPosition = util.diff(projectile.position, velocity);
+
+      // buffer to take into account size of projectile
+      var hitboxBuffer = util.scaleToLength(velocity, projectile.radius);
+      var hitboxStart = util.diff(previousPosition, hitboxBuffer);
+      var hitboxEnd = util.add(projectile.position, hitboxBuffer);
+      var hitboxSegment = {point1: hitboxStart, point2: hitboxEnd};
+
       if (util.magnitude(projectile.position) > config.ARENA_RADIUS) {
-        projectile.onWallHit();
+        var intersectionWithBoundary = util.findPointOnSegmentWithMagnitude(
+          hitboxSegment, config.ARENA_RADIUS, config.EPS
+        );
+        projectile.onWallHit(intersectionWithBoundary);
       }
       for (var obstacle of this.obstacles) {
-        if (util.pointLineDistance(projectile.position, obstacle).trueDist< 2*config.BULLET_RADIUS){
-          projectile.onWallHit();
+        var intersectionIfExists = util.computeIntersection(hitboxSegment, obstacle);
+        if (intersectionIfExists != null) {
+          projectile.onWallHit(intersectionIfExists);
         }
       }
     }
@@ -472,10 +485,10 @@ exports.Room = function(id) {
   }
 
   this.moveLoop = function() {
-    this.checkProjectileWallCollisions();
     this.moveAllPlayers();
     this.moveAllProjectiles();
     this.moveAllPowerups();
+    this.checkProjectileWallCollisions();
     this.collisionDetect();
     this.updateContinuousFire();
     this.updateLeaderboard();

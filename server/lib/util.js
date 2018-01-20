@@ -113,7 +113,7 @@ exports.uniformCircleGenerate  = function(radius, otherPoints){
   return {x: genX, y: genY};
 };
 
-exports.collided = function(firstObject, secondObject, epsilon) {;  
+exports.collided = function(firstObject, secondObject, epsilon) {;
   var dist = exports.distance(firstObject.position, secondObject.position);
   return dist <= (1 + epsilon) * (firstObject.radius + secondObject.radius);
 };
@@ -148,6 +148,63 @@ exports.pointLineDistance = function(point, segment) {
 	}
   return ret;
 };
+
+function triangleArea(a, b, c) {
+  return 1/2 * (
+    a.x*b.y - b.x*a.y +
+    b.x*c.y - c.x*b.y +
+    c.x*a.y - a.x*c.y
+  );
+}
+
+exports.findPointOnSegmentWithMagnitude = function(segment, mag, accuracy) {
+  /*
+  Finds the point on this segment with magnitude mag, up to accuracy accuracy.
+  Precondiiton: mag(segment.point1) <= mag, mag(segment.point2) >-= mag
+  */
+  var pt1 = segment.point1;
+  var pt2 = segment.point2;
+  var midpoint = {x:(pt1.x+pt2.x)/2, y:(pt1.y+pt2.y)/2};
+  if (exports.magnitude(pt1) > mag || exports.magnitude(pt2) < mag) {
+    // precondition not satisfied, return something sane
+    return midpoint;
+  }
+
+  if (exports.distance(pt1, pt2) <= accuracy) {
+    return midpoint;
+  } else {
+    var newSegment;
+    var magMidpoint = exports.magnitude(midpoint);
+    if (magMidpoint <= mag) {
+      newSegment = {point1: midpoint, point2: pt2};
+    } else {
+      newSegment = {point1: pt1, point2: midpoint};
+    }
+    return exports.findPointOnSegmentWithMagnitude(newSegment, mag, accuracy);
+  }
+}
+
+exports.computeIntersection = function(segment1, segment2) {
+  /*
+  Computes the intersection of segment1 (AB) and segment2 (CD), if it exists.
+  Otherwise returns null.
+  */
+  if (
+    triangleArea(segment1.point1, segment2.point1, segment2.point2) *
+    triangleArea(segment1.point2, segment2.point1, segment2.point2) > 0 ||
+    triangleArea(segment2.point1, segment1.point1, segment1.point2) *
+    triangleArea(segment2.point2, segment1.point1, segment1.point2) > 0
+  ) {
+    return null;
+  }
+  var area1 = triangleArea(segment1.point1, segment2.point1, segment2.point2);
+  var area2 = -triangleArea(segment1.point2, segment2.point1, segment2.point2);
+  var ratio1 = area1 / (area1+area2);
+  var ratio2 = area2 / (area1+area2);
+  return exports.add(
+    exports.scale(segment1.point1, ratio2), exports.scale(segment1.point2, ratio1)
+  );
+}
 
 exports.segmentIntersect = function(segment1, segment2){
 	if (exports.pointLineDistance(segment1.point1, segment2).dist > 100 &&
