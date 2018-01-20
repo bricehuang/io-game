@@ -35,14 +35,6 @@ function startGame() {
   document.getElementById('startMenuWrapper').style.display = 'none';
   socket = io();
   SetupSocket(socket);
-  socket.emit('playerInformation',{
-    name: playerName,
-    windowDimensions: {
-      width: screenWidth,
-      height: screenHeight
-    }
-  });
-  animloop();
 }
 
 // check if nick is valid alphanumeric characters (and underscores)
@@ -111,8 +103,7 @@ window.addEventListener('resize', function() {
 
 function setMouseCoords(mouse){
   mouseCoords = {x: mouse.clientX-screenWidth/2, y: mouse.clientY-screenHeight/2};
-  socket.emit('mouseCoords', mouseCoords);
-  //console.log(mouseCoords);
+  socket.emit('mouseCoords', signWithSecurityKey(mouseCoords));
 }
 c.addEventListener('mousemove', setMouseCoords, false);
 
@@ -141,7 +132,7 @@ function move(){
     thismove[2] != lastmove[2] ||
     thismove[3] != lastmove[3]
   ){
-    socket.emit('move', thismove);
+    socket.emit('move', signWithSecurityKey(thismove));
     lastmove = thismove;
   }
 }
@@ -155,7 +146,7 @@ function updateContinuousFire(){
   if(
     thisFireMove!=lastFireMove
     ){
-    socket.emit('continuousFire', thisFireMove);
+    socket.emit('continuousFire', signWithSecurityKey(thisFireMove));
     lastFireMove=thisFireMove;
   }
 
@@ -169,23 +160,23 @@ function resize() {
   screenHeight = window.innerHeight;
 
   var newDimensions = {width: screenWidth, height: screenHeight};
-  socket.emit('windowResized', newDimensions);
+  socket.emit('windowResized', signWithSecurityKey(newDimensions));
 }
 window.addEventListener('resize', resize);
 
 function sendClick(mouse) {
   if (!socket) return;
-  socket.emit('fire');
+  socket.emit('fire', signWithSecurityKey({}));
 }
 c.addEventListener('click', sendClick, false);
 
 function fireSpecial() {
   if (!socket) return;
-  socket.emit('fireSpecial');
+  socket.emit('fireSpecial', signWithSecurityKey({}));
 }
 function dropSpecial() {
   if (!socket) return;
-  socket.emit('dropSpecial');
+  socket.emit('dropSpecial', signWithSecurityKey({}));
 }
 window.addEventListener('keypress', function(event){
   if (event.keyCode == 69 || event.keyCode == 101){ // e or E
@@ -199,5 +190,5 @@ window.addEventListener('keypress', function(event){
 
 function checkLatency() {
   startPingTime = Date.now();
-  this.socket.emit('pingcheck');
+  this.socket.emit('pingcheck', signWithSecurityKey({}));
 }

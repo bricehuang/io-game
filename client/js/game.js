@@ -15,6 +15,8 @@ var ammo = 30;
 var specialAmmo = 0;
 var specialWeapon = "";
 
+var securityKey = "";
+
 var oscillateStep = 0;
 var numOscillateSteps = 64;
 //oscillateStep and numOscillateSteps maybe shouldn't be random global variables
@@ -23,6 +25,10 @@ var isSpiky = false;
 
 var defaultWidth = 5;
 var defaultColor = "#000000";
+
+function signWithSecurityKey(data){
+  return {securityKey: securityKey, data: data};
+}
 
 Game.prototype.handleNetwork = function(socket) {
   console.log('Game connection process here');
@@ -43,6 +49,20 @@ Game.prototype.handleNetwork = function(socket) {
     ammo = message.am;
     specialAmmo = message.spA;
     specialWeapon = message.spW;
+  })
+  socket.on('welcome', function(sk){
+    securityKey = sk;
+    socket.emit('playerInformation',
+      signWithSecurityKey({
+        name: playerName,
+        windowDimensions: {
+          width: screenWidth,
+          height: screenHeight
+        }
+      })
+    );
+    console.log(securityKey);
+    animloop();
   })
   socket.on('death', function(message){
     document.getElementById('gameAreaWrapper').style.display = 'none';
@@ -131,8 +151,8 @@ function drawPlayers(gfx){
     gfx.font = '20px Verdana';
     gfx.fillStyle = "#888888";
     gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
-    
-  
+
+
     gfx.strokeStyle = '#000000';
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
@@ -170,7 +190,7 @@ function drawPlayers(gfx){
     gfx.fill();
     gfx.closePath();
 
-    
+
     //reset to default
   }
   gfx.lineWidth = defaultWidth;
@@ -187,7 +207,7 @@ function drawPowerups(gfx){
     var centerY = screenHeight/2 + powerup.pos.y;
     var radius = 20;
     radius*= 1+0.15*Math.sin(2*Math.PI*oscillateStep/numOscillateSteps);//precompute these?
-    
+
     //gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     //gfx.stroke();
 
@@ -232,7 +252,7 @@ function drawProjectiles(gfx){
       gfx.closePath();
     }
 
-    
+
   }
   gfx.lineWidth = defaultWidth;
   gfx.fillStyle = defaultColor;

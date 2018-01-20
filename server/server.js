@@ -11,91 +11,160 @@ var util    = require('./lib/util');
 var room    = require('./lib/room');
 var obj     = require('./lib/objects');
 
+var pendingPlayers = new Map();
 var players = new Map();
 var rooms = new Map();
 var nextRoomID = 0;
+
+function makeSecurityKey() {
+  /*
+  Makes a hex string of length 16.  This gets passed to clients in the welcome
+  message.  Client must send this key with every request.
+  */
+  text = "";
+  var possible = "0123456789abcdef";
+  for (var i = 0; i < 16; i++){
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+
+function authenticateAndExtractData(player, dataAndSecurity) {
+  /*
+  If data is not formatted as {securityKey: __, data: __}, return null.  Otherwise, extract data
+  if securityKey equals player's securityKey, else returns null.
+  */
+  if (!(
+    dataAndSecurity &&
+    "securityKey" in dataAndSecurity &&
+    "data" in dataAndSecurity
+  )) { return null; }
+  if (player.securityKey != dataAndSecurity.securityKey) { return null; }
+  return dataAndSecurity.data;
+}
 
 app.use(express.static(__dirname + '/../client'));
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
 
-  var currentRoom = rooms.get(nextRoomID);
-  if(currentRoom){
-    var newPlayer = currentRoom.addPlayer(socket);
+  var securityKey = makeSecurityKey();
+
+  var pendingPlayer = {securityKey: securityKey};
+  pendingPlayers.set(socket.id, pendingPlayer);
+
+  socket.emit('welcome', securityKey);
+
+  socket.on('playerInformation', function(dataAndSecurity){
+    var pendingPlayer = pendingPlayers.get(socket.id);
+    if (!pendingPlayer) {return;}
+
+    var data = authenticateAndExtractData(pendingPlayer, dataAndSecurity);
+    if (data == null) {return; }
+    console.log('Authentication passed!');
+    if (!(data && "name" in data && "windowDimensions" in data)) { return; }
+    if (!("width" in data.windowDimensions && "height" in data.windowDimensions)) { return; }
+
+    var currentRoom = rooms.get(nextRoomID);
+    if(currentRoom){
+      var newPlayer = currentRoom.addPlayer(
+        socket, data.name, data.windowDimensions, dataAndSecurity.securityKey
+      );
+      players.set(socket.id, newPlayer);
+      pendingPlayers.delete(socket.id);
       if(currentRoom.players.size >= config.MAX_PLAYERS){
         nextRoomID++;
         rooms.set(nextRoomID, new room.Room(nextRoomID));
+      }
+    } else{
+      rooms.set(nextRoomID, new room.Room(nextRoomID));
+      currentRoom = rooms.get(nextRoomID);
+      var newPlayer = currentRoom.addPlayer(
+        socket, data.name, data.windowDimensions, dataAndSecurity.securityKey
+      );
+      players.set(socket.id, newPlayer);
+      pendingPlayers.delete(socket.id);
     }
-  }
-  else{
-    rooms.set(nextRoomID, new room.Room(nextRoomID));
-    currentRoom = rooms.get(nextRoomID);
-    var newPlayer = currentRoom.addPlayer(socket); 
-  }
 
-  players.set(socket.id, newPlayer);
-
-  socket.on('playerInformation', function(data){
-    if (!(data && "name" in data && "windowDimensions" in data)) { return; }
-    if (!("width" in data.windowDimensions && "height" in data.windowDimensions)) { return; }
-    var player = players.get(socket.id);
-    if (!player) return;
-    player.setName(data.name);
-    player.setWindowDimensions(data.windowDimensions);
-    player.room.emitToRoom('feed', data.name + " joined the game.");
+    currentRoom.emitToRoom('feed', data.name + " joined the game.");
   });
 
-  socket.on('move', function(message){
-    if (!(Array.isArray(message) && message.length == 4)) { return; }
+  socket.on('move', function(dataAndSecurity){
     var player = players.get(socket.id);
     if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
+    if (!(Array.isArray(data) && data.length == 4)) { return; }
     var acceleration = {x:0, y:0};
-    if (message[0]) {acceleration.x -= 1};
-    if (message[1]) {acceleration.y -= 1};
-    if (message[2]) {acceleration.x += 1};
-    if (message[3]) {acceleration.y += 1};
-    player.acceleration = util.scaleToLength(acceleration, player.accelerationMagnitude())
+    if (data[0]) {acceleration.x -= 1};
+    if (data[1]) {acceleration.y -= 1};
+    if (data[2]) {acceleration.x += 1};
+    if (data[3]) {acceleration.y += 1};
+    player.acceleration = util.scaleToLength(acceleration, player.accelerationMagnitude());
   });
 
-  socket.on('mouseCoords', function(mouseCoords){
-    if (!(mouseCoords && "x" in mouseCoords && "y" in mouseCoords)) { return; }
+  socket.on('mouseCoords', function(dataAndSecurity){
     var player = players.get(socket.id);
-    if (!player) return;
-    player.setMouseCoords(mouseCoords);
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
+    if (!(data && "x" in data && "y" in data)) { return; }
+    player.setMouseCoords(data);
   })
 
-  socket.on('windowResized', function(dimensions){
-    if (!(dimensions && "width" in dimensions && "height" in dimensions)) { return; }
+  socket.on('windowResized', function(dataAndSecurity){
     var player = players.get(socket.id);
-    if (!player) return;
-    player.setWindowDimensions(dimensions);
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
+    if (!(data && "width" in data && "height" in data)) { return; }
+    player.setWindowDimensions(data);
   })
 
-  socket.on('fire', function(){
+  socket.on('fire', function(dataAndSecurity){
     var player = players.get(socket.id);
-    if (!player) return;
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
     player.attemptFire(player.mouseCoords);
   })
 
-  socket.on('continuousFire', function(tryFire){
+  socket.on('continuousFire', function(dataAndSecurity){
     var player = players.get(socket.id);
-    if(!player) return;
-    player.tryingContinuousFire = tryFire;
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
+    player.tryingContinuousFire = data;
     return;
   })
-  socket.on('fireSpecial', function(){
+  socket.on('fireSpecial', function(dataAndSecurity){
     var player = players.get(socket.id);
-    if (!player) return;
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
     player.attemptSpecialFire(player.mouseCoords);
   })
-  socket.on('dropSpecial', function(){
+  socket.on('dropSpecial', function(dataAndSecurity){
     var player = players.get(socket.id);
-    if (!player) return;
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
     player.dropSpecialWeapon();
   })
 
-  socket.on('pingcheck', function() {
+  socket.on('pingcheck', function(dataAndSecurity){
+    var player = players.get(socket.id);
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
     console.log('I was pinged!');
     socket.emit('pongcheck');
   })

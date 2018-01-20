@@ -195,7 +195,7 @@ exports.Powerup.prototype.updateSpeedFromGravity = function(vector){
   var velocityVector = util.scale(this.heading,this.speed);
   var newVelocityVector = util.add(velocityVector, vector);
   this.speed =util.magnitude(newVelocityVector);
-  console.log("new speed " + this.speed); 
+  console.log("new speed " + this.speed);
   if(this.speed>=config.EPS){
     this.heading= util.normalize(newVelocityVector);
   }
@@ -341,16 +341,14 @@ exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) 
   }
 }
 
-exports.Player = function(socket, spawnPosition, room) {
+exports.Player = function(socket, spawnPosition, room, name, windowDimensions, securityKey) {
   this.id = socket.id;
   this.socket = socket;
   this.room = room;
+  this.securityKey = securityKey;
 
-  this.name = config.DEFAULT_NAME;
-  this.windowDimensions = {
-    width: config.DEFAULT_WINDOW_WIDTH,
-    height: config.DEFAULT_WINDOW_HEIGHT
-  };
+  this.name = name;
+  this.windowDimensions = windowDimensions;
   this.mouseCoords = {x:1, y:0};
 
   this.position = spawnPosition;

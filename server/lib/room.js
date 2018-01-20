@@ -17,12 +17,14 @@ exports.Room = function(id) {
   this.obstacles = [];
   this.startTime = Date.now();
 
-  this.addPlayer = function(socket) {
+  this.addPlayer = function(socket, name, windowDimensions, securityKey) {
     for(var i = 0;i<config.POWERUPS_PER_PLAYER;i++) {
       this.spawnPowerup();
     }
     var spawnPosition = this.findSpawnLocation();
-    var currentPlayer = new obj.Player(socket, spawnPosition, this);
+    var currentPlayer = new obj.Player(
+      socket, spawnPosition, this, name, windowDimensions, securityKey
+    );
     this.players.set(socket.id, currentPlayer);
     return currentPlayer;
   }
