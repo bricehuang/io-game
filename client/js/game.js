@@ -214,7 +214,7 @@ function drawProjectiles(gfx){
       var radius = 5;
       gfx.beginPath();
       gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-      gfx.fillStyle = "#003300";
+      gfx.fillStyle = "#000000";
       gfx.fill();
       gfx.closePath();
     } else if (projectile.type == "rocket"){

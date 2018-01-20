@@ -158,7 +158,8 @@ exports.Powerup = function(
   isSpecialWeapon,
   heading={x:1, y:0},
   speed=0,
-  radius=config.POWERUP_RADIUS
+  radius=config.POWERUP_RADIUS,
+  gravitySources = new Set()
 ) {
   this.id = id;
   this.type = type;
@@ -168,15 +169,43 @@ exports.Powerup = function(
   this.heading = heading;
   this.speed = speed;
   this.radius = radius;
+  this.gravitySources = gravitySources
 }
 exports.Powerup.prototype.timeStep = function() {
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
+  var gravityVector = {x:0,y:0};
+  for(var gravitySource of this.gravitySources){
+    console.log("gravity source " + gravitySource);
+    gravityVector = util.add(util.normalize(gravityVector),util.scaleToLength(util.diff(gravitySource,this.position),config.GRAVITY_ACCELERATION));
+    this.updateSpeedFromGravity(gravityVector);
+  }
+  this.gravitySources.clear();
   this.speed -= config.FRICTION*this.speed;
   var eff_arena_radius = config.ARENA_RADIUS - this.radius;
   if (util.magnitude(this.position) > eff_arena_radius) {
     this.position = util.scaleToLength(this.position, eff_arena_radius);
     this.speed = 0;
   }
+}
+exports.Powerup.prototype.measureGravity = function(player){
+  if(this.isSpecialWeapon&&player.specialWeapon!=this.type&&player.specialWeapon!=""){
+    return;
+  }
+  if(util.distance(player.position,this.position)<this.radius+player.radius*config.GRAVITY_SCALE){
+    this.gravitySources.add(player.position);
+    console.log("added " + player.name);
+  }
+}
+exports.Powerup.prototype.updateSpeedFromGravity = function(vector){
+  var velocityVector = util.scale(this.heading,this.speed);
+  var newVelocityVector = util.add(velocityVector, vector);
+  this.speed =util.magnitude(newVelocityVector);
+  console.log("new speed " + this.speed); 
+  if(this.speed>=config.EPS){
+    this.heading= util.normalize(newVelocityVector);
+  }
+  console.log("new direction " + JSON.stringify(this.heading));
+
 }
 
 exports.HealthPackPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
@@ -429,10 +458,10 @@ exports.Player = function(socket, spawnPosition, room) {
     return (Date.now() - this.lastFastPickup < config.FAST_DURATION_MILLIS);
   }
   this.speedLimit = function() {
-    return this.isFast() ? 3/2 * config.PLAYER_MAX_SPEED : config.PLAYER_MAX_SPEED;
+    return this.isFast() ? config.FAST_BOOST * config.PLAYER_MAX_SPEED : config.PLAYER_MAX_SPEED;
   }
   this.accelerationMagnitude = function() {
-    return this.isFast() ? 3/2 * config.ACCELERATION_MAGNITUDE : config.ACCELERATION_MAGNITUDE;
+    return this.isFast() ? config.FAST_BOOST * config.ACCELERATION_MAGNITUDE : config.ACCELERATION_MAGNITUDE;
   }
 
   this.refreshSpikeTimestamp = function() {

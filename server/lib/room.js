@@ -318,6 +318,13 @@ exports.Room = function(id) {
         }
       }
     }
+    for (var [key1, player] of this.players){
+      for (var [key2,powerup] of this.powerups){
+        if(player && powerup){
+          powerup.measureGravity(player);
+        }
+      }
+    }
     for(var key of this.players.keys()){
       var player = this.players.get(key);
       for(var i=0; i<this.numObstacles; i++){
