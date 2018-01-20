@@ -237,12 +237,12 @@ exports.Room = function(id) {
   }
 
   this.registerPlayerPowerupHit = function(player, powerup){
-    powerup.effectOnPlayer(player);
-    this.powerups.delete(powerup.id);
-    this.spawnPowerup();
-    return;
+    if (!powerup.isSpecialWeapon || player.canPickUpSpecialWeapon(powerup)) {
+      powerup.effectOnPlayer(player);
+      this.powerups.delete(powerup.id);
+      this.spawnPowerup();
+    }
   }
-
 
   this.registerPlayerWallHit = function(player, wall){
     var hitType = util.pointLineDistance(player.position, wall);

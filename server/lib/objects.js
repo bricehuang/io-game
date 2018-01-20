@@ -150,6 +150,7 @@ exports.Powerup = function(
   type,
   position,
   effectOnPlayer,
+  isSpecialWeapon,
   heading={x:1, y:0},
   speed=0,
   radius=config.POWERUP_RADIUS
@@ -158,6 +159,7 @@ exports.Powerup = function(
   this.type = type;
   this.position = position;
   this.effectOnPlayer = effectOnPlayer;
+  this.isSpecialWeapon = isSpecialWeapon;
   this.heading = heading;
   this.speed = speed;
   this.radius = radius;
@@ -181,6 +183,7 @@ exports.HealthPackPowerUp = function(id, position, heading={x:1, y:0}, speed=0) 
     function(player) {
       player.health = Math.min(player.health + config.HEALTHPACK_HP_GAIN, player.maxHealth);
     },
+    false,
     heading,
     speed
   )
@@ -199,6 +202,7 @@ exports.AmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
         config.MAX_AMMO
       );
     },
+    false,
     heading,
     speed
   )
@@ -219,6 +223,7 @@ exports.SniperAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) 
         config.MAX_SNIPER_AMMO
       );
     },
+    true,
     heading,
     speed
   )
@@ -239,6 +244,7 @@ exports.RocketAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) 
         config.MAX_SNIPER_AMMO
       );
     },
+    true,
     heading,
     speed
   )
@@ -254,6 +260,7 @@ exports.SpikePowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
     function(player) {
       player.refreshSpikeTimestamp();
     },
+    false,
     heading,
     speed
   )
@@ -269,9 +276,10 @@ exports.FastPowerUp = function(id, position, heading={x:1,y:0}, speed=0){
     function(player){
       player.refreshFastTimestamp();
     },
+    false,
     heading,
     speed
-    )
+  )
 }
 exports.FastPowerUp.prototype = new exports.Powerup();
 
@@ -403,6 +411,9 @@ exports.Player = function(socket, spawnPosition, room) {
   this.dropSpecialWeapon = function() {
     this.specialAmmo = 0;
     this.specialWeapon = "";
+  }
+  this.canPickUpSpecialWeapon = function(powerup) {
+    return (this.specialWeapon == "" || this.specialWeapon == powerup.type);
   }
 
   this.refreshFastTimestamp = function() {
