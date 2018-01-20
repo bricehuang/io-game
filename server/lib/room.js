@@ -15,6 +15,7 @@ exports.Room = function(id) {
   this.leaderboard = [];
   this.numObstacles = 10;
   this.obstacles = [];
+  this.startTime = Date.now();
 
   this.addPlayer = function(socket) {
     for(var i = 0;i<config.POWERUPS_PER_PLAYER;i++) {
@@ -229,7 +230,7 @@ exports.Room = function(id) {
       var shooterPlayer = projectile.shooter;
       shooterPlayer.kills++;
       if (player.id == shooterPlayer.id) {
-        this.emitToRoom('feed', player.name + " killed himself!");
+        this.emitToRoom('feed', player.name + " decided his life was worthless!");
       } else {
         this.emitToRoom('feed', player.name + " was killed by " + shooterPlayer.name + "!");
       }
@@ -393,6 +394,18 @@ exports.Room = function(id) {
     }
   }
 
+  this.respawns = function() {
+    for (var key of this.players.keys()) {
+      var player = this.players.get(key);
+      if(player.health<=0){
+        this.spawnPowerupsOnPlayerDeath(player);
+        player.reset();
+        player.position = this.findSpawnLocation();
+      }
+    }
+  }
+
+
   this.expelDeadPlayers = function() {
     var deadPlayers = [];
     for (var key of this.players.keys()) {
@@ -504,6 +517,7 @@ exports.Room = function(id) {
     this.updateContinuousFire();
     this.updateLeaderboard();
     this.purgeDeadProjecties();
+    this.respawns();
     this.sendAllViews();
   }
 

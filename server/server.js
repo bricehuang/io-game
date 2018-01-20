@@ -15,15 +15,25 @@ var players = new Map();
 var rooms = new Map();
 var nextRoomID = 0;
 
-rooms.set(nextRoomID, new room.Room(nextRoomID));
-
 app.use(express.static(__dirname + '/../client'));
 
 io.on('connection', function (socket) {
   console.log("Somebody connected!");
 
   var currentRoom = rooms.get(nextRoomID);
-  var newPlayer = currentRoom.addPlayer(socket);
+  if(currentRoom){
+    var newPlayer = currentRoom.addPlayer(socket);
+      if(currentRoom.players.size >= config.MAX_PLAYERS){
+        nextRoomID++;
+        rooms.set(nextRoomID, new room.Room(nextRoomID));
+    }
+  }
+  else{
+    rooms.set(nextRoomID, new room.Room(nextRoomID));
+    currentRoom = rooms.get(nextRoomID);
+    var newPlayer = currentRoom.addPlayer(socket); 
+  }
+
   players.set(socket.id, newPlayer);
 
   socket.on('playerInformation', function(data){
@@ -33,7 +43,7 @@ io.on('connection', function (socket) {
     if (!player) return;
     player.setName(data.name);
     player.setWindowDimensions(data.windowDimensions);
-    io.emit('feed', data.name + " joined the game.");
+    player.room.emitToRoom('feed', data.name + " joined the game.");
   });
 
   socket.on('move', function(message){
@@ -114,12 +124,24 @@ function moveLoops(){
   for (var key of rooms.keys()) {
     var room = rooms.get(key);
     room.moveLoop();
+    /*
     var deadPlayers = room.expelDeadPlayers();
     for (var i=0; i<deadPlayers.length; i++) {
       var player = deadPlayers[i];
       if (players.has(player.id)){
         players.delete(player.id)
       }
+    }*/
+    if(Date.now()-room.startTime >=config.MATCH_LENGTH){
+      for(var [playerKey,player] of room.players){
+        player.socket.emit('death');
+        player.socket.disconnect();
+        if (players.has(player.id)){
+          players.delete(player.id);
+        }
+        room.players.delete(player.id);
+      }
+      rooms.delete(key);
     }
   }
 }

@@ -321,6 +321,7 @@ exports.HeartPowerUp = function(id, position, heading={x:1,y:0},speed=0){
     function(player){
       player.incrementTier();
     },
+    false,
     heading,
     speed
     )
@@ -477,4 +478,27 @@ exports.Player = function(socket, spawnPosition, room) {
     this.radius = config.PLAYER_RADIUS+this.tier*config.TIER_RADIUS_BONUS;
     this.health = Math.min(this.maxHealth,this.health + config.TIER_HEALTH_BONUS);
   }
+
+  this.reset = function(){
+     this.velocity = {x:0,y:0};
+     this.acceleration = {x:0, y:0};
+
+    this.radius = config.PLAYER_RADIUS;
+    this.health = config.PLAYER_START_HEALTH;
+    this.maxHealth = config.PLAYER_MAX_HEALTH;
+    this.ammo = config.STARTING_AMMO;
+    this.specialAmmo = 0;
+
+    this.lastfire = 0;
+
+    this.specialWeapon = "";
+    this.lastSpecialFire = 0;
+    this.specialFireCooldown = 0;
+
+    this.lastSpikePickup = 0;
+    this.lastFastPickup = 0;
+    this.tier = 0;
+  }
+
+
 }
