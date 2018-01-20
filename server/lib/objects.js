@@ -31,8 +31,12 @@ exports.Projectile = function(
 
 exports.Projectile.prototype.timeStep = function() {
   this.position = util.add(this.position, util.scale(this.heading, this.speed));
+  this.speed += this.acceleration;
+  if (this.type == "rocket") {
+    this.speed = Math.min(this.speed, config.ROCKET_MAX_SPEED);
+  }
   this.timeLeft -= 1;
-  if ((this.timeLeft == 0 || util.magnitude(this.position) > config.ARENA_RADIUS) && this.type!="rocket") {
+  if (this.timeLeft <= 0 && !(this.type == "rocket" && !this.isExploded)) {
     this.isLive = false;
   }
 }
@@ -51,7 +55,11 @@ exports.Bullet = function(id, shooter, position, heading) {
     config.BULLET_RADIUS,
     true,
     function(player){
-
+      player.health -= config.BULLET_COLLISION_DAMAGE;
+      this.isLive = false;
+    },
+    function() {
+      this.isLive = false;
     }
   )
 }
@@ -71,26 +79,50 @@ exports.SniperBullet = function(id, shooter, position, heading) {
     config.BULLET_RADIUS,
     true,
     function(player){
-
+      player.health -= config.SNIPER_BULLET_DAMAGE;
+      this.isLive = false;
+    },
+    function() {
+      this.isLive = false;
     }
   )
 }
 exports.SniperBullet.prototype = new exports.Projectile();
 exports.Rocket = function(id, shooter, position, heading){
-  this,
-  "rocket",
-  id,
-  shooter,
-  position,
-  heading,
-  config.ROCKET_SPEED,
-  config.ROCKET_ACCELERATION,
-  config.ROCKET_AGE,
-  config.ROCKET_RADIUS,
-  true,
-  function(player){
-
+  this.isExploded = false;
+  this.explode = function() {
+    this.isExploded = true;
+    this.radius = config.EXPLODED_ROCKET_RADIUS;
+    this.speed = 0;
+    this.acceleration = 0;
+    this.timeLeft = config.EXPLODED_ROCKET_DURATION;
   }
+  exports.Projectile.call(
+    this,
+    "rocket",
+    id,
+    shooter,
+    position,
+    heading,
+    util.dotProduct(shooter.velocity, heading) + config.ROCKET_SPEED, // verify with Allen
+    config.ROCKET_ACCELERATION,
+    config.ROCKET_AGE,
+    config.ROCKET_RADIUS,
+    true,
+    function(player){
+      if (this.isExploded) {
+        player.health -= config.EXPLODED_ROCKET_DAMAGE;
+        // TODO knockback
+      } else {
+        this.explode();
+      }
+    },
+    function(){
+      if (!this.isExploded) {
+        this.explode();
+      }
+    }
+  );
 
 }
 exports.Rocket.prototype = new exports.Projectile();
@@ -100,6 +132,16 @@ exports.makeProjectile = function(type, id, shooter, position, heading) {
     case "sniperBullet": return new exports.SniperBullet(id, shooter, position, heading);
     case "rocket": return new exports.Rocket(id,shooter,position,heading);
     default: console.assert(false, 'invalid projectile type');
+  }
+}
+exports.getProjectileRadius = function(type) {
+  switch(type) {
+    case "bullet": return config.BULLET_RADIUS;
+    case "sniperBullet": return config.BULLET_RADIUS;
+    case "rocket": return config.ROCKET_RADIUS;
+    default:
+      console.assert(false, "Invalid type");
+      return 0;
   }
 }
 
@@ -183,6 +225,26 @@ exports.SniperAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) 
 }
 exports.SniperAmmoPowerUp.prototype = new exports.Powerup();
 
+exports.RocketAmmoPowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
+  exports.Powerup.call(
+    this,
+    id,
+    "rocket",
+    position,
+    function(player) {
+      if (player.specialWeapon != "rocket" && player.specialAmmo > 0) { return; }
+      player.specialWeapon = "rocket";
+      player.specialAmmo = Math.min(
+        player.specialAmmo + config.SNIPER_AMMO_POWERUP_BULLETS,
+        config.MAX_SNIPER_AMMO
+      );
+    },
+    heading,
+    speed
+  )
+}
+exports.RocketAmmoPowerUp.prototype = new exports.Powerup();
+
 exports.SpikePowerUp = function(id, position, heading={x:1, y:0}, speed=0) {
   exports.Powerup.call(
     this,
@@ -233,6 +295,7 @@ exports.makePowerUp = function(type, id, position, heading={x:1, y:0}, speed=0) 
     case "healthpack": return new exports.HealthPackPowerUp(id, position, heading, speed);
     case "ammo": return new exports.AmmoPowerUp(id, position, heading, speed);
     case "sniperAmmo": return new exports.SniperAmmoPowerUp(id, position, heading, speed);
+    case "rocket": return new exports.RocketAmmoPowerUp(id, position, heading, speed);
     case "spike": return new exports.SpikePowerUp(id, position, heading, speed);
     case "fast": return new exports.FastPowerUp(id, position, heading, speed);
     case "heart": return new exports.HeartPowerUp(id, position, heading, speed);
@@ -349,7 +412,7 @@ exports.Player = function(socket, spawnPosition, room) {
     return (Date.now() - this.lastFastPickup < config.FAST_DURATION_MILLIS);
   }
   this.speedLimit = function() {
-    return this.isFast() ? 3/2 * config.PLAYER_SPEED_LIMIT : config.PLAYER_SPEED_LIMIT;
+    return this.isFast() ? 3/2 * config.PLAYER_MAX_SPEED : config.PLAYER_MAX_SPEED;
   }
   this.accelerationMagnitude = function() {
     return this.isFast() ? 3/2 * config.ACCELERATION_MAGNITUDE : config.ACCELERATION_MAGNITUDE;

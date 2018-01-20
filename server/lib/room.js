@@ -30,7 +30,7 @@ exports.Room = function(id) {
     if (mouseVector.x == 0 && mouseVector.y == 0) { return; }
     var heading = util.normalize(mouseVector);
     var position = util.add(
-      player.position, util.scale(heading, player.radius+config.BULLET_RADIUS+2)
+      player.position, util.scale(heading, player.radius+obj.getProjectileRadius(type)+2)
     );
     var projectile = obj.makeProjectile(
       type,
@@ -193,16 +193,42 @@ exports.Room = function(id) {
     this.spawnMovingPowerupFromPoint("heart",player.position);
   }
 
+  this.registerPlayerPlayerHit = function(player1, player2) {
+    var posDiff = util.diff(player1.position, player2.position);
+    if (util.collided(player1,player2, config.EPS) ) {
+      var velDiff = util.diff(player1.velocity, player2.velocity);
+      var impulse = - util.dotProduct(posDiff, velDiff) / util.dotProduct(posDiff, posDiff)
+      if (Math.abs(impulse)<.05) {
+        impulse = .05;
+      }
+      player1.velocity = util.add(player1.velocity, util.scale(posDiff, impulse));
+      player2.velocity = util.add(player2.velocity, util.scale(posDiff, -impulse));
+
+      if (player2.isSpiky()) {
+        player1.health -= config.SPIKE_COLLISION_DAMAGE;
+      } else {
+        player1.health -= config.BODY_COLLISION_DAMAGE;
+      }
+      if (player1.isSpiky()) {
+        player2.health -= config.SPIKE_COLLISION_DAMAGE;
+      } else {
+        player2.health -= config.BODY_COLLISION_DAMAGE;
+      }
+      if (player1.health <= 0 && player2.health > 0){
+        player2.kills++;
+        this.emitToRoom('feed', player2.name + " roadkilled " + player1.name + "!");
+      }
+      if (player2.health <=0 && player1.health > 0){
+        player1.kills++;
+        this.emitToRoom('feed', player1.name + " roadkilled " + player2.name + "!");
+      }
+    }
+  }
   this.registerPlayerProjectileHit = function(player, projectile){
     if (!projectile.isLive) {return;}
     var wasAlive = (player.health>0);
-    if (projectile.type == "bullet"){
-      player.health -= config.BULLET_COLLISION_DAMAGE;
-    } else if (projectile.type == "sniperBullet") {
-      player.health -= config.SNIPER_BULLET_DAMAGE;
-    }
-    // this.projectiles.delete(projectile.id);
-    projectile.isLive = false;
+    projectile.onPlayerHit(player);
+
     if (player.health <= 0 && wasAlive) {
       var shooterPlayer = projectile.shooter;
       shooterPlayer.kills++;
@@ -269,35 +295,8 @@ exports.Room = function(id) {
       for (var key2 of this.players.keys()) {
         var player1 = this.players.get(key1);
         var player2 = this.players.get(key2);
-        var posDiff = util.diff(player1.position, player2.position);
-        //if(key1<key2) console.log(util.collided(player1,player2, config.EPS));
-        if (key1<key2 && util.collided(player1,player2, config.EPS) ) {
-          var velDiff = util.diff(player1.velocity, player2.velocity);
-          var impulse = - util.dotProduct(posDiff, velDiff) / util.dotProduct(posDiff, posDiff)
-          if (Math.abs(impulse)<.05) {
-            impulse = .05;
-          }
-          player1.velocity = util.add(player1.velocity, util.scale(posDiff, impulse));
-          player2.velocity = util.add(player2.velocity, util.scale(posDiff, -impulse));
-
-          if (player2.isSpiky()) {
-            player1.health -= config.SPIKE_COLLISION_DAMAGE;
-          } else {
-            player1.health -= config.BODY_COLLISION_DAMAGE;
-          }
-          if (player1.isSpiky()) {
-            player2.health -= config.SPIKE_COLLISION_DAMAGE;
-          } else {
-            player2.health -= config.BODY_COLLISION_DAMAGE;
-          }
-          if (player1.health <= 0 && player2.health > 0){
-            player2.kills++;
-            this.emitToRoom('feed', player2.name + " roadkilled " + player1.name + "!");
-          }
-          if (player2.health <=0 && player1.health > 0){
-            player1.kills++;
-            this.emitToRoom('feed', player1.name + " roadkilled " + player2.name + "!");
-          }
+        if (key1 < key2) {
+          this.registerPlayerPlayerHit(player1, player2)
         }
       }
     }
@@ -339,9 +338,12 @@ exports.Room = function(id) {
 
   this.checkProjectileWallCollisions = function() {
     for(var [key, projectile] of this.projectiles){
+      if (util.magnitude(projectile.position) > config.ARENA_RADIUS) {
+        projectile.onWallHit();
+      }
       for (var obstacle of this.obstacles) {
         if (util.pointLineDistance(projectile.position, obstacle).trueDist< 2*config.BULLET_RADIUS){
-          projectile.isLive = false;
+          projectile.onWallHit();
         }
       }
     }
@@ -437,6 +439,9 @@ exports.Room = function(id) {
       var buffer = projectile.radius;
       if (player.isVectorOnScreen(relPosition,buffer)) {
         var current = {type: projectile.type, pos: relPosition};
+        if (projectile.type == "rocket") {
+          current.isExploded = projectile.isExploded;
+        }
         nearbyProjectiles.push(current);
       }
     }

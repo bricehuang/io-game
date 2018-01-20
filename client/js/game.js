@@ -31,13 +31,13 @@ Game.prototype.handleNetwork = function(socket) {
     myAbsoluteCoord = message.AbCd;
 
     nearbyObstacles = message.nOb;
-    
+
 
     leaderboard = message.Ldb;
     myStats = message.stats;
     ammo = message.am;
     sniperAmmo = message.snA;
-    
+
   })
   socket.on('death', function(message){
     document.getElementById('gameAreaWrapper').style.display = 'none';
@@ -108,13 +108,13 @@ function drawPlayers(gfx){
 
 
     gfx.fillStyle = color;
-    
+
     gfx.font = '20px Verdana';
     gfx.textAlign = 'center';
     gfx.fillText(player.name, centerX, centerY-(player.Spk ? radius*1.8 : radius*1.3));
     gfx.font = '12px Verdana';
     gfx.fillText(player.health, centerX +  1.1*radius, centerY+(player.Spk ? radius*1.8 : radius*1.4));
-    
+
     gfx.lineWidth = 10;
     gfx.strokeStyle = color;
     gfx.beginPath();
@@ -126,7 +126,7 @@ function drawPlayers(gfx){
 
     gfx.lineWidth = 5;
     gfx.strokeStyle = '#003300';
-    
+
     gfx.beginPath();
     gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
     gfx.stroke();
@@ -182,7 +182,7 @@ function drawPowerups(gfx){
     var powerupImg = getPowerupIcon(powerup.type);
     gfx.beginPath();
     gfx.arc(centerX, centerY, 1.4*radius, 0, 2*Math.PI, false);
-    
+
     gfx.drawImage(powerupImg, centerX - radius , centerY - radius,2*radius,2*radius);
     gfx.closePath();
   }
@@ -208,10 +208,16 @@ function drawProjectiles(gfx){
       gfx.fill();
       gfx.closePath();
     } else if (projectile.type == "rocket"){
-      var radius = 20;
+      var radius;
+      if (projectile.isExploded) {
+        radius = 60;
+        gfx.fillStyle = "#FF0000";
+      } else {
+        radius = 20;
+        gfx.fillStyle = "#000000";
+      }
       gfx.beginPath();
       gfx.arc(centerX, centerY, radius, 0, 2*Math.PI, false);
-      gfx.fillStyle = "#000000";
       gfx.fill();
       gfx.closePath();
     }
@@ -240,6 +246,7 @@ function getPowerupIcon(type) {
   switch(type) {
     case "ammo": return bulletImg;
     case "sniperAmmo": return sniperImg;
+    case "rocket": return rocketImg;
     case "healthpack": return healthpackImg;
     case "spike": return spikeImg;
     case "fast": return fastImg;
@@ -347,8 +354,8 @@ setInterval(updateOscillate, cycleLength*1000/numOscillateSteps);
 
 Game.prototype.handleGraphics = function(gfx,mouse) {
   // This is where you draw everything
-  
-  
+
+
 
     var grd=gfx.createRadialGradient(-myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,0,
       -myAbsoluteCoord.x+screenWidth/2,-myAbsoluteCoord.y+screenHeight/2,2*ARENA_RADIUS);
@@ -358,9 +365,9 @@ Game.prototype.handleGraphics = function(gfx,mouse) {
     // Fill with gradient
     gfx.fillStyle=grd;
    gfx.fillRect(0, 0, screenWidth, screenHeight);
-  
 
-  
+
+
   drawObjects(gfx);
   drawBoundary(gfx);
   drawForeground(gfx);
