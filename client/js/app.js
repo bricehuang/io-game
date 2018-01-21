@@ -30,6 +30,7 @@ var heartImg = new Image();
 heartImg.src = 'js/images/heart.png'
 
 var gameInProgress = false;
+var voteForceStart = false;
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
@@ -43,6 +44,7 @@ function startGame() {
       height: screenHeight
     }
   });
+  voteForceStart = false;
   document.getElementById('startMenuWrapper').style.display = 'none';
   document.getElementById('waitingScreen').style.display = 'block';
 }
@@ -89,6 +91,17 @@ restartBtn.onclick = function() {
   document.getElementById('startMenuWrapper').style.display = 'block';
 }
 
+var forceStartBtn = document.getElementById('forceStartButton');
+forceStartBtn.onclick = function() {
+  if (voteForceStart) {
+    voteForceStart = false;
+    forceStartBtn.classList.remove('clicked');
+  } else {
+    voteForceStart = true;
+    forceStartBtn.classList.add('clicked');
+  }
+  socket.emit('voteForceStart', signWithSecurityKey(voteForceStart));
+}
 
 function SetupSocket(socket) {
   game.handleNetwork(socket);

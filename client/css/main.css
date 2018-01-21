@@ -76,7 +76,7 @@ canvas {
 	margin-bottom: 10px;
 }
 
-#startButton:active, #startButton:hover, #restartButton:active, #restartButton:hover {
+#startButton:active, #startButton:hover, #restartButton:active, #restartButton:hover, #forceStartButton.clicked{
 	top: 1px;
 	background: #55D88B;
 	outline: none;

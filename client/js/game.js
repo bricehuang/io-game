@@ -109,6 +109,7 @@ Game.prototype.handleNetwork = function(socket) {
     document.getElementById('gameAreaWrapper').style.display = 'block';
     console.log('starting');
     gameInProgress = true;
+    voteForceStart = false;
     animloop();
   })
 
