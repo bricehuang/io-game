@@ -343,6 +343,8 @@ exports.Player = function(socket, spawnPosition, room, name, windowDimensions, s
   this.room = room;
   this.securityKey = securityKey;
 
+  this.voteToForceStart = false;
+
   this.name = name;
   this.windowDimensions = windowDimensions;
   this.mouseCoords = {x:1, y:0};

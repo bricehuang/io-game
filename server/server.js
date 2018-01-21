@@ -168,6 +168,17 @@ io.on('connection', function (socket) {
     player.dropSpecialWeapon();
   })
 
+  socket.on('voteForceStart', function(dataAndSecurity){
+    var player = players.get(socket.id);
+    if (!player) { return; }
+    var data = authenticateAndExtractData(player, dataAndSecurity);
+    if (data == null) {return; }
+
+    player.voteToForceStart = data;
+    player.room.sendWaitingInfo();
+  })
+
+
   socket.on('pingcheck', function(dataAndSecurity){
     var player = players.get(socket.id);
     if (!player) { return; }

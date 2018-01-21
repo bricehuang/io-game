@@ -30,6 +30,25 @@ exports.Room = function(id) {
     this.sendWaitingInfo();
     return currentPlayer;
   }
+  this.forceStartVotes = function() {
+    var count = 0;
+    for (var [key, player] of this.players) {
+      if (player.voteToForceStart) {
+        count++;
+      }
+    }
+    return count;
+  }
+  this.shouldStart = function() {
+    if (this.players.size <= 1) {
+      return false;
+    } else if (this.players.size == config.MAX_PLAYERS) {
+      return true;
+    } else {
+      var votesNeeded = config.VOTES_TO_FORCE_START[this.players.size];
+      return (this.forceStartVotes() >= votesNeeded);
+    }
+  }
 
   this.addFiredProjectile = function(type, player, mouseVector) {
     if (mouseVector.x == 0 && mouseVector.y == 0) { return; }
@@ -532,12 +551,19 @@ exports.Room = function(id) {
   }
 
   this.sendWaitingInfo = function() {
-    if(this.players.size >= config.MIN_PLAYERS){
+    if(this.shouldStart()){
       this.play = true;
+      for (var [key, player] of this.players) {
+        player.voteToForceStart = false;
+      }
       this.startTime = Date.now();
       this.emitToRoom('gameStart',{});
     } else{
-      this.emitToRoom('waiting',{numPlayers:this.players.size});
+      this.emitToRoom('waiting',{
+        numPlayers: this.players.size,
+        forceStartVotes: this.forceStartVotes(),
+        votesNeeded: config.VOTES_TO_FORCE_START[this.players.size]
+      });
     }
   }
 
