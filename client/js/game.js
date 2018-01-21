@@ -64,15 +64,12 @@ Game.prototype.handleNetwork = function(socket) {
       })
     );
     console.log(securityKey);
-    animloop();
   })
   socket.on('death', function(message){
+    starting = false;
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('startMenuWrapper').style.display = 'block';
     $('#feed').empty();
-    while(feed.firstChild ){
-      feed.removeChild(feed.firstChild);
-    }
   })
   socket.on('pongcheck', function(){
     var timeNow = Date.now();

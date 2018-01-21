@@ -33,7 +33,6 @@ var starting = false;
 var queueSize = 0;
 var roomSize = 5;
 
-
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
   socket = io();
@@ -48,7 +47,6 @@ function startGame() {
   });
   document.getElementById('startMenuWrapper').style.display = 'none';
   checkStart();
-  //animloop();
 }
 
 
@@ -69,7 +67,6 @@ function checkStart() {
       document.getElementById('gameAreaWrapper').style.display = 'block';
       console.log('starting');
       animloop();
-      starting = false;
       queueSize = 0;
     }
 }
@@ -123,8 +120,10 @@ window.requestAnimFrame = (function(){
 })();
 
 function animloop(){
-  requestAnimFrame(animloop);
-  gameLoop();
+  if (starting){
+    requestAnimFrame(animloop);
+    gameLoop();
+  }
 }
 
 function gameLoop() {
