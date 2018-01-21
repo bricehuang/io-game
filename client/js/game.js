@@ -14,6 +14,7 @@ var myStats;
 var ammo = 30;
 var specialAmmo = 0;
 var specialWeapon = "";
+var timeLeft = 200.0;
 
 var securityKey = "";
 
@@ -49,6 +50,7 @@ Game.prototype.handleNetwork = function(socket) {
     ammo = message.am;
     specialAmmo = message.spA;
     specialWeapon = message.spW;
+    timeLeft = message.tL;
   })
   socket.on('welcome', function(sk){
     securityKey = sk;
@@ -310,6 +312,12 @@ function drawBoundary(gfx) {
     gfx.lineWidth = 1;
   }
 }
+function drawTimer(gfx) {
+  gfx.fillStyle = '#142DCC';
+  gfx.strokeStyle = '#003300';
+  gfx.font = '48px Verdana';
+  gfx.fillText(timeLeft, 175, 50);
+}
 function drawForeground(gfx){
   gfx.fillStyle = '#142DCC';
   gfx.strokeStyle = '#003300';
@@ -413,4 +421,5 @@ Game.prototype.handleGraphics = function(gfx,mouse) {
   drawBoundary(gfx);
   drawForeground(gfx);
   drawAmmo(gfx);
+  drawTimer(gfx);
 }

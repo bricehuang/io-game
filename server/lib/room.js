@@ -447,6 +447,17 @@ exports.Room = function(id) {
     }
   }
 
+  this.getTimeLeft = function() {
+    var millisLeft = config.MATCH_LENGTH - (Date.now() - this.startTime);
+    var secsLeft = Math.floor(millisLeft/100)/10;
+    var minsPart = Math.floor(secsLeft/60).toFixed(0);
+    var secsPart = (secsLeft - 60 * minsPart).toFixed(1);
+    if (secsPart.toString().length == 3) { //
+      secsPart = "0" + secsPart;
+    }
+    return minsPart + ":" + secsPart;
+  }
+
   this.sendView = function(player) {
     var allPlayers = [];
     for (var [key,otherPlayer] of this.players) {
@@ -509,7 +520,8 @@ exports.Room = function(id) {
         stats: {name:player.name, score:player.kills, id:player.id},
         am: player.ammo,
         spA: player.specialAmmo,
-        spW: player.specialWeapon
+        spW: player.specialWeapon,
+        tL: this.getTimeLeft()
       }, Long)
     );
   }
@@ -534,7 +546,7 @@ exports.Room = function(id) {
     }
     else{
       if(this.playersQueue.size >= config.MIN_PLAYERS){
-        this.play = true; 
+        this.play = true;
         for(var [key,player] of this.playersQueue){
           this.players.set(key,player);
           this.playersQueue.delete(key,player);
@@ -545,7 +557,7 @@ exports.Room = function(id) {
       }
       this.startTime = Date.now();
     }
-    
+
   }
 
   this.obstacles = this.generateObstacles();
