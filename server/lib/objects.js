@@ -355,6 +355,7 @@ exports.Player = function(socket, spawnPosition, room, name, windowDimensions, s
   this.health = config.PLAYER_START_HEALTH;
   this.maxHealth = config.PLAYER_MAX_HEALTH;
   this.kills = 0;
+  this.deaths = 0;
   this.ammo = config.STARTING_AMMO;
   this.specialAmmo = 0;
 

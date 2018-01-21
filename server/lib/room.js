@@ -223,11 +223,13 @@ exports.Room = function(id) {
     } else {
       player2.health -= config.BODY_COLLISION_DAMAGE;
     }
-    if (player1.health <= 0 && player2.health > 0){
+    if (player1.health <= 0){
+      player1.deaths++;
       player2.kills++;
       this.emitToRoom('feed', player1.name + " was roadkilled by " + player2.name + "!");
     }
-    if (player2.health <=0 && player1.health > 0){
+    if (player2.health <=0){
+      player2.deaths++;
       player1.kills++;
       this.emitToRoom('feed', player2.name + " was roadkilled by " + player1.name + "!");
     }
@@ -239,10 +241,11 @@ exports.Room = function(id) {
 
     if (player.health <= 0 && wasAlive) {
       var shooterPlayer = projectile.shooter;
-      shooterPlayer.kills++;
+      player.deaths++;
       if (player.id == shooterPlayer.id) {
         this.emitToRoom('feed', player.name + " decided his life was worthless!");
       } else {
+        shooterPlayer.kills++;
         this.emitToRoom('feed', player.name + " was killed by " + shooterPlayer.name + "!");
       }
     }
@@ -391,9 +394,13 @@ exports.Room = function(id) {
   this.updateLeaderboard = function(){
     var newLeaderboard = [];
     for(var [key,player] of this.players){
-      newLeaderboard.push({name:player.name, score:player.kills, id:player.id,});
+      newLeaderboard.push({
+        name:player.name,
+        score: player.kills-player.deaths,
+        id:player.id,
+      });
     }
-    newLeaderboard.sort(function(a,b){return b.score-a.score});
+    newLeaderboard.sort(function(a,b){return b.score - a.score});
     this.leaderboard = newLeaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,newLeaderboard.length));
   }
 
