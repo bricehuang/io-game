@@ -44,7 +44,6 @@ Game.prototype.handleNetwork = function(socket) {
 
     nearbyObstacles = message.nOb;
 
-
     leaderboard = message.Ldb;
     myStats = message.stats;
     ammo = message.am;

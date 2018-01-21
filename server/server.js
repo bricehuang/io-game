@@ -86,7 +86,7 @@ io.on('connection', function (socket) {
     else{
       rooms.set(nextRoomID, new room.Room(nextRoomID));
       currentRoom = rooms.get(nextRoomID);
-      
+
     }
     var newPlayer = currentRoom.addPlayer(
       socket, playerName, data.windowDimensions, dataAndSecurity.securityKey
@@ -185,9 +185,6 @@ io.on('connection', function (socket) {
     for (var [key, room] of rooms) {
       if (room.players.has(socket.id)) {
         room.players.delete(socket.id);
-      }
-      if(room.playersQueue.has(socket.id)) {
-        room.playersQueue.delete(socket.id);
       }
     }
   })
