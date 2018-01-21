@@ -246,7 +246,7 @@ exports.Room = function(id) {
         this.emitToRoom('feed', player.name + " decided his life was worthless!");
       } else {
         shooterPlayer.kills++;
-        this.emitToRoom('feed', player.name + " was killed by " + shooterPlayer.name + "!");
+        this.emitToRoom('feed', player.name + " was ended by " + shooterPlayer.name + "!");
       }
     }
   }

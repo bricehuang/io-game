@@ -31,6 +31,8 @@ heartImg.src = 'js/images/heart.png'
 
 var starting = false;
 var queueSize = 0;
+var roomSize = 5;
+
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
@@ -54,7 +56,7 @@ function checkStart() {
 
     if(starting == false) {
         document.getElementById('waitingScreen').style.display = 'block';
-        document.getElementById('queue').innerHTML = queueSize;
+        document.getElementById('queue').innerHTML = queueSize+'/'+roomSize;
         socket.on('waiting', function(message){
           queueSize = message.numPlayers;
         })
