@@ -89,6 +89,7 @@ restartBtn.onclick = function() {
   document.getElementById('startMenuWrapper').style.display = 'block';
 }
 
+
 function SetupSocket(socket) {
   game.handleNetwork(socket);
 }

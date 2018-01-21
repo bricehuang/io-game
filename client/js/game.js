@@ -93,6 +93,15 @@ Game.prototype.handleNetwork = function(socket) {
   })
   socket.on('waiting', function(message){
     document.getElementById('queue').innerHTML = message.numPlayers+'/'+roomSize;
+    if (message.votesNeeded == null) {
+      // cannot force start no matter what
+      document.getElementById('forceStartButton').style.display = 'none';
+    } else {
+      document.getElementById('forceStartButton').style.display = 'block';
+      document.getElementById('forceStartButton').innerHTML = (
+        'Force Start ' + message.forceStartVotes + '/' + message.votesNeeded
+      );
+    }
   })
   socket.on('gameStart',function(){
     document.getElementById('queue').innerHTML = '';
