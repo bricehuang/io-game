@@ -6,6 +6,10 @@
 
     <link rel="stylesheet" href="/css/main.css" />
     <style>
+
+        *{
+            box-sizing: border-box;
+        }
         #feedContainer {
             position: absolute;
             left: 0;
@@ -28,6 +32,43 @@
         .scrollable {
             overflow: auto;
         }
+        #leaderContainer {
+            position: absolute;
+            margin: 50px;
+            padding: 10px;
+            right: 0;
+            top: 0;
+            width :20%;
+            /*height:50% ;*/
+            border: 5px solid #000000;
+            border-radius: 20px;
+            opacity: 0.8;
+            background-color: grey;
+
+        }
+        #leaderHeader{
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 30px;
+            font-family: sans-serif;
+            overflow:hidden;
+        }
+
+        table.fixed {
+            table-layout:fixed;
+            width:100%;
+            font:;ont-family: sans-serif;
+        }
+        table.fixed td {overflow:hidden;white-space: nowrap;color: white;
+            font-size: 24px;
+            font-family: "Comic Sans";
+            padding: 2px;
+
+        }/
+        table.fixed td:nth-of-type(1) {width:10%;}
+        table.fixed td:nth-of-type(2) {width:70%;}
+        table.fixed td:nth-of-type(3) {width:20%;}
     </style>
 </head>
 <body>
@@ -35,6 +76,14 @@
         <canvas tabindex="1" id="cvs"></canvas>
         <div class="scrollable" id="feedContainer">
             <ul id="feed"></ul>
+        </div>
+        <div id = "leaderContainer">
+            <div id = "leaderHeader" color = "black">
+                Leaderboard
+            </div>
+            <table id = "leaderboard" class = fixed>
+
+            </table>
         </div>
     </div>
     <div id="startMenuWrapper">

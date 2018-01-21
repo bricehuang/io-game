@@ -331,6 +331,34 @@ function drawForeground(gfx){
     }
   }
   gfx.stroke();*/
+
+
+  //old leaderboard
+
+  var leader = document.getElementById("leaderboard");
+  leader.innerHTML = "";
+  for(var i = 0;i<leaderboard.length;i++){
+    var nextRow = document.createElement("tr");
+    var rowColor = 'white';
+    if(leaderboard[i].id==myStats.id){
+      rowColor = 'rgb(255,60,0)';
+    }
+    leader.appendChild(nextRow);
+    var rank = document.createElement("td");
+    rank.style.color = rowColor;
+    rank.innerHTML = "" + (i+1) + ".";
+    nextRow.appendChild(rank);
+    var name = document.createElement("td");
+    name.style.color = rowColor;
+    name.innerHTML = leaderboard[i].name;
+    nextRow.appendChild(name);
+    var score = document.createElement("td");
+    score.style.color = rowColor;
+    score.innerHTML = leaderboard[i].score;
+    nextRow.appendChild(score);
+
+  }
+  /*
   gfx.font = '48px Verdana';
   gfx.textAlign = 'center';
   leaderboardOffset = {x:100,y:30};
@@ -359,6 +387,8 @@ function drawForeground(gfx){
     gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
   }
   gfx.stroke();
+  */
+
 }
 function drawAmmo(gfx) {
   gfx.strokeStyle = "#000000";
