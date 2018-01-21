@@ -190,35 +190,18 @@ io.on('connection', function (socket) {
   })
 });
 
-function expelDeadPlayer(player) {
-  players.delete(player.id);
-  player.room.players.delete(player.id);
-  player.socket.emit('death');
-  player.socket.disconnect();
-}
-
 function moveLoops(){
   for (var key of rooms.keys()) {
     var room = rooms.get(key);
     room.moveLoop();
-    /*
-    var deadPlayers = room.expelDeadPlayers();
-    for (var i=0; i<deadPlayers.length; i++) {
-      var player = deadPlayers[i];
-      if (players.has(player.id)){
-        players.delete(player.id)
-      }
-    }*/
-    if(Date.now()-room.startTime >=config.MATCH_LENGTH){
-      for(var [playerKey,player] of room.players){
-        player.socket.emit('death');
-        player.socket.disconnect();
+    var playersInRoomIfGameOver = room.expelAllPlayersIfGameOver();
+    if (playersInRoomIfGameOver != null) {
+      rooms.delete(key);
+      for (var player of playersInRoomIfGameOver) {
         if (players.has(player.id)){
           players.delete(player.id);
         }
-        room.players.delete(player.id);
       }
-      rooms.delete(key);
     }
   }
 }

@@ -555,7 +555,25 @@ exports.Room = function(id) {
     } else {
       this.sendWaitingInfo();
     }
+  }
 
+  this.expelAllPlayersIfGameOver = function() {
+    /*
+    If game is over, expels all players from this room and returns a list of the expelled
+    player objects.  Else returns null.
+    */
+    if (this.play && Date.now()-this.startTime >= config.MATCH_LENGTH) {
+      var expelledPlayers = [];
+      for(var [key,player] of this.players){
+        player.socket.emit('death');
+        player.socket.disconnect();
+        this.players.delete(player.id);
+        expelledPlayers.push(player);
+      }
+      return expelledPlayers;
+    } else {
+      return null;
+    }
   }
 
   this.obstacles = this.generateObstacles();
