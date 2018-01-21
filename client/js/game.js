@@ -72,7 +72,10 @@ Game.prototype.handleNetwork = function(socket) {
     $('#feed').empty();
     var finalStandingsHtml = "<tr><th>Player</th> <th>Score</th></tr>";
     for (var entry of leaderboard) {
-      finalStandingsHtml += ("<tr><td>" + entry.name + "</td> <td>" + entry.score + "</td></tr>");
+      finalStandingsHtml += (
+        "<tr><td style='text-align: center;'>" + entry.name +
+        "</td> <td style='text-align: center;'>" + entry.score + "</td></tr>"
+      );
     }
     $('#finalStandings').html(finalStandingsHtml);
   })

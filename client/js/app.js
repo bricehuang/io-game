@@ -31,7 +31,7 @@ heartImg.src = 'js/images/heart.png'
 
 var starting = false;
 var queueSize = 0;
-var roomSize = 5;
+var roomSize = 8;
 
 function startGame() {
   playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
