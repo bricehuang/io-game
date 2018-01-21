@@ -15,7 +15,7 @@ exports.Room = function(id) {
   this.leaderboard = [];
   this.numObstacles = 10;
   this.obstacles = [];
-  this.startTime = Date.now();
+  this.startTime;
   this.play = false;
 
   this.addPlayer = function(socket, name, windowDimensions, securityKey) {
@@ -27,6 +27,7 @@ exports.Room = function(id) {
       socket, spawnPosition, this, name, windowDimensions, securityKey
     );
     this.players.set(socket.id, currentPlayer);
+    this.sendWaitingInfo();
     return currentPlayer;
   }
 
@@ -552,8 +553,6 @@ exports.Room = function(id) {
       this.purgeDeadProjecties();
       this.respawns();
       this.sendAllViews();
-    } else {
-      this.sendWaitingInfo();
     }
   }
 

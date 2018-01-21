@@ -27,6 +27,8 @@ var isSpiky = false;
 var defaultWidth = 5;
 var defaultColor = "#000000";
 
+var roomSize = 8;
+
 function signWithSecurityKey(data){
   return {securityKey: securityKey, data: data};
 }
@@ -65,7 +67,7 @@ Game.prototype.handleNetwork = function(socket) {
     console.log(securityKey);
   })
   socket.on('death', function(message){
-    starting = false;
+    gameInProgress = false;
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('gameEndScreen').style.display = 'block';
     $('#feed').empty();
@@ -88,8 +90,20 @@ Game.prototype.handleNetwork = function(socket) {
     if (feedWindow.scrollTop() + feedWindow.height() + 20 >= feedWindow[0].scrollHeight) {
         feedWindow.scrollTop(feedWindow[0].scrollHeight);
     }
-
   })
+  socket.on('waiting', function(message){
+    document.getElementById('queue').innerHTML = message.numPlayers+'/'+roomSize;
+  })
+  socket.on('gameStart',function(){
+    document.getElementById('queue').innerHTML = '';
+    document.getElementById('waitingScreen').style.display = 'none';
+    document.getElementById('gameAreaWrapper').style.display = 'block';
+    console.log('starting');
+    gameInProgress = true;
+    animloop();
+  })
+
+
 }
 
 Game.prototype.handleLogic = function() {
