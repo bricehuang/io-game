@@ -106,6 +106,13 @@ window.onload = function() {
   });
 };
 
+var restartBtn = document.getElementById('restartButton');
+restartBtn.onclick = function() {
+  $('#finalStandings').html('');
+  document.getElementById('gameEndScreen').style.display = 'none';
+  document.getElementById('startMenuWrapper').style.display = 'block';
+}
+
 function SetupSocket(socket) {
   game.handleNetwork(socket);
 }

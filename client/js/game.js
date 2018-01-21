@@ -68,8 +68,13 @@ Game.prototype.handleNetwork = function(socket) {
   socket.on('death', function(message){
     starting = false;
     document.getElementById('gameAreaWrapper').style.display = 'none';
-    document.getElementById('startMenuWrapper').style.display = 'block';
+    document.getElementById('gameEndScreen').style.display = 'block';
     $('#feed').empty();
+    var finalStandingsHtml = "<tr><th>Player</th> <th>Score</th></tr>";
+    for (var entry of leaderboard) {
+      finalStandingsHtml += ("<tr><td>" + entry.name + "</td> <td>" + entry.score + "</td></tr>");
+    }
+    $('#finalStandings').html(finalStandingsHtml);
   })
   socket.on('pongcheck', function(){
     var timeNow = Date.now();

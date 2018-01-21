@@ -98,10 +98,18 @@
 
 
     <div id="waitingScreen" style="display:none;">
-            <h3>Sierra</h3>
-            <p>Waiting for Players</p>
-            <p id="queue"></p>
+        <p>Waiting for Players</p>
+        <p id="queue"></p>
     </div>
+
+    <div id="gameEndScreen" style="display:none;">
+        <div>
+            <p>Final Standings</p>
+            <table id="finalStandings"></table>
+            <button id="restartButton">Play Again</button>
+        </div>
+    </div>
+
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>

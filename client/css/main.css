@@ -15,7 +15,7 @@ canvas {
 	margin: 0; padding: 0;
 }
 
-#startMenu, #waitingScreen {
+#startMenu, #waitingScreen, #gameEndScreen {
 	margin:auto;
 	margin-top:100px;
 	width: 350px;
@@ -27,7 +27,7 @@ canvas {
 	box-sizing: border-box;
 }
 
-#startMenu p, #waitingScreen p {
+#startMenu p, #waitingScreen p, #gameEndScreen p {
 	padding: 0;
 	text-align:center;
 	font-size: x-large;
@@ -53,7 +53,7 @@ canvas {
 	box-shadow: 0 0 3px 1px #DDDDDD;
 }
 
-#startButton {
+#startButton, #restartButton {
 	position: relative;
 	margin: auto;
 	margin-top: 10px;
@@ -76,7 +76,7 @@ canvas {
 	margin-bottom: 10px;
 }
 
-#startButton:active, #startButton:hover {
+#startButton:active, #startButton:hover, #restartButton:active, #restartButton:hover {
 	top: 1px;
 	background: #55D88B;
 	outline: none;
