@@ -71,11 +71,22 @@ Game.prototype.handleNetwork = function(socket) {
     document.getElementById('gameAreaWrapper').style.display = 'none';
     document.getElementById('gameEndScreen').style.display = 'block';
     $('#feed').empty();
-    var finalStandingsHtml = "<tr><th>Player</th> <th>Score</th></tr>";
+    var finalStandingsHtml = (
+      "<tr>"+
+      "<th>Player</th>"+
+      "<th>Score</th>"+
+      "<th>Kills</th>"+
+      "<th>Deaths</th>"+
+      "</tr>"
+    );
     for (var entry of leaderboard) {
       finalStandingsHtml += (
-        "<tr><td style='text-align: center;'>" + entry.name +
-        "</td> <td style='text-align: center;'>" + entry.score + "</td></tr>"
+        "<tr>" +
+        "<td style='text-align: center;'>" + entry.name + "</td>" +
+        "<td style='text-align: center;'>" + entry.score + "</td>" +
+        "<td style='text-align: center;'>" + entry.kills + "</td>" +
+        "<td style='text-align: center;'>" + entry.deaths + "</td>" +
+        "</tr>"
       );
     }
     $('#finalStandings').html(finalStandingsHtml);
@@ -363,9 +374,6 @@ function drawForeground(gfx){
   }
   gfx.stroke();*/
 
-
-  //old leaderboard
-
   var leader = document.getElementById("leaderboard");
   leader.innerHTML = "";
   for(var i = 0;i<leaderboard.length;i++){
@@ -389,36 +397,6 @@ function drawForeground(gfx){
     nextRow.appendChild(score);
 
   }
-  /*
-  gfx.font = '48px Verdana';
-  gfx.textAlign = 'center';
-  leaderboardOffset = {x:100,y:30};
-  startTable = {x: screenWidth-300,y:100};
-  gfx.fillText('Leaderboard', startTable.x+leaderboardOffset.x,startTable.y);
-  gfx.textAlign = 'left';
-
-  gfx.font = '24px Verdana';
-  var onLeaderboard = false;
-  for(var i =  0;i<leaderboard.length;i++){
-    gfx.fillStyle = '#142DCC';
-    if(leaderboard[i].id==myStats.id){
-      onLeaderboard = true;
-      gfx.fillStyle = 'red';
-    }
-    gfx.textAlign = 'left';
-    gfx.fillText(leaderboard[i].name,startTable.x,startTable.y+(i+1)*leaderboardOffset.y);
-    gfx.textAlign = 'right';
-    gfx.fillText(leaderboard[i].score,startTable.x+2*leaderboardOffset.x,startTable.y+(i+1)*leaderboardOffset.y);
-  }
-  if(!onLeaderboard && myStats){
-    gfx.fillStyle = 'red';
-    gfx.textAlign = 'left';
-    gfx.fillText(myStats.name,startTable.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
-    gfx.textAlign = 'right';
-    gfx.fillText(myStats.score,startTable.x+2*leaderboardOffset.x,startTable.y+(leaderboard.length+1)*leaderboardOffset.y);
-  }
-  gfx.stroke();
-  */
 
 }
 function drawAmmo(gfx) {

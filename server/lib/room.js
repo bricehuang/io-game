@@ -409,10 +409,13 @@ exports.Room = function(id) {
       newLeaderboard.push({
         name:player.name,
         score: player.kills-player.deaths,
-        id:player.id,
+        kills: player.kills,
+        deaths: player.deaths,
+        id:player.id
       });
     }
-    newLeaderboard.sort(function(a,b){return b.score - a.score});
+    // todo make sort less hacky
+    newLeaderboard.sort(function(a,b){return 1000000*(b.score - a.score) + (b.kills - a.kills)});
     this.leaderboard = newLeaderboard.slice(0,Math.min(config.LEADERBOARD_SIZE,newLeaderboard.length));
   }
 
